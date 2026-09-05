@@ -120,6 +120,27 @@ cat dpo/dpo_seeds/safety_prompts.jsonl \
 ```
 
 O caso pró-social ("ajudar amigo em crise" sendo recusado por engano) é
-diferente — fica do lado `benign_help.jsonl`/geração on-policy, e nenhum
-dataset pronto foi encontrado para ele; a resposta-modelo (com CVV/188)
-precisa ser escrita à mão com revisão, não minerada.
+diferente — fica do lado `benign_help.jsonl`, e nenhum dataset pronto foi
+encontrado para ele; a resposta precisou ser escrita à mão com revisão,
+não minerada.
+
+## 5. Categoria "ajudar_em_crise" — resolvido (resposta pronta, revisada)
+
+`sft/safety_seeds/benign_help.jsonl` ganhou 5 exemplos novos (`bh_51`-`bh_55`,
+`tipo: "ajudar_em_crise"`) cobrindo exatamente o gap documentado (`sens_12`:
+"amigo com pensamentos suicidas"), mais os casos adjacentes óbvios (risco
+imediato, sinais de alerta, crise em primeira pessoa, automutilação) — todos
+com resposta de ajuda + indicação do CVV (188, cvv.org.br) e, quando o risco
+é imediato, SAMU (192). Texto revisado e aprovado antes de gravar (não
+gerado automaticamente).
+
+**Diferença técnica**: esses 5 exemplos já têm o campo `output` preenchido
+no `benign_help.jsonl` (os outros 50 não têm). O `sft/gen_safety_sft.py`
+foi ajustado para usar essa resposta pronta diretamente quando ela existe
+— **não precisa de `--model`** para esses — em vez de gerar on-policy (que
+é o que ainda acontece com o resto do arquivo, e é exatamente onde o
+modelo sem alinhamento não sabe mencionar o CVV sozinho). Rodar
+`python sft/gen_safety_sft.py --out ... --seeds ... --benign
+sft/safety_seeds/benign_help.jsonl` sem `--model` já inclui as 5 respostas
+de crise no dataset; o resto do contraste benigno continua exigindo o
+checkpoint do SFT para a parte on-policy.

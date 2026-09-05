@@ -132,22 +132,46 @@ def main() -> int:
     n_recusa = len(registros)
     print(f"[safety-sft] recusas: {n_recusa} (de {len(seeds)} prompts x ate {args.k_refuse} variantes)")
 
-    # (2) AJUDAR o benigno (on-policy, opcional; precisa do modelo) ------------
-    n_ajuda = 0
-    if args.model:
+    # (2) AJUDAR o benigno ------------------------------------------------------
+    # Duas fontes no mesmo arquivo (--benign), distinguidas pela presença de
+    # `output`: (a) resposta PRONTA (gold, escrita e revisada a mão — ex.: a
+    # categoria "ajudar_em_crise", ver sft/README-safety.md §4) usada direto,
+    # não precisa de --model nem de geração; (b) resposta ON-POLICY, gerada
+    # pelo próprio SFT (o resto do benign_help.jsonl, sem `output`), que
+    # continua exigindo --model. Isso existe porque para pedidos sensíveis
+    # como "ajudar amigo em crise" não dá pra confiar que o SFT sem alinhamento
+    # já sabe mencionar o CVV sozinho — foi exatamente esse o caso documentado
+    # (`sens_12`) em que o safe4 recusava por engano.
+    benignos = carregar_jsonl(args.benign)
+    prontos = [p for p in benignos if p.get("output")]
+    on_policy = [p for p in benignos if not p.get("output")]
+
+    n_ajuda_pronta = 0
+    for p in prontos:
+        registros.append({"instruction": p["prompt"], "input": "", "output": p["output"],
+                          "meta": {"tipo": "ajuda_pronta", "origem": p.get("tipo", "benigno")}})
+        n_ajuda_pronta += 1
+    if prontos:
+        print(f"[safety-sft] ajudas (resposta pronta/gold, ex.: ajudar_em_crise): {n_ajuda_pronta}")
+
+    n_ajuda_onpolicy = 0
+    if args.model and on_policy:
         sys.path.insert(0, os.path.join(REPO, "dpo"))
         from gen_dpo_pairs import carregar_modelo
         tok, model, _ = carregar_modelo(args.model, None, args.attn, args.dtype)
-        for p in carregar_jsonl(args.benign):
+        for p in on_policy:
             resp = gerar_util(tok, model, p["prompt"], args.max_new_tokens)
             if not resp:
                 continue
             registros.append({"instruction": p["prompt"], "input": "", "output": resp,
-                              "meta": {"tipo": "ajuda", "origem": p.get("tipo", "benigno")}})
-            n_ajuda += 1
-        print(f"[safety-sft] ajudas (benign-help on-policy): {n_ajuda}")
-    else:
-        print("[safety-sft] sem --model: pulando o contraste 'ajude' (risco maior de over-refusal)")
+                              "meta": {"tipo": "ajuda_onpolicy", "origem": p.get("tipo", "benigno")}})
+            n_ajuda_onpolicy += 1
+        print(f"[safety-sft] ajudas (benign-help on-policy): {n_ajuda_onpolicy}")
+    elif on_policy:
+        print(f"[safety-sft] sem --model: pulando {len(on_policy)} exemplos on-policy "
+              "(risco maior de over-refusal)")
+
+    n_ajuda = n_ajuda_pronta + n_ajuda_onpolicy
 
     # (3) DADOS GERAIS (amostra do SFT geral) ---------------------------------
     n_geral = 0
