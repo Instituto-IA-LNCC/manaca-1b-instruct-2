@@ -202,13 +202,20 @@ Já disponível neste repositório (o que funcionou e valeu, sem tentativas falh
 - **Corpus de SFT (v1 e v2)** — fontes, splits, licenças e comandos:
   [`docs/data/`](docs/data/) · código de extração/tratamento em
   [`sft/prepare_data.py`](sft/prepare_data.py) e [`sft/jaster/build_jaster.py`](sft/jaster/build_jaster.py).
-- **Corpus-fonte para instrução sintética (instruct-2)** — LegalPT, ClassiCC-PT
-  e Carolina Corpus, mesmo padrão de extração do
-  [`manaca/corpus/`](https://github.com/brunoleomenezes/manaca/tree/main/corpus):
-  [`corpus/README.md`](corpus/README.md) · scripts em [`corpus/scripts/`](corpus/scripts/).
-- **GigaVerbo-v2 SFT (Polygl0t, Apache-2.0, ~4M ex. prontos)** — fonte de
-  instrução nativa/sintética já pronta (não precisa de geração), convertida
-  para o esquema Alpaca: [`sft/gigaverbo_v2_sft/README.md`](sft/gigaverbo_v2_sft/README.md).
+- **Corpus-fonte para instrução sintética (instruct-2)** — LegalPT, ClassiCC-PT,
+  Carolina, MADLAD-400, FineWeb-2, HPLT 2.0 e Portuguese-PD, mesmo padrão de
+  extração do [`manaca/corpus/`](https://github.com/brunoleomenezes/manaca/tree/main/corpus):
+  [`corpus/README.md`](corpus/README.md) · scripts em [`corpus/scripts/`](corpus/scripts/)
+  (inclui a tabela completa de fontes avaliadas e excluídas, com motivo).
+- **Fontes de instrução já prontas (instruct-2)** — GigaVerbo-v2 SFT, Tucano-SFT,
+  Quati e ExtraGLUE, todas de licença aberta e sem geração sintética necessária:
+  [`sft/gigaverbo_v2_sft/README.md`](sft/gigaverbo_v2_sft/README.md) ·
+  [`sft/tucano_sft/README.md`](sft/tucano_sft/README.md) ·
+  [`sft/quati/README.md`](sft/quati/README.md).
+- **2ª tentativa de DPO (instruct-2)** — GigaVerbo-v2 Preferences e Reward-Aira,
+  para retomar o DPO após o resultado negativo do v1/v2 com dado maior e de
+  terceiros: [`dpo/gigaverbo_v2_preferences/README.md`](dpo/gigaverbo_v2_preferences/README.md) ·
+  [`dpo/reward_aira/README.md`](dpo/reward_aira/README.md).
 - **Treino do instruct v1 e v2** — [`sft/README.md`](sft/README.md) e o treinador
   [`sft/train.py`](sft/train.py); ambiente em [`docker/`](docker/) + `docker-compose.yml`.
 - **Logs das corridas que produziram os modelos** — [`docs/training/`](docs/training/).

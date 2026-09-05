@@ -338,6 +338,90 @@ def conv_pira(ds):
         yield {"instruction": inst, "input": inp, "output": ans}
 
 
+# ── ExtraGLUE (PORTULAN): GLUE/SuperGLUE traduzido automaticamente p/ pt-BR ──
+# NOTA DE PROVENIÊNCIA: diferente das demais tarefas do manacá-jaster (dados
+# nativos em PT-BR), o ExtraGLUE é TRADUÇÃO AUTOMÁTICA do inglês (Rodrigues
+# et al., 2024, arXiv:2404.05333). Licença MIT, sem restrição — incluído por
+# completude (mais tarefas de classificação/similaridade), mas não resolve o
+# problema de dependência de tradução já documentado no corpus v1/v2; por
+# isso fica fora do DEFAULT_TASKS (só entra com --tasks all ou nomeado).
+# Nomes de config inferidos por amostra real (commit do dataset no HF
+# mostrou "data/mnli_matched_pt-BR/test.jsonl"); se algum não bater, a
+# tarefa é pulada com aviso (ver main()) — corrigir via --source.
+
+def _extraglue_nli_label(raw, names):
+    """
+    Mapeamento próprio (não reaproveita _nli_label_pt): o ExtraGLUE mistura
+    tarefas de 2 classes (QNLI: entailment/not_entailment) e 3 classes (MNLI:
+    entailment/neutral/contradiction), com vocabulário de rótulo diferente
+    do assin2/sick-br (que não tem "not_entailment"). Mapear aqui evita
+    vazar o rótulo em inglês cru quando cair fora do dicionário.
+    """
+    if names is not None:
+        try:
+            raw = names[int(raw)]
+        except (TypeError, ValueError, IndexError):
+            pass
+    # Sem fallback numerico ("0"/"1"): a posicao do inteiro na ClassLabel
+    # varia entre MNLI (3 classes) e QNLI (2 classes) — mapear so pelo nome
+    # da classe (via feature_names) evita inverter o rotulo silenciosamente.
+    key = s(raw).upper().replace("-", "_")
+    return {
+        "ENTAILMENT": "Implicação",
+        "NEUTRAL": "Neutro",
+        "CONTRADICTION": "Contradição",
+        "NOT_ENTAILMENT": "Não-implicação",
+    }.get(key, s(raw))
+
+
+def conv_extraglue_nli(ds):
+    """MNLI/QNLI traduzidos: entailment (2 ou 3 classes, tolerante a ambos)."""
+    names = feature_names(ds, "label")
+    inst = ("Determine a relação lógica entre as duas frases. Responda com uma palavra: "
+            "Implicação, Neutro, Contradição ou Não-implicação (conforme aplicável).")
+    for ex in ds:
+        a = s(first(ex, "premise", "question", "sentence1"))
+        b = s(first(ex, "hypothesis", "sentence", "sentence2"))
+        lab = first(ex, "label", default=None)
+        if not a or not b or lab in (None, ""):
+            continue
+        out = _extraglue_nli_label(lab, names)
+        if out not in ("Implicação", "Neutro", "Contradição", "Não-implicação"):
+            continue  # nome de classe nao reconhecido (ClassLabel ausente) -- nao gera rotulo cru
+        yield {"instruction": inst, "input": f"Frase 1: {a}\nFrase 2: {b}", "output": out}
+
+
+def conv_extraglue_stsb(ds):
+    inst = "Avalie a similaridade semântica entre as duas frases numa escala de 1 a 5."
+    for ex in ds:
+        a, b = s(first(ex, "sentence1", "premise")), s(first(ex, "sentence2", "hypothesis"))
+        score = first(ex, "label", "score", default=None)
+        if not a or not b or score in (None, ""):
+            continue
+        try:
+            out = f"{float(score):.1f}"
+        except (TypeError, ValueError):
+            continue
+        yield {"instruction": inst, "input": f"Frase 1: {a}\nFrase 2: {b}", "output": out}
+
+
+def conv_extraglue_mrpc(ds):
+    names = feature_names(ds, "label")
+    inst = "As duas frases a seguir têm o mesmo significado (são paráfrases)? Responda apenas Sim ou Não."
+    for ex in ds:
+        a, b = s(first(ex, "sentence1")), s(first(ex, "sentence2"))
+        lab = first(ex, "label", default=None)
+        if not a or not b or lab in (None, ""):
+            continue
+        if names is not None:
+            try:
+                lab = names[int(lab)]
+            except (TypeError, ValueError, IndexError):
+                pass
+        pos = s(lab).upper() in ("1", "TRUE", "EQUIVALENT", "PARAPHRASE")
+        yield {"instruction": inst, "input": f"Frase 1: {a}\nFrase 2: {b}", "output": "Sim" if pos else "Não"}
+
+
 # ── Registro de tarefas (id HF padrão + config + split + conversor) ───────────
 NER_HAREM = "Extraia as entidades nomeadas do texto, agrupadas por tipo."
 NER_LENER = "Extraia as entidades nomeadas (jurídicas) do texto, agrupadas por tipo."
@@ -357,6 +441,13 @@ TASKS = {
     "tweetsentbr":  ("eduagarcia/tweetsentbr_fewshot", None,       "test",  conv_tweetsentbr),
     "hatebr":       ("ruanchaves/hatebr",             None,        "train", conv_hatebr),
     "pira":         ("paulopirozelli/pira",           None,        "train", conv_pira),
+    # ExtraGLUE (PORTULAN, MIT, traduzido pt-BR) — ver nota de proveniencia
+    # acima de conv_extraglue_nli. Configs inferidas por amostra real do
+    # HF; corrigir via --source se algum nome nao bater.
+    "extraglue_mnli": ("PORTULAN/extraglue", "mnli_matched_pt-BR", "test", conv_extraglue_nli),
+    "extraglue_qnli": ("PORTULAN/extraglue", "qnli_pt-BR",         "test", conv_extraglue_nli),
+    "extraglue_stsb": ("PORTULAN/extraglue", "stsb_pt-BR",         "test", conv_extraglue_stsb),
+    "extraglue_mrpc": ("PORTULAN/extraglue", "mrpc_pt-BR",         "test", conv_extraglue_mrpc),
 }
 
 # Conjunto padrão (curado): tarefas mais robustas de conversão automática.

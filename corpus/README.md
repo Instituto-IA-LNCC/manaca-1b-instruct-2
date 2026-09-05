@@ -13,34 +13,70 @@ schema Parquet fixo, manifesto JSON atômico (resume idempotente por shard),
 `passes_filter`/`quality_score`, `verify()` de integridade, logs via loguru.
 As diferenças estão documentadas no docstring de cada script.
 
-## Fontes
+## Fontes brutas (precisam do passo de geração sintética depois)
 
 | # | Script | Fonte HF | Papel | Licença |
 |---|--------|----------|-------|---------|
 | 01 | `01_acquire_legalpt.py` | `eduagarcia/LegalPT_dedup` (menos `tesemo_v2`) | Domínio jurídico — ataca o OAB no acaso do instruct v1/v2 | mista, verificar por config (ver script) |
 | 02 | `02_acquire_classiccpt.py` | `ClassiCC-Corpus/ClassiCC-PT` | Web nativo PT-BR filtrado por `edu_score`/`toxic_score` | aberta, herda termos do CC |
 | 03 | `03_acquire_carolina.py` | `carolina-c4ai/corpus-carolina` (rev. `v1.2`) | Diversidade de registro/gênero (escrita, roleplay) | CC BY-NC-SA 4.0 — **não comercial** |
+| 04 | `04_acquire_madlad400.py` | `allenai/MADLAD-400` (config `pt`) | Web geral, domínios/períodos distintos do GigaVerbo | Apache 2.0 |
+| 05 | `05_acquire_fineweb2.py` | `HuggingFaceFW/fineweb-2` (config `por_Latn`) | Web de alta qualidade (pipeline FineWeb) | ODC-By 1.0 |
+| 06 | `06_acquire_hplt2.py` | `HPLT/HPLT2.0_cleaned` (config `pt`) | Web geral, cobertura temporal distinta | CC0 (domínio público) |
+| 07 | `07_acquire_portuguese_pd.py` | `PleIAs/Portuguese-PD` | Registro histórico/literário (pré-1884) | Domínio público |
 
-Critério de escolha (ver o levantamento completo na conversa que originou este
-pipeline): excluídas todas as fontes já usadas no Tier 1 do **base**
-(GigaVerbo, FineWeb-2, HPLT 2.0) ou com licença ainda não confirmada
-(Aurora-PT, Aroeira, GigaVerbo-v2) ou comercial (Jabuticaba) ou cujo texto
-bruto herda restrição de uma fonte não-aberta (CrawlPT/brWaC).
+### Fontes 04-06 — por que estavam descartadas e agora não estão
 
-### Por que `tesemo_v2` é excluído do LegalPT (importante)
+MADLAD-400, FineWeb-2 e HPLT 2.0 faziam parte do Tier 1 do **plano** de
+pré-treino do `manaca`. Uma auditoria contra o repositório real do base
+(`manaca-1b-base`) confirmou que o corpus final de pré-treino usou **só**
+GigaVerbo (subamostra) + Ulysses Tesemõ + Wikipedia-pt (~20,1B tokens) — os
+scripts dessas 3 fontes existem no `manaca-1b-base` mas nunca foram
+executados/consumidos. Ou seja: "planejadas" ≠ "usadas" — estão livres de
+sobreposição real com o base. Detalhe completo no docstring de cada script.
 
-O LegalPT_dedup reempacota o Ulysses Tesemõ inteiro como um de seus 6
-sub-corpora. O `manaca` (base) já extrai o Tesemõ por inteiro no seu Script
-06. `01_acquire_legalpt.py` itera as configs do LegalPT_dedup individualmente
-e **nunca solicita** a config `tesemo_v2` — não depende de inferir valores da
-coluna `source`, é uma exclusão estrutural e auditável.
+## Fontes de instrução já prontas (sem geração sintética)
+
+| Diretório | Fonte HF | Tamanho | Licença |
+|---|---|---|---|
+| [`../sft/gigaverbo_v2_sft/`](../sft/gigaverbo_v2_sft/) | `Polygl0t/gigaverbo-v2-sft` | ~4M exemplos | Apache 2.0 |
+| [`../sft/tucano_sft/`](../sft/tucano_sft/) | `TucanoBR/Tucano-SFT` | não confirmado (~600k?) | Apache 2.0 / MIT (subfontes) |
+| [`../sft/quati/`](../sft/quati/) | `unicamp-dl/quati` (tarefa de relevância, 3 configs juntadas) | configurável | CC BY 4.0 |
+| `../sft/jaster/build_jaster.py` (`extraglue_*`) | `PORTULAN/extraglue` | 4 tarefas NLI/STS/paráfrase | MIT (traduzido) |
+
+## Fontes de preferência (2ª tentativa de DPO)
+
+| Diretório | Fonte HF | Tamanho | Licença |
+|---|---|---|---|
+| [`../dpo/gigaverbo_v2_preferences/`](../dpo/gigaverbo_v2_preferences/) | `Polygl0t/gigaverbo-v2-preferences` | ~28,4K pares | Apache 2.0 |
+| [`../dpo/reward_aira/`](../dpo/reward_aira/) | `nicholasKluge/reward-aira-dataset` | pequeno | Apache 2.0 |
+
+O DPO on-policy do v1/v2 foi resultado negativo (dataset pequeno, gerado
+pelo próprio modelo — ver `dpo/README-onpolicy.md`). Estas duas fontes são
+maiores, geradas por modelos terceiros, e habilitam uma segunda tentativa —
+**convertê-las não significa adotar o DPO**: a decisão é pela avaliação
+(segurança no MT-Bench-PT + over-refusal estável), mesmo critério já usado.
+
+## Fontes avaliadas e excluídas (com motivo)
+
+| Fonte | Motivo |
+|---|---|
+| `UFRGS/brwac`, CrawlPT | Sem licença aberta declarada (nem no HF nem na fonte oficial UFRGS); acesso por formulário |
+| `soberania/jabuticaba` | Comercial/gated |
+| Aurora-PT, Aroeira, GigaVerbo-v2 (bruto) | Licença ainda não finalizada/declarada claramente |
+| `thegoodfellas/blogset-br` | Sinal de licença conflitante (Apache-2.0 no HF vs. termo original PUC-RS de uso acadêmico) — precisa verificação manual antes de automatizar |
+| `PleIAs/common_corpus` | Licença mista, não-uniforme por sub-fonte (fatia PT variável) — precisa auditoria por sub-fonte, não uma automação genérica |
+| `Helsinki-NLP/OpenSubtitles2024` (pt) | Licença ambígua, herdada do OpenSubtitles.org |
+| `factckbr/factckbr` (FACTCK.BR) | Licença não claramente declarada; corpus pequeno (1.309 claims) |
+| SciELO parallel (`community-datasets/scielo`) | Licença não-uniforme (varia por artigo/periódico) |
+| `dominguesm/Canarim-Instruct-PTBR` | CC BY-NC + redundante com Alpaca-PT já coberto (baixo valor marginal) |
 
 ## Diferença de escopo vs. `manaca/corpus/`
 
-Cada script tem um teto de documentos por padrão (`--max-docs`, tipicamente
-150k-300k), porque a saída aqui alimenta um passo de geração sintética via
-LLM (custo de API), não o pré-treino de um modelo do zero. `--max-docs 0`
-remove o teto se um uso futuro precisar do corpus inteiro.
+Cada script tem um teto de documentos/exemplos por padrão, porque a saída
+aqui alimenta um passo de geração sintética via LLM (custo de API) ou já é
+consumida direto no mix de SFT — não o pré-treino de um modelo do zero.
+`--max-docs 0` / `--max_examples 0` remove o teto quando fizer sentido.
 
 ## Pré-requisitos
 
@@ -58,30 +94,35 @@ sempre as duas listas juntas (a imagem Docker já faz isso).
 ## Reproduzir
 
 ```bash
-make corpus-legalpt      # -> $DATA_DIR/raw/legalpt/
-make corpus-classiccpt   # -> $DATA_DIR/raw/classiccpt/
-make corpus-carolina     # -> $DATA_DIR/raw/carolina/
-make corpus-all          # os 3 em sequencia
-
-# Argumentos extra (ex.: sem teto de documentos):
+# Fontes brutas (corpus/scripts/, precisam do passo de geracao sintetica depois)
+make corpus-all-raw     # 01-07 em sequencia
 make corpus-legalpt ARGS="--max-docs 0"
 make corpus-classiccpt ARGS="--min-edu 2.5 --max-toxic 0.3"
 make corpus-carolina ARGS="--revision v2.0.1"
+make corpus-madlad400 && make corpus-fineweb2 && make corpus-hplt2 && make corpus-portuguese-pd
+
+# Fontes de instrucao ja prontas
+make gigaverbo-v2-sft-data
+make tucano-sft-data
+make quati-data
+./scripts/docker/run_posttrain.sh python sft/jaster/build_jaster.py --tasks extraglue_mnli,extraglue_qnli,extraglue_stsb,extraglue_mrpc --out data/sft/extraglue
+
+# Fontes de preferencia (2a tentativa de DPO)
+make dpo-preferences-data
 ```
 
 Cada script é idempotente (retoma do último shard/config em caso de
-interrupção) e grava metadados em
-`$DATA_DIR/checkpoints/acquisition_manifest.json` (uma entrada por fonte),
-mais um relatório de distribuição específico por fonte
-(`config_distribution.json`, `classiccpt_quality_stats.json`,
-`taxonomy_distribution.json`).
+interrupção) e grava metadados em manifest JSON (por shard/fonte no caso
+dos scripts de `corpus/`, ou `manifest.json` por diretório no caso dos
+builders de `sft/`/`dpo/`).
 
 ## Próximo passo
 
-Estes três diretórios de shards Parquet ainda **não são** dados de SFT — são
-passagens brutas. O passo seguinte (fora do escopo destes scripts) é o
-pipeline de geração de instrução sintética: amostrar passagens de qualidade,
-gerar `{instruction, input, output}` grounded no texto via um LLM professor,
-decontaminar contra ENEM/BLUEX/OAB e os benchmarks internos
+Os diretórios de shards Parquet das fontes 01-07 ainda **não são** dados de
+SFT — são passagens brutas. O passo seguinte (fora do escopo destes
+scripts) é o pipeline de geração de instrução sintética: amostrar passagens
+de qualidade, gerar `{instruction, input, output}` grounded no texto via um
+LLM professor, decontaminar contra ENEM/BLUEX/OAB e os benchmarks internos
 (`bench/`), e registrar manifest com `sha256` por fonte antes de entrar em
-`sft/prepare_data.py`.
+`sft/prepare_data.py`. As fontes de instrução já prontas (`gigaverbo_v2_sft`,
+`tucano_sft`, `quati`, `extraglue`) já entram direto via `--extra`.

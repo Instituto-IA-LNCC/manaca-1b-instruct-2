@@ -1,0 +1,31 @@
+# GigaVerbo-v2 Preferences — 2ª tentativa de DPO
+
+`Polygl0t/gigaverbo-v2-preferences` (Tucano 2, arXiv:2603.03543, Apache
+2.0): ~28,4K pares chosen/rejected em 4 subconjuntos (harmless/harmful ×
+com/sem raciocínio), `chosen` gerado por Qwen2.5-32B-Instruct e `rejected`
+por Qwen2.5-7B-Instruct.
+
+## Por que importa
+
+O DPO on-policy do v1/v2 foi **resultado negativo documentado**
+(`dpo/README-onpolicy.md`, `docs/evaluation/safety-alignment-pt.md`): o
+dataset era pequeno e gerado pelo próprio Manacá, e o prior de obediência
+era forte demais para a margem de treino mudar a geração livre. Este
+dataset é maior, gerado por dois modelos terceiros (não o modelo em
+treino) e focado em harmlessness — dá uma segunda chance ao método, com
+uma característica que faltava (volume + separação clara chosen/rejected).
+
+**Não é garantia de sucesso.** Converter aqui não decide adotar o DPO —
+isso é decidido pela mesma avaliação já usada no projeto (segurança no
+MT-Bench-PT sobe, over-refusal não sobe, IFEval-PT/geral não regride).
+
+## Uso
+
+```bash
+make dpo-gigaverbo-v2-preferences
+```
+
+Saída: `dpo_onpolicy/gigaverbo_v2_preferences/gigaverbo_v2_preferences.jsonl`
+no esquema `{instruction, input, chosen, rejected}` que `dpo/train.py`
+consome (não versionado — `dpo_onpolicy/` está no `.gitignore`, como as
+demais gerações de pares de segurança deste repo).

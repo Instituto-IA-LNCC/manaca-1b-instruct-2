@@ -11,7 +11,7 @@
 # =============================================================================
 SHELL := /bin/bash
 DC := docker compose
-.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all gigaverbo-v2-sft-data
+.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all gigaverbo-v2-sft-data corpus-madlad400 corpus-fineweb2 corpus-hplt2 corpus-portuguese-pd corpus-all-raw tucano-sft-data quati-data dpo-gigaverbo-v2-preferences dpo-reward-aira dpo-preferences-data
 .RECIPEPREFIX := >
 
 help:  ## Lista os alvos
@@ -57,3 +57,40 @@ corpus-all:  ## Roda os 3 scripts de aquisicao em sequencia (LegalPT -> ClassiCC
 
 gigaverbo-v2-sft-data:  ## Converte Polygl0t/gigaverbo-v2-sft (Apache-2.0, ~4M ex.) -> data/sft/gigaverbo_v2_sft (Alpaca)
 > ./scripts/docker/run_posttrain.sh python sft/gigaverbo_v2_sft/build_gigaverbo_v2_sft.py --shuffle $(ARGS)
+
+corpus-madlad400:  ## Aquisicao do MADLAD-400/pt (Apache-2.0, livre do base) -> $WORK_DIR/raw/madlad400
+> ./scripts/docker/run_posttrain.sh python corpus/scripts/04_acquire_madlad400.py $(ARGS)
+
+corpus-fineweb2:  ## Aquisicao do FineWeb-2/por_Latn (ODC-By, livre do base) -> $WORK_DIR/raw/fineweb2
+> ./scripts/docker/run_posttrain.sh python corpus/scripts/05_acquire_fineweb2.py $(ARGS)
+
+corpus-hplt2:  ## Aquisicao do HPLT 2.0/pt (CC0, livre do base) -> $WORK_DIR/raw/hplt2
+> ./scripts/docker/run_posttrain.sh python corpus/scripts/06_acquire_hplt2.py $(ARGS)
+
+corpus-portuguese-pd:  ## Aquisicao do Portuguese-PD (dominio publico, registro historico) -> $WORK_DIR/raw/portuguese_pd
+> ./scripts/docker/run_posttrain.sh python corpus/scripts/07_acquire_portuguese_pd.py $(ARGS)
+
+corpus-all-raw:  ## Roda os 7 scripts de aquisicao bruta em sequencia (01-07)
+> $(MAKE) corpus-legalpt
+> $(MAKE) corpus-classiccpt
+> $(MAKE) corpus-carolina
+> $(MAKE) corpus-madlad400
+> $(MAKE) corpus-fineweb2
+> $(MAKE) corpus-hplt2
+> $(MAKE) corpus-portuguese-pd
+
+tucano-sft-data:  ## Converte TucanoBR/Tucano-SFT (Apache-2.0/MIT) -> data/sft/tucano_sft (Alpaca)
+> ./scripts/docker/run_posttrain.sh python sft/tucano_sft/build_tucano_sft.py --shuffle $(ARGS)
+
+quati-data:  ## Constroi a tarefa de relevancia Quati (CC BY 4.0, nativo) -> data/sft/quati (Alpaca)
+> ./scripts/docker/run_posttrain.sh python sft/quati/build_quati_task.py --shuffle $(ARGS)
+
+dpo-gigaverbo-v2-preferences:  ## Converte Polygl0t/gigaverbo-v2-preferences (Apache-2.0) -> dpo_onpolicy/gigaverbo_v2_preferences
+> ./scripts/docker/run_posttrain.sh python dpo/gigaverbo_v2_preferences/build_gigaverbo_v2_preferences.py $(ARGS)
+
+dpo-reward-aira:  ## Converte nicholasKluge/reward-aira-dataset (Apache-2.0) -> dpo_onpolicy/reward_aira
+> ./scripts/docker/run_posttrain.sh python dpo/reward_aira/build_reward_aira.py $(ARGS)
+
+dpo-preferences-data:  ## Roda os 2 conversores de preferencia (2a tentativa de DPO, ver dpo/README-onpolicy.md)
+> $(MAKE) dpo-gigaverbo-v2-preferences
+> $(MAKE) dpo-reward-aira
