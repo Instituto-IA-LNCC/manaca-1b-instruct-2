@@ -11,7 +11,7 @@
 # =============================================================================
 SHELL := /bin/bash
 DC := docker compose
-.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all gigaverbo-v2-sft-data corpus-madlad400 corpus-fineweb2 corpus-hplt2 corpus-portuguese-pd corpus-all-raw tucano-sft-data quati-data dpo-gigaverbo-v2-preferences dpo-reward-aira dpo-preferences-data synth-run synth-submit synth-collect synth-dry-run
+.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all gigaverbo-v2-sft-data corpus-madlad400 corpus-fineweb2 corpus-hplt2 corpus-portuguese-pd corpus-all-raw tucano-sft-data quati-data dpo-gigaverbo-v2-preferences dpo-reward-aira dpo-preferences-data synth-run synth-submit synth-collect synth-dry-run safety-mine-refusals safety-mine-refusals-audit safety-ambiguous-seeds safety-ambiguous-seeds-stats
 .RECIPEPREFIX := >
 
 help:  ## Lista os alvos
@@ -106,3 +106,15 @@ synth-submit:  ## So submete o(s) lote(s) e sai (nao espera ate 24h) -- ver synt
 
 synth-collect:  ## Busca resultados de um lote ja submetido (make synth-collect ARGS="--state data/synth/X/batch_state.json")
 > ./scripts/docker/run_posttrain.sh python synth/generate_instructions.py collect $(ARGS)
+
+safety-mine-refusals-audit:  ## Amostra p/ auditoria manual do banco de recusas minerado (NADA e gravado)
+> ./scripts/docker/run_posttrain.sh python sft/safety_seeds/mine_refusal_bank.py --sample-audit 15 $(ARGS)
+
+safety-mine-refusals:  ## Minera banco de recusas do gigaverbo-v2-preferences -> sft/safety_seeds/refusal_bank_mined.jsonl (candidato, auditar antes de usar)
+> ./scripts/docker/run_posttrain.sh python sft/safety_seeds/mine_refusal_bank.py $(ARGS)
+
+safety-ambiguous-seeds-stats:  ## So confirma (ToLD-Br/HateBR) quais categorias de odio/bullying tem evidencia real em PT-BR
+> ./scripts/docker/run_posttrain.sh python dpo/dpo_seeds/build_ambiguous_seeds.py --stats-only $(ARGS)
+
+safety-ambiguous-seeds:  ## Gera seeds nocivos de fraseado ambiguo (templates, evidencia-baseados) -> dpo/dpo_seeds/safety_prompts_ambiguous.jsonl
+> ./scripts/docker/run_posttrain.sh python dpo/dpo_seeds/build_ambiguous_seeds.py $(ARGS)

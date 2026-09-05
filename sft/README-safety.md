@@ -75,3 +75,36 @@ BASE=manaca-1b-instruct-v2-full ADAPTER=manaca-1b-instruct-v2-safe \
 Depois, se (a) subiu e (b) ficou estável, rode a utilidade (IFEval-PT offline +
 MT-Bench-PT com juiz) para confirmar que não regrediu. Só então o
 `instruct-v2-safe` vira o instruct oficial.
+
+## 4. Escalando para o instruct-2 — o gap de recall e o caso pró-social
+
+O `safe4` (acima) ficou em 75% de recall de segurança porque o banco de
+recusas é só 8 frases fixas e os 50 seeds nocivos não cobrem fraseado
+AMBÍGUO (bullying, piada humilhante disfarçada). Uma pesquisa (2026)
+confirmou que não existe dataset pronto pra isso em PT-BR — dois scripts
+novos mineram o que dá pra minerar com responsabilidade:
+
+- **`sft/safety_seeds/mine_refusal_bank.py`** — extrai um banco de recusas
+  muito maior e diverso das respostas `chosen` (já seguras, geradas por
+  LLM) do subset harmful do `Polygl0t/gigaverbo-v2-preferences`. Produz um
+  **candidato**, não um banco pronto: rode com `--sample-audit N` primeiro
+  e confira manualmente antes de usar (as categorias de dano desse dataset
+  não são documentadas publicamente).
+- **`dpo/dpo_seeds/build_ambiguous_seeds.py`** — confirma estatisticamente
+  (contagens agregadas, sem reproduzir texto real de ninguém) quais
+  categorias de ódio/bullying de fato ocorrem em PT-BR (via ToLD-Br e
+  HateBR), e gera novos seeds nocivos por TEMPLATE escrito à mão cobrindo
+  fraseado indireto — o gap documentado no recall.
+
+```bash
+python sft/safety_seeds/mine_refusal_bank.py --sample-audit 15   # audite antes
+python sft/safety_seeds/mine_refusal_bank.py                     # grava o candidato
+
+python dpo/dpo_seeds/build_ambiguous_seeds.py --stats-only        # so a evidencia
+python dpo/dpo_seeds/build_ambiguous_seeds.py                     # gera os seeds
+```
+
+O caso pró-social ("ajudar amigo em crise" sendo recusado por engano) é
+diferente — fica do lado `benign_help.jsonl`/geração on-policy, e nenhum
+dataset pronto foi encontrado para ele; a resposta-modelo (com CVV/188)
+precisa ser escrita à mão com revisão, não minerada.
