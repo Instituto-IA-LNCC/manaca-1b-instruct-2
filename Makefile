@@ -11,7 +11,7 @@
 # =============================================================================
 SHELL := /bin/bash
 DC := docker compose
-.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all gigaverbo-v2-sft-data corpus-madlad400 corpus-fineweb2 corpus-hplt2 corpus-portuguese-pd corpus-all-raw tucano-sft-data quati-data dpo-gigaverbo-v2-preferences dpo-reward-aira dpo-preferences-data synth-run synth-submit synth-collect synth-dry-run safety-mine-refusals safety-mine-refusals-audit safety-ambiguous-seeds safety-ambiguous-seeds-stats
+.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all gigaverbo-v2-sft-data corpus-madlad400 corpus-fineweb2 corpus-hplt2 corpus-portuguese-pd corpus-all-raw tucano-sft-data quati-data dpo-gigaverbo-v2-preferences dpo-reward-aira dpo-preferences-data synth-run synth-submit synth-collect synth-dry-run safety-mine-refusals safety-mine-refusals-audit safety-ambiguous-seeds safety-ambiguous-seeds-stats safety-mine-prompts safety-mine-prompts-audit
 .RECIPEPREFIX := >
 
 help:  ## Lista os alvos
@@ -118,3 +118,9 @@ safety-ambiguous-seeds-stats:  ## So confirma (ToLD-Br/HateBR) quais categorias 
 
 safety-ambiguous-seeds:  ## Gera seeds nocivos de fraseado ambiguo (templates, evidencia-baseados) -> dpo/dpo_seeds/safety_prompts_ambiguous.jsonl
 > ./scripts/docker/run_posttrain.sh python dpo/dpo_seeds/build_ambiguous_seeds.py $(ARGS)
+
+safety-mine-prompts-audit:  ## Amostra p/ auditoria manual dos prompts nocivos minerados (NADA e gravado)
+> ./scripts/docker/run_posttrain.sh python dpo/dpo_seeds/mine_harmful_prompts.py --sample-audit 15 $(ARGS)
+
+safety-mine-prompts:  ## Minera prompts nocivos do gigaverbo-v2-preferences (dedup contra os seeds existentes) -> dpo/dpo_seeds/safety_prompts_mined.jsonl
+> ./scripts/docker/run_posttrain.sh python dpo/dpo_seeds/mine_harmful_prompts.py $(ARGS)

@@ -81,12 +81,18 @@ MT-Bench-PT com juiz) para confirmar que não regrediu. Só então o
 O `safe4` (acima) ficou em 75% de recall de segurança porque o banco de
 recusas é só 8 frases fixas e os 50 seeds nocivos não cobrem fraseado
 AMBÍGUO (bullying, piada humilhante disfarçada). Uma pesquisa (2026)
-confirmou que não existe dataset pronto pra isso em PT-BR — dois scripts
+confirmou que não existe dataset pronto pra isso em PT-BR — três scripts
 novos mineram o que dá pra minerar com responsabilidade:
 
-- **`sft/safety_seeds/mine_refusal_bank.py`** — extrai um banco de recusas
-  muito maior e diverso das respostas `chosen` (já seguras, geradas por
-  LLM) do subset harmful do `Polygl0t/gigaverbo-v2-preferences`. Produz um
+- **`dpo/dpo_seeds/mine_harmful_prompts.py`** — extrai os **prompts**
+  (não as respostas) do mesmo subset harmful do
+  `Polygl0t/gigaverbo-v2-preferences`, deduplicado contra os seeds
+  existentes. Escala o pool de 50 para potencialmente centenas. Seguro de
+  reproduzir (texto sintético, não fala de pessoa real) — mas a
+  `categoria` atribuída é heurística; rode com `--sample-audit N` antes.
+- **`sft/safety_seeds/mine_refusal_bank.py`** — o par deste: extrai as
+  respostas `chosen` (já seguras) do mesmo subset harmful, um banco de
+  recusas muito maior e diverso que os 8 templates fixos. Produz um
   **candidato**, não um banco pronto: rode com `--sample-audit N` primeiro
   e confira manualmente antes de usar (as categorias de dano desse dataset
   não são documentadas publicamente).
@@ -97,11 +103,20 @@ novos mineram o que dá pra minerar com responsabilidade:
   fraseado indireto — o gap documentado no recall.
 
 ```bash
-python sft/safety_seeds/mine_refusal_bank.py --sample-audit 15   # audite antes
-python sft/safety_seeds/mine_refusal_bank.py                     # grava o candidato
+python dpo/dpo_seeds/mine_harmful_prompts.py --sample-audit 15    # audite antes
+python dpo/dpo_seeds/mine_harmful_prompts.py                      # grava o candidato
+
+python sft/safety_seeds/mine_refusal_bank.py --sample-audit 15    # audite antes
+python sft/safety_seeds/mine_refusal_bank.py                      # grava o candidato
 
 python dpo/dpo_seeds/build_ambiguous_seeds.py --stats-only        # so a evidencia
 python dpo/dpo_seeds/build_ambiguous_seeds.py                     # gera os seeds
+
+# depois de auditar, juntar tudo:
+cat dpo/dpo_seeds/safety_prompts.jsonl \
+    dpo/dpo_seeds/safety_prompts_ambiguous.jsonl \
+    dpo/dpo_seeds/safety_prompts_mined.jsonl \
+    > dpo/dpo_seeds/safety_prompts_v2.jsonl
 ```
 
 O caso pró-social ("ajudar amigo em crise" sendo recusado por engano) é
