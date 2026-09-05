@@ -42,6 +42,11 @@ RUN if [ -n "${DNS_SERVERS}" ]; then \
         : > /etc/resolv.conf; \
         for ns in ${DNS_SERVERS}; do echo "nameserver ${ns}" >> /etc/resolv.conf; done; \
     fi; \
+    echo "=== DEBUG resolv.conf ==="; cat /etc/resolv.conf; \
+    echo "=== DEBUG nsswitch.conf (hosts line) ==="; grep ^hosts /etc/nsswitch.conf || echo "(sem nsswitch.conf)"; \
+    echo "=== DEBUG getent hosts pypi.org ==="; getent hosts pypi.org || echo "(getent falhou)"; \
+    echo "=== DEBUG python getaddrinfo ==="; python3 -c "import socket; print(socket.getaddrinfo('pypi.org', 443))" || echo "(python getaddrinfo falhou)"; \
+    echo "=== FIM DEBUG ==="; \
     python -m pip install -r /tmp/requirements/posttrain.txt -r /tmp/requirements/corpus.txt
 
 WORKDIR /workspace/manaca
