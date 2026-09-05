@@ -25,9 +25,26 @@ build-posttrain: env  ## Constrói a imagem GPU de SFT (Fase 3)
 # estiver instalado -- sem ele, cai silenciosamente na rede bridge padrao e
 # o pip falha com "Name or service not known". Builda direto com o builder
 # classico (DOCKER_BUILDKIT=0), que suporta --network=host sem buildx.
-> set -a; [ -f .env ] && . ./.env; set +a; \
-> DOCKER_BUILDKIT=0 docker build --network=host \
->   --build-arg BASE_IMAGE="$${GPU_BASE_IMAGE:-nvcr.io/nvidia/pytorch:24.12-py3}" \
+#
+# --network=host sozinho NAO basta se o host usa o stub do systemd-resolved
+# (127.0.0.53 no /etc/resolv.conf): o Docker descarta nameservers loopback
+# ao montar o resolv.conf do container de build, mesmo com rede
+# compartilhada (reproduzido ao vivo). Mesma causa-raiz que
+# scripts/docker/run_posttrain.sh ja contorna p/ `docker run` (resolv.conf
+# customizado montado); `docker build` nao aceita bind-mount, entao usamos
+# `--dns` (so o builder classico aceita essa flag). Override manual:
+#   MANACA_DNS="1.1.1.1 8.8.8.8" make build-posttrain
+#
+# NAO usa `source .env` aqui (um valor com caractere de shell -- ex.: um
+# placeholder tipo "<n>" nao preenchido -- quebraria o build inteiro);
+# le so a linha GPU_BASE_IMAGE com grep, com o mesmo default do .env.example.
+> GPU_BASE_IMAGE="$$(grep -m1 '^GPU_BASE_IMAGE=' .env 2>/dev/null | cut -d= -f2-)"; \
+> GPU_BASE_IMAGE="$${GPU_BASE_IMAGE:-nvcr.io/nvidia/pytorch:24.12-py3}"; \
+> DNS_LIST="$${MANACA_DNS:-$$(resolvectl dns 2>/dev/null | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}|([0-9A-Fa-f]{1,4}:){2,}[0-9A-Fa-f:]*' | grep -vE '^(127\.|::1$$)' | sort -u)}"; \
+> DNS_ARGS=""; for ns in $$DNS_LIST; do DNS_ARGS="$$DNS_ARGS --dns $$ns"; done; \
+> echo "[build-posttrain] BASE_IMAGE=$$GPU_BASE_IMAGE DNS=$${DNS_LIST:-'(nenhum detectado -- build pode falhar por DNS)'}"; \
+> DOCKER_BUILDKIT=0 docker build --network=host $$DNS_ARGS \
+>   --build-arg BASE_IMAGE="$$GPU_BASE_IMAGE" \
 >   -f docker/Dockerfile.posttrain -t manaca-posttrain:latest .
 
 sft-data:  ## Dados de SFT v1 (manaca-jaster + alpaca + oasst) -> data/sft
