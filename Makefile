@@ -31,8 +31,11 @@ build-posttrain: env  ## Constrói a imagem GPU de SFT (Fase 3)
 # ao montar o resolv.conf do container de build, mesmo com rede
 # compartilhada (reproduzido ao vivo). Mesma causa-raiz que
 # scripts/docker/run_posttrain.sh ja contorna p/ `docker run` (resolv.conf
-# customizado montado); `docker build` nao aceita bind-mount, entao usamos
-# `--dns` (so o builder classico aceita essa flag). Override manual:
+# customizado montado); mas `docker build` NEM aceita bind-mount NEM
+# `--dns` (builder classico deste Docker nao tem essa flag -- confirmado
+# ao vivo: "unknown flag: --dns"). Solucao: passa os IPs como build-arg
+# p/ o Dockerfile sobrescrever /etc/resolv.conf DENTRO do proprio RUN que
+# precisa de rede (ver docker/Dockerfile.posttrain). Override manual:
 #   MANACA_DNS="1.1.1.1 8.8.8.8" make build-posttrain
 #
 # NAO usa `source .env` aqui (um valor com caractere de shell -- ex.: um
@@ -41,10 +44,10 @@ build-posttrain: env  ## Constrói a imagem GPU de SFT (Fase 3)
 > GPU_BASE_IMAGE="$$(grep -m1 '^GPU_BASE_IMAGE=' .env 2>/dev/null | cut -d= -f2-)"; \
 > GPU_BASE_IMAGE="$${GPU_BASE_IMAGE:-nvcr.io/nvidia/pytorch:24.12-py3}"; \
 > DNS_LIST="$${MANACA_DNS:-$$(resolvectl dns 2>/dev/null | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}|([0-9A-Fa-f]{1,4}:){2,}[0-9A-Fa-f:]*' | grep -vE '^(127\.|::1$$)' | sort -u)}"; \
-> DNS_ARGS=""; for ns in $$DNS_LIST; do DNS_ARGS="$$DNS_ARGS --dns $$ns"; done; \
 > echo "[build-posttrain] BASE_IMAGE=$$GPU_BASE_IMAGE DNS=$${DNS_LIST:-'(nenhum detectado -- build pode falhar por DNS)'}"; \
-> DOCKER_BUILDKIT=0 docker build --network=host $$DNS_ARGS \
+> DOCKER_BUILDKIT=0 docker build --network=host \
 >   --build-arg BASE_IMAGE="$$GPU_BASE_IMAGE" \
+>   --build-arg DNS_SERVERS="$$DNS_LIST" \
 >   -f docker/Dockerfile.posttrain -t manaca-posttrain:latest .
 
 sft-data:  ## Dados de SFT v1 (manaca-jaster + alpaca + oasst) -> data/sft

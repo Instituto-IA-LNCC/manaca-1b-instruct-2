@@ -8,6 +8,18 @@
 ARG BASE_IMAGE=nvcr.io/nvidia/pytorch:24.12-py3
 FROM ${BASE_IMAGE}
 
+# DNS_SERVERS (lista separada por espaco, ex.: "1.1.1.1 8.8.8.8"): alguns
+# hosts (ex.: systemd-resolved com stub 127.0.0.53 no /etc/resolv.conf) nao
+# tem esse endereco alcancavel de dentro do container mesmo com
+# --network=host no build, e `docker build` nao aceita --dns como
+# `docker run` aceita. Sobrescrevemos /etc/resolv.conf DENTRO do mesmo RUN
+# que precisa de rede (Docker remonta esse arquivo a cada novo container/
+# step, entao so persiste assim). Passe via:
+#   docker build --build-arg DNS_SERVERS="$(resolvectl dns | ...)" ...
+# (ja automatizado em `make build-posttrain`). Vazio = usa o resolv.conf
+# padrao do container, sem alteracao.
+ARG DNS_SERVERS=""
+
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -17,12 +29,20 @@ ENV DEBIAN_FRONTEND=noninteractive \
     TOKENIZERS_PARALLELISM=false \
     NCCL_DEBUG=WARN
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN if [ -n "${DNS_SERVERS}" ]; then \
+        : > /etc/resolv.conf; \
+        for ns in ${DNS_SERVERS}; do echo "nameserver ${ns}" >> /etc/resolv.conf; done; \
+    fi; \
+    apt-get update && apt-get install -y --no-install-recommends \
         git curl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements/posttrain.txt requirements/corpus.txt /tmp/requirements/
-RUN python -m pip install -r /tmp/requirements/posttrain.txt -r /tmp/requirements/corpus.txt
+RUN if [ -n "${DNS_SERVERS}" ]; then \
+        : > /etc/resolv.conf; \
+        for ns in ${DNS_SERVERS}; do echo "nameserver ${ns}" >> /etc/resolv.conf; done; \
+    fi; \
+    python -m pip install -r /tmp/requirements/posttrain.txt -r /tmp/requirements/corpus.txt
 
 WORKDIR /workspace/manaca
 
