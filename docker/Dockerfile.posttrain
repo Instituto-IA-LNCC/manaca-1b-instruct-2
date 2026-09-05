@@ -18,6 +18,17 @@ FROM ${BASE_IMAGE}
 #   docker build --build-arg DNS_SERVERS="$(resolvectl dns | ...)" ...
 # (ja automatizado em `make build-posttrain`). Vazio = usa o resolv.conf
 # padrao do container, sem alteracao.
+#
+# `options single-request-reopen` E OBRIGATORIO, nao cosmetico: o glibc
+# resolve A/AAAA em paralelo por UDP, e em alguns clusters (HPC LNCC/Netuno
+# incluso) esse par de consultas as vezes perde pacote -- getaddrinfo()
+# funciona uma chamada e falha na proxima PRO MESMO host (exatamente o
+# sintoma visto: `python3 -c "socket.getaddrinfo('pypi.org', ...)"` ok, e o
+# pip, segundos depois, "Name or service not known" pro mesmo pypi.org).
+# Mesma causa-raiz e mesma correcao ja usadas em scripts/docker/run_sft.sh
+# e run_posttrain.sh (repo manaca-1b-instruct) para os containers de
+# `docker run`; aqui replicamos pro `docker build`, que nao aceita bind-
+# mount de resolv.conf.
 ARG DNS_SERVERS=""
 
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -32,22 +43,29 @@ ENV DEBIAN_FRONTEND=noninteractive \
 RUN if [ -n "${DNS_SERVERS}" ]; then \
         : > /etc/resolv.conf; \
         for ns in ${DNS_SERVERS}; do echo "nameserver ${ns}" >> /etc/resolv.conf; done; \
+        echo "nameserver 127.0.0.53" >> /etc/resolv.conf; \
+        echo "options single-request-reopen timeout:2 attempts:5" >> /etc/resolv.conf; \
     fi; \
     apt-get update && apt-get install -y --no-install-recommends \
         git curl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements/posttrain.txt requirements/corpus.txt /tmp/requirements/
+# A imagem base NGC ja aponta um indice pip extra (pypi.ngc.nvidia.com) que
+# so tem registro AAAA neste cluster e trava o pip mesmo com o resto do DNS
+# corrigido -- mesmo problema e mesma correcao documentados em
+# scripts/eval/build_lmeval_image.sh: remove qualquer pip.conf que aponte
+# pra ele e zera PIP_INDEX_URL/PIP_EXTRA_INDEX_URL so para este install.
 RUN if [ -n "${DNS_SERVERS}" ]; then \
         : > /etc/resolv.conf; \
         for ns in ${DNS_SERVERS}; do echo "nameserver ${ns}" >> /etc/resolv.conf; done; \
+        echo "nameserver 127.0.0.53" >> /etc/resolv.conf; \
+        echo "options single-request-reopen timeout:2 attempts:5" >> /etc/resolv.conf; \
     fi; \
-    echo "=== DEBUG resolv.conf ==="; cat /etc/resolv.conf; \
-    echo "=== DEBUG nsswitch.conf (hosts line) ==="; grep ^hosts /etc/nsswitch.conf || echo "(sem nsswitch.conf)"; \
-    echo "=== DEBUG getent hosts pypi.org ==="; getent hosts pypi.org || echo "(getent falhou)"; \
-    echo "=== DEBUG python getaddrinfo ==="; python3 -c "import socket; print(socket.getaddrinfo('pypi.org', 443))" || echo "(python getaddrinfo falhou)"; \
-    echo "=== FIM DEBUG ==="; \
-    python -m pip install -r /tmp/requirements/posttrain.txt -r /tmp/requirements/corpus.txt
+    find /etc /root /usr -maxdepth 4 -name 'pip.conf' -not -path '*/site-packages/*' -delete 2>/dev/null || true; \
+    PIP_INDEX_URL= PIP_EXTRA_INDEX_URL= python -m pip install --index-url https://pypi.org/simple \
+        --retries 20 --timeout 120 \
+        -r /tmp/requirements/posttrain.txt -r /tmp/requirements/corpus.txt
 
 WORKDIR /workspace/manaca
 
