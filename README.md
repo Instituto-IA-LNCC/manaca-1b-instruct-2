@@ -207,6 +207,10 @@ Já disponível neste repositório (o que funcionou e valeu, sem tentativas falh
   extração do [`manaca/corpus/`](https://github.com/brunoleomenezes/manaca/tree/main/corpus):
   [`corpus/README.md`](corpus/README.md) · scripts em [`corpus/scripts/`](corpus/scripts/)
   (inclui a tabela completa de fontes avaliadas e excluídas, com motivo).
+- **Geração de instrução sintética (instruct-2)** — transforma as passagens
+  brutas acima em `{instruction, input, output}` via Claude (Anthropic
+  Batches API), grounded no texto, com decontaminação e manifest de custo:
+  [`synth/README.md`](synth/README.md) · [`synth/generate_instructions.py`](synth/generate_instructions.py).
 - **Fontes de instrução já prontas (instruct-2)** — GigaVerbo-v2 SFT, Tucano-SFT,
   Quati e ExtraGLUE, todas de licença aberta e sem geração sintética necessária:
   [`sft/gigaverbo_v2_sft/README.md`](sft/gigaverbo_v2_sft/README.md) ·

@@ -11,7 +11,7 @@
 # =============================================================================
 SHELL := /bin/bash
 DC := docker compose
-.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all gigaverbo-v2-sft-data corpus-madlad400 corpus-fineweb2 corpus-hplt2 corpus-portuguese-pd corpus-all-raw tucano-sft-data quati-data dpo-gigaverbo-v2-preferences dpo-reward-aira dpo-preferences-data
+.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all gigaverbo-v2-sft-data corpus-madlad400 corpus-fineweb2 corpus-hplt2 corpus-portuguese-pd corpus-all-raw tucano-sft-data quati-data dpo-gigaverbo-v2-preferences dpo-reward-aira dpo-preferences-data synth-run synth-submit synth-collect synth-dry-run
 .RECIPEPREFIX := >
 
 help:  ## Lista os alvos
@@ -94,3 +94,15 @@ dpo-reward-aira:  ## Converte nicholasKluge/reward-aira-dataset (Apache-2.0) -> 
 dpo-preferences-data:  ## Roda os 2 conversores de preferencia (2a tentativa de DPO, ver dpo/README-onpolicy.md)
 > $(MAKE) dpo-gigaverbo-v2-preferences
 > $(MAKE) dpo-reward-aira
+
+synth-dry-run:  ## Mostra os prompts de geracao sintetica sem gastar (make synth-dry-run ARGS="--source X --max-examples 5")
+> ./scripts/docker/run_posttrain.sh python synth/generate_instructions.py run --dry-run $(ARGS)
+
+synth-run:  ## Gera instrucao sintetica via Batches API: submete+espera+coleta (make synth-run ARGS="--source X --max-examples N")
+> ./scripts/docker/run_posttrain.sh python synth/generate_instructions.py run $(ARGS)
+
+synth-submit:  ## So submete o(s) lote(s) e sai (nao espera ate 24h) -- ver synth/README.md
+> ./scripts/docker/run_posttrain.sh python synth/generate_instructions.py submit $(ARGS)
+
+synth-collect:  ## Busca resultados de um lote ja submetido (make synth-collect ARGS="--state data/synth/X/batch_state.json")
+> ./scripts/docker/run_posttrain.sh python synth/generate_instructions.py collect $(ARGS)

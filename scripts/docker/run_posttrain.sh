@@ -59,6 +59,7 @@ exec docker run --rm --network host --ipc host \
   -e WORK_DIR=/workspace/manaca-corpus \
   -e HF_HOME=/workspace/hf-cache \
   -e HF_TOKEN="${HF_TOKEN:-}" \
+  -e ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}" \
   -e PIP_CONFIG_FILE=/dev/null \
   -v "${REPO_ROOT}":/workspace/manaca \
   -v "${DATA_DIR}":/workspace/manaca-corpus \

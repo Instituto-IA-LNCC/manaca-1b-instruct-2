@@ -116,13 +116,20 @@ interrupção) e grava metadados em manifest JSON (por shard/fonte no caso
 dos scripts de `corpus/`, ou `manifest.json` por diretório no caso dos
 builders de `sft/`/`dpo/`).
 
-## Próximo passo
+## Próximo passo — geração de instrução sintética
 
 Os diretórios de shards Parquet das fontes 01-07 ainda **não são** dados de
-SFT — são passagens brutas. O passo seguinte (fora do escopo destes
-scripts) é o pipeline de geração de instrução sintética: amostrar passagens
-de qualidade, gerar `{instruction, input, output}` grounded no texto via um
-LLM professor, decontaminar contra ENEM/BLUEX/OAB e os benchmarks internos
-(`bench/`), e registrar manifest com `sha256` por fonte antes de entrar em
-`sft/prepare_data.py`. As fontes de instrução já prontas (`gigaverbo_v2_sft`,
-`tucano_sft`, `quati`, `extraglue`) já entram direto via `--extra`.
+SFT — são passagens brutas. O pipeline que as transforma em
+`{instruction, input, output}` (grounded no texto, via Claude/Anthropic
+Batches API, com decontaminação e manifest de custo) já existe:
+[`../synth/README.md`](../synth/README.md) ·
+[`../synth/generate_instructions.py`](../synth/generate_instructions.py).
+
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...
+make synth-run ARGS="--source legalpt --max-examples 2000"
+```
+
+As fontes de instrução já prontas (`gigaverbo_v2_sft`, `tucano_sft`,
+`quati`, `extraglue`) não passam por este pipeline — já entram direto via
+`--extra` no `sft/prepare_data.py`.

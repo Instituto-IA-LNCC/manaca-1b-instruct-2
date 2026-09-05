@@ -19,3 +19,9 @@ loguru==0.7.2
 rich==13.9.4
 tqdm==4.66.5
 huggingface_hub==0.26.2
+
+# synth/generate_instructions.py (geracao de instrucao sintetica via Batches
+# API). Sem pin exato de patch (ao contrario do resto desta lista): a versao
+# atual mais recente do SDK 1.x nao foi confirmada no momento da escrita;
+# >=1.0.0 evita a API antiga (0.x, pre-httpx2) sem fixar um numero adivinhado.
+anthropic>=1.0.0
