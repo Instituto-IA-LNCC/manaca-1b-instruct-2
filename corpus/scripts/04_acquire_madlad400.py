@@ -183,15 +183,21 @@ def acquire(max_docs: int) -> dict[str, Any]:
     manifest = load_manifest()
 
     existing = get_existing_shards(OUTPUT_DIR)
-    docs_to_skip = len(existing) * SHARD_SIZE if existing else 0
     next_shard = (max(existing) + 1) if existing else 0
+    # BUG corrigido (mesma causa em todos os corpus/scripts/0X_acquire_*.py):
+    # `len(existing) * SHARD_SIZE` so aproxima a posicao real no stream bruto
+    # se a retencao for ~100%; com filtro de qualidade ela nao e. Usa o
+    # `total_seen` real gravado no manifest da execucao anterior.
+    prev = manifest.get("sources", {}).get(SOURCE_NAME, {})
+    docs_to_skip = prev.get("total_seen", 0)
 
     logger.info("=" * 60)
     logger.info(f"Fonte: {SOURCE_NAME}  |  Repo: {HF_REPO_ID} (config={HF_CONFIG})")
     logger.info(f"Teto de docs: {'sem limite' if max_docs <= 0 else f'{max_docs:,}'}")
     logger.info(f"Licenca: {LICENSE}  |  Ref: {REFERENCE}")
     if docs_to_skip:
-        logger.info(f"Retomando: {len(existing)} shards existentes (~{docs_to_skip:,} docs)")
+        logger.info(f"Retomando: {len(existing)} shards existentes | {prev.get('total_kept', 0):,} docs "
+                     f"mantidos | pulando os primeiros {docs_to_skip:,} docs do stream bruto")
     logger.info("=" * 60)
 
     try:
@@ -205,15 +211,22 @@ def acquire(max_docs: int) -> dict[str, Any]:
     id_col = next((c for c in ["id", "url", "doc_id"] if c in first), None)
     logger.info(f"Coluna texto: '{text_col}'  |  ID: '{id_col or 'gerado'}'  |  Campos: {list(first.keys())}")
 
-    buffer, shard_id, total_seen, kept, skipped, total_chars = [], next_shard, 0, 0, 0, 0
+    buffer, shard_id = [], next_shard
+    total_seen  = prev.get("total_seen", 0)
+    kept        = prev.get("total_kept", 0)
+    skipped     = prev.get("total_skip", prev.get("total_skipped", 0))
+    total_chars = prev.get("total_chars", 0)
+    stream_pos = 0
     t_start = time.time()
     for item in tqdm(dataset, desc="MADLAD-400/pt", unit="doc", mininterval=15, file=sys.stderr):
-        total_seen += 1
-        if total_seen <= docs_to_skip:
+        stream_pos += 1
+        if stream_pos <= docs_to_skip:
             continue
+        # cap ANTES de contar (evita off-by-one -- ver 01_acquire_legalpt.py)
         if max_docs > 0 and kept >= max_docs:
             logger.info(f"Teto de {max_docs:,} docs atingido — parando.")
             break
+        total_seen += 1
         text = str(item.get(text_col, "")).strip()
         if not passes_filter(text):
             skipped += 1
@@ -232,7 +245,7 @@ def acquire(max_docs: int) -> dict[str, Any]:
             manifest["sources"][SOURCE_NAME] = {
                 "status": "in_progress", "hf_repo": HF_REPO_ID, "license": LICENSE,
                 "total_seen": total_seen, "total_kept": kept, "total_skip": skipped,
-                "shards_written": shard_id + 1,
+                "total_chars": total_chars, "shards_written": shard_id + 1,
                 "estimated_tokens_b": round(total_chars / 4 / 1e9, 3),
                 "updated_at": datetime.now(timezone.utc).isoformat(),
             }
@@ -250,6 +263,7 @@ def acquire(max_docs: int) -> dict[str, Any]:
         "status": "completed" if not (max_docs > 0 and kept >= max_docs) else "capped_by_max_docs",
         "hf_repo": HF_REPO_ID, "license": LICENSE, "reference": REFERENCE,
         "total_seen": total_seen, "total_kept": kept, "total_skipped": skipped,
+        "total_chars": total_chars,
         "retention_rate": round(kept / max(total_seen, 1), 4), "shards_written": shard_id + 1,
         "total_bytes": total_bytes, "total_gb": round(total_bytes / 1e9, 3),
         "estimated_tokens": est_tokens, "estimated_tokens_b": round(est_tokens / 1e9, 3),

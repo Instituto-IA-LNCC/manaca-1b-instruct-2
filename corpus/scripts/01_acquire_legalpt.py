@@ -338,6 +338,14 @@ def acquire(max_docs: int) -> dict[str, Any]:
     shard_id   = (max(existing) + 1) if existing else 0
     completed  = get_completed_configs(manifest)
 
+    # Estado acumulado de execuções anteriores (BUG corrigido: sem isto, o teto
+    # --max-docs e os totais finais ficavam incorretos ao retomar -- `kept`
+    # reiniciava em 0 a cada execução, entao configs ja concluidas nao contavam
+    # pro teto nem para config_distribution/total_seen/total_skipped no
+    # manifest final. Reproduzido ao vivo: apos LegalPT atingir o teto de
+    # 300k com 2 configs, uma nova execução ignorava o teto e baixava mais).
+    prev = manifest.get("sources", {}).get(SOURCE_NAME, {})
+
     logger.info("=" * 60)
     logger.info(f"Fonte:            {SOURCE_NAME}")
     logger.info(f"Repositorio:      {HF_REPO_ID}")
@@ -347,15 +355,16 @@ def acquire(max_docs: int) -> dict[str, Any]:
     logger.info(f"Referencia:       {REFERENCE}")
     logger.info(f"Output:           {OUTPUT_DIR}")
     if existing:
-        logger.info(f"Retomando: {len(existing)} shards existentes, {len(completed)} configs concluidas")
+        logger.info(f"Retomando: {len(existing)} shards existentes, {len(completed)} configs concluidas "
+                     f"({prev.get('total_kept', 0):,} docs ja contabilizados)")
     logger.info("=" * 60)
 
     buffer: list[dict] = []
-    total_seen  = 0
-    kept        = 0
-    skipped     = 0
-    total_chars = 0
-    config_counts: dict[str, int] = {}
+    total_seen  = prev.get("total_seen", 0)
+    kept        = prev.get("total_kept", 0)
+    skipped     = prev.get("total_skip", 0)
+    total_chars = prev.get("total_chars", 0)
+    config_counts: dict[str, int] = dict(prev.get("config_distribution", {}))
     t_start = time.time()
 
     for config in ALL_CONFIGS:
@@ -384,9 +393,12 @@ def acquire(max_docs: int) -> dict[str, Any]:
 
         config_kept = 0
         for item in tqdm(dataset, desc=f"legalpt/{config}", unit="doc", mininterval=15, file=sys.stderr):
-            total_seen += 1
+            # cap ANTES de contar (evita off-by-one: sem isto, total_seen conta
+            # +1 item que nunca chega a ser processado a cada vez que o teto ja
+            # foi atingido, inflando o contador a cada nova execucao/retomada).
             if max_docs > 0 and kept >= max_docs:
                 break
+            total_seen += 1
 
             raw_text = item.get(text_col, "")
             text = clean_legal_text(raw_text if isinstance(raw_text, str) else "")
@@ -419,8 +431,10 @@ def acquire(max_docs: int) -> dict[str, Any]:
                     "status": "in_progress", "hf_repo": HF_REPO_ID,
                     "excluded_configs": sorted(EXCLUDED_CONFIGS),
                     "total_seen": total_seen, "total_kept": kept, "total_skip": skipped,
+                    "total_chars": total_chars,
                     "shards_written": shard_id + 1,
                     "completed_configs": sorted(completed),
+                    "config_distribution": config_counts,
                     "estimated_tokens_b": round(total_chars / 4 / 1e9, 3),
                     "updated_at": datetime.now(timezone.utc).isoformat(),
                 }
@@ -452,7 +466,8 @@ def acquire(max_docs: int) -> dict[str, Any]:
         "status": "completed" if not (max_docs > 0 and kept >= max_docs) else "capped_by_max_docs",
         "hf_repo": HF_REPO_ID, "excluded_configs": sorted(EXCLUDED_CONFIGS),
         "reference": REFERENCE, "total_seen": total_seen, "total_kept": kept,
-        "total_skipped": skipped, "retention_rate": round(kept / max(total_seen, 1), 4),
+        "total_skipped": skipped, "total_chars": total_chars,
+        "retention_rate": round(kept / max(total_seen, 1), 4),
         "shards_written": shard_id + 1, "total_bytes": total_bytes,
         "total_gb": round(total_bytes / 1e9, 3), "estimated_tokens": est_tokens,
         "estimated_tokens_b": round(est_tokens / 1e9, 3), "elapsed_hours": round(elapsed / 3600, 2),

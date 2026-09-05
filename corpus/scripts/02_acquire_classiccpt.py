@@ -266,8 +266,18 @@ def acquire(max_docs: int, min_edu: float, max_toxic: float) -> dict[str, Any]:
     manifest = load_manifest()
 
     existing     = get_existing_shards(OUTPUT_DIR)
-    docs_to_skip = len(existing) * SHARD_SIZE if existing else 0
     next_shard   = (max(existing) + 1) if existing else 0
+
+    # BUG corrigido: `docs_to_skip` NAO pode ser `shards_existentes * SHARD_SIZE`
+    # -- isso assume 1 shard = SHARD_SIZE posicoes no stream bruto, o que so
+    # vale com 100% de retencao. Aqui a retencao real e ~7% (a maioria e
+    # descartada por filtro de qualidade/classificador), entao o stream bruto
+    # ja consumido e MUITO maior que `shards*SHARD_SIZE` -- usar essa
+    # estimativa reabriria o stream do zero e reprocessaria/duplicaria quase
+    # todo o corpus ja salvo. Usa o `total_seen` real do manifest (posicao
+    # exata onde a execucao anterior parou).
+    prev         = manifest.get("sources", {}).get(SOURCE_NAME, {})
+    docs_to_skip = prev.get("total_seen", 0)
 
     logger.info("=" * 60)
     logger.info(f"Fonte:        {SOURCE_NAME}")
@@ -278,7 +288,9 @@ def acquire(max_docs: int, min_edu: float, max_toxic: float) -> dict[str, Any]:
     logger.info(f"Referencia:   {REFERENCE}")
     logger.info(f"Output:       {OUTPUT_DIR}")
     if docs_to_skip:
-        logger.info(f"Retomando: {len(existing)} shards existentes (~{docs_to_skip:,} docs ja salvos)")
+        logger.info(f"Retomando: {len(existing)} shards existentes | "
+                    f"{prev.get('total_kept', 0):,} docs mantidos | "
+                    f"pulando os primeiros {docs_to_skip:,} docs do stream bruto")
     logger.info("=" * 60)
 
     logger.info(f"Conectando ao HuggingFace: {HF_REPO_ID} ...")
@@ -295,20 +307,27 @@ def acquire(max_docs: int, min_edu: float, max_toxic: float) -> dict[str, Any]:
     logger.info(f"Campos disponiveis: {list(first.keys())}")
 
     buffer: list[dict] = []
-    shard_id, total_seen, kept, skip_qual, skip_clf = next_shard, 0, 0, 0, 0
-    total_chars = 0
+    shard_id = next_shard
+    total_seen  = prev.get("total_seen", 0)
+    kept        = prev.get("total_kept", 0)
+    skip_qual   = prev.get("skip_quality", 0)
+    skip_clf    = prev.get("skip_classifier", 0)
+    total_chars = prev.get("total_chars", 0)
+    stream_pos = 0
     edu_scores: list[float] = []
     toxic_scores: list[float] = []
     warned = [False]
     t_start = time.time()
 
     for item in tqdm(dataset, desc="ClassiCC-PT", unit="doc", mininterval=15, file=sys.stderr):
-        total_seen += 1
-        if total_seen <= docs_to_skip:
+        stream_pos += 1
+        if stream_pos <= docs_to_skip:
             continue
+        # cap ANTES de contar (evita off-by-one -- ver 01_acquire_legalpt.py)
         if max_docs > 0 and kept >= max_docs:
             logger.info(f"Teto de {max_docs:,} docs atingido — parando.")
             break
+        total_seen += 1
 
         if not passes_classifier_filter(item, min_edu, max_toxic, warned):
             skip_clf += 1
@@ -344,6 +363,7 @@ def acquire(max_docs: int, min_edu: float, max_toxic: float) -> dict[str, Any]:
                 "status": "in_progress", "hf_repo": HF_REPO_ID, "license": LICENSE,
                 "total_seen": total_seen, "total_kept": kept,
                 "skip_quality": skip_qual, "skip_classifier": skip_clf,
+                "total_chars": total_chars,
                 "shards_written": shard_id + 1,
                 "estimated_tokens_b": round(total_chars / 4 / 1e9, 3),
                 "updated_at": datetime.now(timezone.utc).isoformat(),
@@ -391,7 +411,7 @@ def acquire(max_docs: int, min_edu: float, max_toxic: float) -> dict[str, Any]:
     final: dict[str, Any] = {
         "status": "completed" if not (max_docs > 0 and kept >= max_docs) else "capped_by_max_docs",
         "hf_repo": HF_REPO_ID, "license": LICENSE, "reference": REFERENCE,
-        "total_seen": total_seen, "total_kept": kept,
+        "total_seen": total_seen, "total_kept": kept, "total_chars": total_chars,
         "total_skipped": skip_qual + skip_clf,
         "skip_quality": skip_qual, "skip_classifier": skip_clf,
         "retention_rate": round(kept / max(total_seen, 1), 4),
