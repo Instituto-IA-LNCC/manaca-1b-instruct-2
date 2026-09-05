@@ -10,7 +10,6 @@
 #   make sft ARGS="..."     # SFT v1    |  make sft-v2       -> SFT v2
 # =============================================================================
 SHELL := /bin/bash
-DC := docker compose
 .PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all gigaverbo-v2-sft-data corpus-madlad400 corpus-fineweb2 corpus-hplt2 corpus-portuguese-pd corpus-all-raw tucano-sft-data quati-data dpo-gigaverbo-v2-preferences dpo-reward-aira dpo-preferences-data synth-run synth-submit synth-collect synth-dry-run safety-mine-refusals safety-mine-refusals-audit safety-ambiguous-seeds safety-ambiguous-seeds-stats safety-mine-prompts safety-mine-prompts-audit safety-generate-benign safety-generate-benign-dry-run safety-generate-harmful safety-generate-harmful-dry-run safety-generate-harmful-audit safety-project-size
 .RECIPEPREFIX := >
 
@@ -21,7 +20,15 @@ env:  ## Cria .env a partir do exemplo, se faltar
 > @[ -f .env ] || { cp .env.example .env && echo "[env] .env criado a partir de .env.example — ajuste os caminhos"; }
 
 build-posttrain: env  ## Constrói a imagem GPU de SFT (Fase 3)
-> $(DC) build posttrain
+# `docker compose build` só respeita o `network: host` do docker-compose.yml
+# (necessário p/ o pip resolver DNS durante o build) se o plugin `buildx`
+# estiver instalado -- sem ele, cai silenciosamente na rede bridge padrao e
+# o pip falha com "Name or service not known". Builda direto com o builder
+# classico (DOCKER_BUILDKIT=0), que suporta --network=host sem buildx.
+> set -a; [ -f .env ] && . ./.env; set +a; \
+> DOCKER_BUILDKIT=0 docker build --network=host \
+>   --build-arg BASE_IMAGE="$${GPU_BASE_IMAGE:-nvcr.io/nvidia/pytorch:24.12-py3}" \
+>   -f docker/Dockerfile.posttrain -t manaca-posttrain:latest .
 
 sft-data:  ## Dados de SFT v1 (manaca-jaster + alpaca + oasst) -> data/sft
 > ./scripts/docker/run_posttrain.sh bash -lc 'python sft/jaster/build_jaster.py --tasks default --out data/sft/jaster --shuffle && python sft/prepare_data.py --sources alpaca,oasst --out data/sft --shuffle --dedup --extra data/sft/jaster/manaca_jaster.jsonl'
