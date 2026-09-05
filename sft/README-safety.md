@@ -187,3 +187,66 @@ original: `{id, tipo, prompt}`, IDs continuando de `bh_056`) +
 `benign_help_generated_manifest.json` com contagem por categoria, tokens
 gasto e custo estimado (chamadas síncronas, sem desconto de Batches —
 volume pequeno o suficiente para não justificar a API de lotes).
+
+## 7. Meta explícita: ~2.000 exemplos (acima do AnswerCarefully v2)
+
+Decisão: em vez de "mais que 411", a meta agora é **~2.000** exemplos de
+safety-SFT — acima até do AnswerCarefully v2 do LLM-jp (1.800). O lado
+AJUDA já tinha `generate_benign_prompts.py` (§6); faltava o par do lado
+RECUSA: **`dpo/dpo_seeds/generate_harmful_prompts.py`** gera novos
+**pedidos** nocivos via API Claude (nunca as respostas — a resposta
+continua sendo um dos templates fixos de `gen_safety_sft.py`), mesma
+prática usada por datasets públicos de segurança (AnswerCarefully,
+do-not-answer, HarmBench: um LLM gera as PERGUNTAS de red-team, não as
+respostas nocivas). Reaproveita as 14 categorias já usadas em
+`safety_prompts.jsonl`, **exceto** `autolesao` e `sexual` — essas duas
+continuam exigindo tratamento manual revisado (mesmo cuidado já dado à
+categoria "ajudar_em_crise" em §5), não geração em lote.
+
+**A conta** (receita "safe4": `K_REFUSE=4`, `N_GENERAL=200`):
+
+| Componente | Hoje (hand-written) | Alvo |
+|---|---|---|
+| seeds nocivos (recusa) | 50 → recusa=200 | ~400 → recusa≈1.600 |
+| benign-help (ajuda) | 55 | ~255 |
+| dados gerais | 200 | 200 |
+| **TOTAL** | **455** (medido: 411) | **≈2.055** |
+
+```bash
+# audita antes de gravar (recomendado, mesmo nao sendo obrigatorio p/ este script)
+make safety-generate-harmful-audit
+
+# gera o candidato (default: 14 categorias x ate 30 pedidos/categoria)
+make safety-generate-harmful
+
+# confirma o progresso a qualquer momento, sem GPU e sem gastar API
+# (so soma os arquivos de seeds/benign que ja existem no disco)
+make safety-project-size
+```
+
+`safety-project-size` (`sft/safety_seeds/project_safety_sft_size.py`)
+aplica a mesma fórmula do `gen_safety_sft.py` para projetar o total a
+partir do que já está no disco — inclui os candidatos ainda não
+auditados por padrão (avisa quais são) e aceita `--k_refuse`/`--n_general`
+para simular a receita desejada.
+
+Depois de auditar (`--sample-audit`) e aprovar os candidatos de
+`generate_harmful_prompts.py` e `mine_harmful_prompts.py`, junte tudo:
+
+```bash
+cat dpo/dpo_seeds/safety_prompts.jsonl \
+    dpo/dpo_seeds/safety_prompts_ambiguous.jsonl \
+    dpo/dpo_seeds/safety_prompts_mined.jsonl \
+    dpo/dpo_seeds/safety_prompts_generated.jsonl \
+    > dpo/dpo_seeds/safety_prompts_v2.jsonl
+
+cat sft/safety_seeds/benign_help.jsonl \
+    sft/safety_seeds/benign_help_generated.jsonl \
+    > sft/safety_seeds/benign_help_v2.jsonl
+
+python sft/gen_safety_sft.py --out sft_safety/safety_sft_v2.jsonl \
+    --seeds dpo/dpo_seeds/safety_prompts_v2.jsonl \
+    --benign sft/safety_seeds/benign_help_v2.jsonl \
+    --k_refuse 4 --general_data data/sft_v2/manaca_sft.jsonl --n_general 200 \
+    --model <checkpoint-do-sft-v2>
+```

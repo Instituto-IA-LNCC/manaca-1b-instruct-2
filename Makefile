@@ -11,7 +11,7 @@
 # =============================================================================
 SHELL := /bin/bash
 DC := docker compose
-.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all gigaverbo-v2-sft-data corpus-madlad400 corpus-fineweb2 corpus-hplt2 corpus-portuguese-pd corpus-all-raw tucano-sft-data quati-data dpo-gigaverbo-v2-preferences dpo-reward-aira dpo-preferences-data synth-run synth-submit synth-collect synth-dry-run safety-mine-refusals safety-mine-refusals-audit safety-ambiguous-seeds safety-ambiguous-seeds-stats safety-mine-prompts safety-mine-prompts-audit safety-generate-benign safety-generate-benign-dry-run
+.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all gigaverbo-v2-sft-data corpus-madlad400 corpus-fineweb2 corpus-hplt2 corpus-portuguese-pd corpus-all-raw tucano-sft-data quati-data dpo-gigaverbo-v2-preferences dpo-reward-aira dpo-preferences-data synth-run synth-submit synth-collect synth-dry-run safety-mine-refusals safety-mine-refusals-audit safety-ambiguous-seeds safety-ambiguous-seeds-stats safety-mine-prompts safety-mine-prompts-audit safety-generate-benign safety-generate-benign-dry-run safety-generate-harmful safety-generate-harmful-dry-run safety-generate-harmful-audit safety-project-size
 .RECIPEPREFIX := >
 
 help:  ## Lista os alvos
@@ -130,3 +130,15 @@ safety-generate-benign-dry-run:  ## Mostra os prompts de geracao do lado "ajuda"
 
 safety-generate-benign:  ## Gera prompts benignos-mas-sensiveis via Claude p/ escalar o lado "ajuda" -> sft/safety_seeds/benign_help_generated.jsonl
 > ./scripts/docker/run_posttrain.sh python sft/safety_seeds/generate_benign_prompts.py $(ARGS)
+
+safety-generate-harmful-dry-run:  ## Mostra os prompts de geracao do lado "recusa" sem gastar (nenhuma chamada de API)
+> ./scripts/docker/run_posttrain.sh python dpo/dpo_seeds/generate_harmful_prompts.py --dry-run $(ARGS)
+
+safety-generate-harmful-audit:  ## Gera e SO IMPRIME amostra p/ auditoria manual (nao grava nada)
+> ./scripts/docker/run_posttrain.sh python dpo/dpo_seeds/generate_harmful_prompts.py --sample-audit 15 $(ARGS)
+
+safety-generate-harmful:  ## Gera prompts nocivos via Claude p/ escalar o lado "recusa" (candidato, auditar antes) -> dpo/dpo_seeds/safety_prompts_generated.jsonl
+> ./scripts/docker/run_posttrain.sh python dpo/dpo_seeds/generate_harmful_prompts.py $(ARGS)
+
+safety-project-size:  ## Soma os arquivos de seeds/benign existentes e projeta o total do safety-SFT (sem GPU, sem API)
+> python3 sft/safety_seeds/project_safety_sft_size.py $(ARGS)
