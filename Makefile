@@ -11,7 +11,7 @@
 # =============================================================================
 SHELL := /bin/bash
 DC := docker compose
-.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all
+.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all gigaverbo-v2-sft-data
 .RECIPEPREFIX := >
 
 help:  ## Lista os alvos
@@ -54,3 +54,6 @@ corpus-all:  ## Roda os 3 scripts de aquisicao em sequencia (LegalPT -> ClassiCC
 > $(MAKE) corpus-legalpt
 > $(MAKE) corpus-classiccpt
 > $(MAKE) corpus-carolina
+
+gigaverbo-v2-sft-data:  ## Converte Polygl0t/gigaverbo-v2-sft (Apache-2.0, ~4M ex.) -> data/sft/gigaverbo_v2_sft (Alpaca)
+> ./scripts/docker/run_posttrain.sh python sft/gigaverbo_v2_sft/build_gigaverbo_v2_sft.py --shuffle $(ARGS)

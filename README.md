@@ -206,6 +206,9 @@ Já disponível neste repositório (o que funcionou e valeu, sem tentativas falh
   e Carolina Corpus, mesmo padrão de extração do
   [`manaca/corpus/`](https://github.com/brunoleomenezes/manaca/tree/main/corpus):
   [`corpus/README.md`](corpus/README.md) · scripts em [`corpus/scripts/`](corpus/scripts/).
+- **GigaVerbo-v2 SFT (Polygl0t, Apache-2.0, ~4M ex. prontos)** — fonte de
+  instrução nativa/sintética já pronta (não precisa de geração), convertida
+  para o esquema Alpaca: [`sft/gigaverbo_v2_sft/README.md`](sft/gigaverbo_v2_sft/README.md).
 - **Treino do instruct v1 e v2** — [`sft/README.md`](sft/README.md) e o treinador
   [`sft/train.py`](sft/train.py); ambiente em [`docker/`](docker/) + `docker-compose.yml`.
 - **Logs das corridas que produziram os modelos** — [`docs/training/`](docs/training/).
