@@ -11,6 +11,9 @@ seguir instruções curtas ("Qual a similaridade semântica?" -> "4.0") a partir
 datasets japoneses (JNLI, JSICK, JSQuAD...), o manacá-jaster faz o mesmo com
 ASSIN2, SICK-BR, FaQuAD, ENEM, HAREM, LeNER-Br, Mac-Morpho, TweetSentBR, HateBR
 e Pirá (análise: references/phase3-sft/llm-jp-sft-pipeline-analise.md §§57.2).
+Também inclui ExtraGLUE (tradução, fora do DEFAULT_TASKS) e HealthQA-BR
+(múltipla escolha de provas de saúde brasileiras — Revalida/Enare, CC BY
+4.0, também fora do DEFAULT_TASKS até auditar uma amostra).
 
 Saída: `{instruction, input, output}` (esquema Alpaca) — o MESMO consumido por
 `sft/prepare_data.py` e `sft/train.py`. O preâmbulo e os marcadores
@@ -50,6 +53,7 @@ import hashlib
 import json
 import os
 import random
+import re
 import sys
 
 # ── Utilitários de schema tolerante ──────────────────────────────────────────
@@ -338,6 +342,35 @@ def conv_pira(ds):
         yield {"instruction": inst, "input": inp, "output": ans}
 
 
+# ── HealthQA-BR (Larxel, CC BY 4.0): multipla-escolha de provas de saude ─────
+# Revalida/Enare (medica e multiprofissional) -- licenca confirmada na propria
+# ficha do HF (nao apenas por busca, ver sft/README-corpus-novo.md). Igual ao
+# `conv_enem`, mas as alternativas NAO vem em coluna separada: estao
+# embutidas no fim do texto de `question` no formato "'A': 'texto', 'B': ...".
+_HEALTHQA_ALT_RE = re.compile(r"'([A-E])':\s*'((?:\\.|[^'\\])*)'")
+
+
+def conv_healthqa_br(ds):
+    inst = ("Responda à questão de múltipla escolha a seguir (prova de licenciamento/residência "
+            "em saúde no Brasil) indicando a letra da alternativa correta (A, B, C, D ou E).")
+    letters = ["A", "B", "C", "D", "E"]
+    for ex in ds:
+        raw_q = s(first(ex, "question", default=""))
+        key = s(first(ex, "answer", default="")).upper()[:1]
+        if not raw_q or key not in letters:
+            continue
+        matches = list(_HEALTHQA_ALT_RE.finditer(raw_q))
+        if not matches:
+            continue
+        stem = raw_q[:matches[0].start()].strip()
+        alts = {m.group(1): m.group(2).strip() for m in matches}
+        if not stem or key not in alts:
+            continue
+        lines = [f"{L}) {alts[L]}" for L in letters if L in alts]
+        yield {"instruction": inst, "input": f"{stem}\n\n" + "\n".join(lines),
+               "output": f"Alternativa correta: {key}"}
+
+
 # ── ExtraGLUE (PORTULAN): GLUE/SuperGLUE traduzido automaticamente p/ pt-BR ──
 # NOTA DE PROVENIÊNCIA: diferente das demais tarefas do manacá-jaster (dados
 # nativos em PT-BR), o ExtraGLUE é TRADUÇÃO AUTOMÁTICA do inglês (Rodrigues
@@ -441,6 +474,9 @@ TASKS = {
     "tweetsentbr":  ("eduagarcia/tweetsentbr_fewshot", None,       "test",  conv_tweetsentbr),
     "hatebr":       ("ruanchaves/hatebr",             None,        "train", conv_hatebr),
     "pira":         ("paulopirozelli/pira",           None,        "train", conv_pira),
+    # HealthQA-BR: fora do DEFAULT_TASKS (dominio de saude, formato de
+    # alternativas embutidas em texto -- auditar amostra antes de promover).
+    "healthqa_br":  ("Larxel/healthqa-br",            None,        "train", conv_healthqa_br),
     # ExtraGLUE (PORTULAN, MIT, traduzido pt-BR) — ver nota de proveniencia
     # acima de conv_extraglue_nli. Configs inferidas por amostra real do
     # HF; corrigir via --source se algum nome nao bater.

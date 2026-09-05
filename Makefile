@@ -10,7 +10,7 @@
 #   make sft ARGS="..."     # SFT v1    |  make sft-v2       -> SFT v2
 # =============================================================================
 SHELL := /bin/bash
-.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all gigaverbo-v2-sft-data corpus-madlad400 corpus-fineweb2 corpus-hplt2 corpus-portuguese-pd corpus-all-raw tucano-sft-data quati-data dpo-gigaverbo-v2-preferences dpo-reward-aira dpo-preferences-data synth-run synth-submit synth-collect synth-dry-run safety-mine-refusals safety-mine-refusals-audit safety-ambiguous-seeds safety-ambiguous-seeds-stats safety-mine-prompts safety-mine-prompts-audit safety-generate-benign safety-generate-benign-dry-run safety-generate-harmful safety-generate-harmful-dry-run safety-generate-harmful-audit safety-project-size
+.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all gigaverbo-v2-sft-data corpus-madlad400 corpus-fineweb2 corpus-hplt2 corpus-portuguese-pd corpus-all-raw tucano-sft-data quati-data dpo-gigaverbo-v2-preferences dpo-reward-aira dpo-preferences-data synth-run synth-submit synth-collect synth-dry-run safety-mine-refusals safety-mine-refusals-audit safety-ambiguous-seeds safety-ambiguous-seeds-stats safety-mine-prompts safety-mine-prompts-audit safety-generate-benign safety-generate-benign-dry-run safety-generate-harmful safety-generate-harmful-dry-run safety-generate-harmful-audit safety-project-size medpt-data aya-pt-data jaster-healthqa-br juristcu-data personas-br-dry-run personas-br-data aes-enem-dry-run aes-enem-data
 .RECIPEPREFIX := >
 
 help:  ## Lista os alvos
@@ -111,6 +111,30 @@ tucano-sft-data:  ## Converte TucanoBR/Tucano-SFT (Apache-2.0/MIT) -> data/sft/t
 
 quati-data:  ## Constroi a tarefa de relevancia Quati (CC BY 4.0, nativo) -> data/sft/quati (Alpaca)
 > ./scripts/docker/run_posttrain.sh python sft/quati/build_quati_task.py --shuffle $(ARGS)
+
+medpt-data:  ## Converte AKCIT/MedPT (QA medico real PT-BR, CC BY 4.0) -> data/sft/medpt (Alpaca)
+> ./scripts/docker/run_posttrain.sh python sft/medpt/build_medpt.py --shuffle $(ARGS)
+
+aya-pt-data:  ## Converte o Aya Dataset (subset PT, Apache-2.0, instrucao humana nativa) -> data/sft/aya_pt (Alpaca)
+> ./scripts/docker/run_posttrain.sh python sft/aya_pt/build_aya_pt.py --shuffle $(ARGS)
+
+jaster-healthqa-br:  ## Converte so a tarefa HealthQA-BR do manaca-jaster (CC BY 4.0) -> data/sft/jaster
+> ./scripts/docker/run_posttrain.sh python sft/jaster/build_jaster.py --tasks healthqa_br --out data/sft/jaster $(ARGS)
+
+juristcu-data:  ## Constroi a tarefa de relevancia juridica JurisTCU (CC BY 4.0, nativo) -> data/sft/juristcu (Alpaca)
+> ./scripts/docker/run_posttrain.sh python sft/juristcu/build_juristcu_task.py --shuffle $(ARGS)
+
+personas-br-dry-run:  ## Mostra o prompt de geracao de SFT a partir de personas sem gastar
+> ./scripts/docker/run_posttrain.sh python sft/personas_br/generate_personas_sft.py --dry-run $(ARGS)
+
+personas-br-data:  ## Gera SFT via Claude a partir de Nemotron-Personas-Brazil (CC BY 4.0) -> data/sft/personas_br
+> ./scripts/docker/run_posttrain.sh python sft/personas_br/generate_personas_sft.py $(ARGS)
+
+aes-enem-dry-run:  ## Mostra o prompt de feedback de redacao ENEM sem gastar
+> ./scripts/docker/run_posttrain.sh python sft/aes_enem/generate_aes_enem_feedback.py --dry-run $(ARGS)
+
+aes-enem-data:  ## Gera feedback de redacao ENEM via Claude, grounded na nota real (MIT) -> data/sft/aes_enem
+> ./scripts/docker/run_posttrain.sh python sft/aes_enem/generate_aes_enem_feedback.py $(ARGS)
 
 dpo-gigaverbo-v2-preferences:  ## Converte Polygl0t/gigaverbo-v2-preferences (Apache-2.0) -> dpo_onpolicy/gigaverbo_v2_preferences
 > ./scripts/docker/run_posttrain.sh python dpo/gigaverbo_v2_preferences/build_gigaverbo_v2_preferences.py $(ARGS)

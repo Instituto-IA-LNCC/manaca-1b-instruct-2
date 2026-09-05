@@ -43,6 +43,17 @@ sobreposição real com o base. Detalhe completo no docstring de cada script.
 | [`../sft/tucano_sft/`](../sft/tucano_sft/) | `TucanoBR/Tucano-SFT` | não confirmado (~600k?) | Apache 2.0 / MIT (subfontes) |
 | [`../sft/quati/`](../sft/quati/) | `unicamp-dl/quati` (tarefa de relevância, 3 configs juntadas) | configurável | CC BY 4.0 |
 | `../sft/jaster/build_jaster.py` (`extraglue_*`) | `PORTULAN/extraglue` | 4 tarefas NLI/STS/paráfrase | MIT (traduzido) |
+| [`../sft/medpt/`](../sft/medpt/) | `AKCIT/MedPT` — QA médico REAL/nativo PT-BR | 384.095 pares | CC BY 4.0 |
+| [`../sft/aya_pt/`](../sft/aya_pt/) | Aya Dataset (subset PT) — instrução humana nativa | ~1-10K | Apache 2.0 |
+| `../sft/jaster/build_jaster.py` (`healthqa_br`) | `Larxel/healthqa-br` — múltipla escolha Revalida/Enare | 5.632 questões | CC BY 4.0 |
+| [`../sft/juristcu/`](../sft/juristcu/) | `LeandroRibeiro/JurisTCU` (relevância jurídica, 3 CSVs juntados) | configurável | CC BY 4.0 |
+
+## Fontes geradas via API (Claude) — o dado bruto não tem resposta pronta útil
+
+| Diretório | Fonte HF | Por que precisa do Claude | Licença |
+|---|---|---|---|
+| [`../sft/personas_br/`](../sft/personas_br/) | `nvidia/Nemotron-Personas-Brazil` (6M personas) | Personas não são QA; Claude gera pedido+resposta condicionados à persona | CC BY 4.0 |
+| [`../sft/aes_enem/`](../sft/aes_enem/) | `kamel-usp/aes_enem_dataset` (redações + notas reais) | Só há nota numérica, não feedback textual; Claude gera a justificativa GROUNDED na nota real | MIT |
 
 ## Fontes de preferência (2ª tentativa de DPO)
 
@@ -70,6 +81,10 @@ maiores, geradas por modelos terceiros, e habilitam uma segunda tentativa —
 | `factckbr/factckbr` (FACTCK.BR) | Licença não claramente declarada; corpus pequeno (1.309 claims) |
 | SciELO parallel (`community-datasets/scielo`) | Licença não-uniforme (varia por artigo/periódico) |
 | `dominguesm/Canarim-Instruct-PTBR` | CC BY-NC + redundante com Alpaca-PT já coberto (baixo valor marginal) |
+| `hugoabonizio/clinical-protocols-br` | Sintético a partir de PCDTs do Ministério da Saúde, tipicamente CC BY-NC-SA — herda a restrição NC |
+| SaudeBR-QA (artigo acadêmico) | Sem repositório de download público nem licença declarada encontrados |
+| `Larxel/healthqa-br`, `AKCIT/MedPT` | Aceitos — CC BY 4.0 confirmado. Ver tabelas acima (`healthqa_br`, `medpt`) |
+| `LeandroRibeiro/JurisTCU` | Aceito — CC-BY-4.0 confirmado na própria ficha (não apenas por busca). Ver `sft/juristcu/` |
 
 ## Diferença de escopo vs. `manaca/corpus/`
 
@@ -106,6 +121,14 @@ make gigaverbo-v2-sft-data
 make tucano-sft-data
 make quati-data
 ./scripts/docker/run_posttrain.sh python sft/jaster/build_jaster.py --tasks extraglue_mnli,extraglue_qnli,extraglue_stsb,extraglue_mrpc --out data/sft/extraglue
+make medpt-data
+make aya-pt-data
+make jaster-healthqa-br
+make juristcu-data
+
+# Fontes geradas via API (Claude) -- teste com --dry-run antes de gastar
+make personas-br-dry-run && make personas-br-data ARGS="--num_personas 2000"
+make aes-enem-dry-run && make aes-enem-data ARGS="--max_examples 500"
 
 # Fontes de preferencia (2a tentativa de DPO)
 make dpo-preferences-data
@@ -131,5 +154,9 @@ make synth-run ARGS="--source legalpt --max-examples 2000"
 ```
 
 As fontes de instrução já prontas (`gigaverbo_v2_sft`, `tucano_sft`,
-`quati`, `extraglue`) não passam por este pipeline — já entram direto via
-`--extra` no `sft/prepare_data.py`.
+`quati`, `extraglue`, `medpt`, `aya_pt`, `healthqa_br`, `juristcu`) não
+passam por este pipeline — já entram direto via `--extra` no
+`sft/prepare_data.py`. As duas fontes geradas via Claude
+(`personas_br`, `aes_enem`) também já saem prontas no schema Alpaca —
+usam a API diretamente (chamadas síncronas, não Batches, pelo volume
+menor), não o pipeline de passagens brutas.
