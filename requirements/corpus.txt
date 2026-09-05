@@ -1,0 +1,21 @@
+# Manacá-1B-Instruct-2 — Dependências extras para corpus/scripts/ (aquisição
+# de fontes-brutas para instrução sintética: LegalPT, ClassiCC-PT, Carolina).
+# ------------------------------------------------------------------------------
+# NAO fixa `datasets` aqui: reaproveita o datasets==3.1.0 ja pinado em
+# requirements/posttrain.txt. Motivo (ver corpus/scripts/03_acquire_carolina.py):
+# o Carolina Corpus ainda depende de um loading script custom
+# (trust_remote_code=True), suporte que o `datasets` >= 4.0 removeu. Instalar
+# um `datasets` mais novo neste ambiente quebra o Script 03 silenciosamente
+# de forma nao obvia — instale SEMPRE junto com posttrain.txt:
+#
+#   pip install -r requirements/posttrain.txt -r requirements/corpus.txt
+#
+# Schema Parquet + manifest + resume fieis ao padrao de
+# github.com/brunoleomenezes/manaca (corpus/scripts/*.py).
+
+pyarrow==17.0.0
+zstandard==0.23.0
+loguru==0.7.2
+rich==13.9.4
+tqdm==4.66.5
+huggingface_hub==0.26.2

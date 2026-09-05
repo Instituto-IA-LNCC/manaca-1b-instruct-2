@@ -11,7 +11,7 @@
 # =============================================================================
 SHELL := /bin/bash
 DC := docker compose
-.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo
+.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all
 .RECIPEPREFIX := >
 
 help:  ## Lista os alvos
@@ -40,3 +40,17 @@ sft-safety:  ## Safety-SFT (LoRA sobre o v2, DDP): recusa o nocivo sem virar rec
 
 dpo:  ## DPO on-policy (RESULTADO NEGATIVO documentado; nao mudou a geracao). Ver dpo/README-onpolicy.md
 > ACCELERATE_CONFIG=$${ACCELERATE_CONFIG:-configs/accelerate_config_ddp.yaml} ./scripts/docker/run_sft.sh dpo $(ARGS)
+
+corpus-legalpt:  ## Aquisicao do LegalPT (menos tesemo_v2, ja no Tier 1 do base) -> $WORK_DIR/raw/legalpt
+> ./scripts/docker/run_posttrain.sh python corpus/scripts/01_acquire_legalpt.py $(ARGS)
+
+corpus-classiccpt:  ## Aquisicao do ClassiCC-PT (filtrado por edu_score/toxic_score) -> $WORK_DIR/raw/classiccpt
+> ./scripts/docker/run_posttrain.sh python corpus/scripts/02_acquire_classiccpt.py $(ARGS)
+
+corpus-carolina:  ## Aquisicao do Carolina Corpus v1.2 (registro/estilo, CC BY-NC-SA) -> $WORK_DIR/raw/carolina
+> ./scripts/docker/run_posttrain.sh python corpus/scripts/03_acquire_carolina.py $(ARGS)
+
+corpus-all:  ## Roda os 3 scripts de aquisicao em sequencia (LegalPT -> ClassiCC-PT -> Carolina)
+> $(MAKE) corpus-legalpt
+> $(MAKE) corpus-classiccpt
+> $(MAKE) corpus-carolina

@@ -21,8 +21,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         git curl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements/posttrain.txt /tmp/requirements/posttrain.txt
-RUN python -m pip install -r /tmp/requirements/posttrain.txt
+COPY requirements/posttrain.txt requirements/corpus.txt /tmp/requirements/
+RUN python -m pip install -r /tmp/requirements/posttrain.txt -r /tmp/requirements/corpus.txt
 
 WORKDIR /workspace/manaca
 

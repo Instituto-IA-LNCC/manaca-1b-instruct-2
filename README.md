@@ -202,6 +202,10 @@ Já disponível neste repositório (o que funcionou e valeu, sem tentativas falh
 - **Corpus de SFT (v1 e v2)** — fontes, splits, licenças e comandos:
   [`docs/data/`](docs/data/) · código de extração/tratamento em
   [`sft/prepare_data.py`](sft/prepare_data.py) e [`sft/jaster/build_jaster.py`](sft/jaster/build_jaster.py).
+- **Corpus-fonte para instrução sintética (instruct-2)** — LegalPT, ClassiCC-PT
+  e Carolina Corpus, mesmo padrão de extração do
+  [`manaca/corpus/`](https://github.com/brunoleomenezes/manaca/tree/main/corpus):
+  [`corpus/README.md`](corpus/README.md) · scripts em [`corpus/scripts/`](corpus/scripts/).
 - **Treino do instruct v1 e v2** — [`sft/README.md`](sft/README.md) e o treinador
   [`sft/train.py`](sft/train.py); ambiente em [`docker/`](docker/) + `docker-compose.yml`.
 - **Logs das corridas que produziram os modelos** — [`docs/training/`](docs/training/).
