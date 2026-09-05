@@ -11,7 +11,7 @@
 # =============================================================================
 SHELL := /bin/bash
 DC := docker compose
-.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all gigaverbo-v2-sft-data corpus-madlad400 corpus-fineweb2 corpus-hplt2 corpus-portuguese-pd corpus-all-raw tucano-sft-data quati-data dpo-gigaverbo-v2-preferences dpo-reward-aira dpo-preferences-data synth-run synth-submit synth-collect synth-dry-run safety-mine-refusals safety-mine-refusals-audit safety-ambiguous-seeds safety-ambiguous-seeds-stats safety-mine-prompts safety-mine-prompts-audit
+.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all gigaverbo-v2-sft-data corpus-madlad400 corpus-fineweb2 corpus-hplt2 corpus-portuguese-pd corpus-all-raw tucano-sft-data quati-data dpo-gigaverbo-v2-preferences dpo-reward-aira dpo-preferences-data synth-run synth-submit synth-collect synth-dry-run safety-mine-refusals safety-mine-refusals-audit safety-ambiguous-seeds safety-ambiguous-seeds-stats safety-mine-prompts safety-mine-prompts-audit safety-generate-benign safety-generate-benign-dry-run
 .RECIPEPREFIX := >
 
 help:  ## Lista os alvos
@@ -124,3 +124,9 @@ safety-mine-prompts-audit:  ## Amostra p/ auditoria manual dos prompts nocivos m
 
 safety-mine-prompts:  ## Minera prompts nocivos do gigaverbo-v2-preferences (dedup contra os seeds existentes) -> dpo/dpo_seeds/safety_prompts_mined.jsonl
 > ./scripts/docker/run_posttrain.sh python dpo/dpo_seeds/mine_harmful_prompts.py $(ARGS)
+
+safety-generate-benign-dry-run:  ## Mostra os prompts de geracao do lado "ajuda" sem gastar (nenhuma chamada de API)
+> ./scripts/docker/run_posttrain.sh python sft/safety_seeds/generate_benign_prompts.py --dry-run $(ARGS)
+
+safety-generate-benign:  ## Gera prompts benignos-mas-sensiveis via Claude p/ escalar o lado "ajuda" -> sft/safety_seeds/benign_help_generated.jsonl
+> ./scripts/docker/run_posttrain.sh python sft/safety_seeds/generate_benign_prompts.py $(ARGS)

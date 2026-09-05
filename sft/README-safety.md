@@ -144,3 +144,46 @@ modelo sem alinhamento não sabe mencionar o CVV sozinho). Rodar
 sft/safety_seeds/benign_help.jsonl` sem `--model` já inclui as 5 respostas
 de crise no dataset; o resto do contraste benigno continua exigindo o
 checkpoint do SFT para a parte on-policy.
+
+## 6. Escalando o lado "ajuda" — `generate_benign_prompts.py`
+
+Os itens 1-3 (§4-5) escalam o lado RECUSA e resolvem o caso "ajudar em
+crise", mas o lado AJUDA continuava travado em 55 prompts, todos escritos
+à mão. `sft/safety_seeds/generate_benign_prompts.py` escala esse lado:
+gera **novos prompts** (não respostas) benignos-mas-de-fraseado-sensível
+via Claude, em 10 categorias inspiradas no vão que separa "recusa" de
+"ajuda" (linha do XSTest em inglês, sem versão pronta em PT-BR): segurança
+digital, saúde não-emergencial, autodefesa pessoal, ficção com temas
+pesados, direitos legais cotidianos, finanças e golpes, conflitos e
+relacionamentos, prevenção de acidentes domésticos, denúncia de
+abuso/assédio, segurança no trânsito.
+
+**Por que gerar aqui é seguro sem auditoria obrigatória** (diferente dos
+mineradores do lado nocivo, §4): o pior caso de um prompt malfeito é um
+exemplo de baixa qualidade, não um exemplo perigoso — o pedido em si já é
+benigno por construção do prompt de geração. O script gera só os
+**prompts**; as respostas continuam on-policy via `gen_safety_sft.py`
+(exceto se uma categoria nova também se revelar problemática on-policy,
+caso em que o tratamento é o mesmo já usado para "ajudar_em_crise":
+resposta pronta, escrita e revisada à mão).
+
+Deduplica contra `benign_help.jsonl` E contra `bench/overrefusal_pt/prompts.jsonl`,
+preservando o requisito existente de que o benign-help fique disjunto da
+avaliação de over-refusal.
+
+```bash
+make safety-generate-benign-dry-run                 # mostra os prompts, sem custo
+make safety-generate-benign                          # gera de verdade (Claude, chamadas sincronas)
+make safety-generate-benign ARGS="--categories seguranca_digital,autodefesa_pessoal"
+
+# depois de gerar, juntar com o original:
+cat sft/safety_seeds/benign_help.jsonl \
+    sft/safety_seeds/benign_help_generated.jsonl \
+    > sft/safety_seeds/benign_help_v2.jsonl
+```
+
+Saída: `sft/safety_seeds/benign_help_generated.jsonl` (schema igual ao
+original: `{id, tipo, prompt}`, IDs continuando de `bh_056`) +
+`benign_help_generated_manifest.json` com contagem por categoria, tokens
+gasto e custo estimado (chamadas síncronas, sem desconto de Batches —
+volume pequeno o suficiente para não justificar a API de lotes).
