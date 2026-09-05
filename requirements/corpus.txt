@@ -20,6 +20,13 @@ rich==13.9.4
 tqdm==4.66.5
 huggingface_hub==0.26.2
 
+# corpus/scripts/03_acquire_carolina.py: o loading script custom do Carolina
+# Corpus (trust_remote_code=True) importa lxml.etree diretamente -- sem isso,
+# falha com "ModuleNotFoundError: No module named 'lxml'" (reproduzido ao
+# vivo no Netuno). Nao vem por padrao na imagem NGC PyTorch nem em
+# requirements/posttrain.txt.
+lxml==5.3.0
+
 # synth/generate_instructions.py (geracao de instrucao sintetica via Batches
 # API). Sem pin exato de patch (ao contrario do resto desta lista): a versao
 # atual mais recente do SDK 1.x nao foi confirmada no momento da escrita;
