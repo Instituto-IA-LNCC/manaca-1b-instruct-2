@@ -49,6 +49,7 @@ Autor | Author: Bruno Leonardo Santos Menezes <brunolsm@lncc.br>
 from __future__ import annotations
 
 import argparse
+import functools
 import hashlib
 import json
 import os
@@ -393,7 +394,22 @@ def conv_healthqa_br(ds):
 # com `data_files` explícito (mesmo padrão usado em
 # corpus/scripts/04_acquire_madlad400.py) — ver DATA_FILES_OVERRIDE.
 
-def _extraglue_nli_label(raw, names):
+# Fallback numerico confirmado ao vivo (Netuno): os configs mnli_matched_pt-BR
+# e qnli_pt-BR do PORTULAN/extraglue expoem "label" como Value(dtype='int64')
+# PURO -- sem ClassLabel (feature_names() sempre retorna None aqui, porque o
+# dataset e servido como jsonl solto, sem loading script custom que declare
+# o tipo). O mapeamento por nome de classe (abaixo) nunca acertava e todo
+# exemplo era descartado (0 exemplos). Os valores brutos batem exatamente
+# com a convencao numerica ORIGINAL do GLUE em ingles (conferido nos 3
+# primeiros exemplos reais de mnli_matched_pt-BR/validation contra os
+# exemplos conhecidos do GLUE dev_matched: idx 0 label=1 -> neutral, idx 1
+# label=2 -> contradiction, idx 2 label=0 -> entailment) -- ou seja, a
+# traducao do PORTULAN preserva os inteiros originais do GLUE em ingles.
+_MNLI_INT_LABELS = {0: "Implicação", 1: "Neutro", 2: "Contradição"}
+_QNLI_INT_LABELS = {0: "Implicação", 1: "Não-implicação"}
+
+
+def _extraglue_nli_label(raw, names, int_labels=None):
     """
     Mapeamento próprio (não reaproveita _nli_label_pt): o ExtraGLUE mistura
     tarefas de 2 classes (QNLI: entailment/not_entailment) e 3 classes (MNLI:
@@ -406,19 +422,28 @@ def _extraglue_nli_label(raw, names):
             raw = names[int(raw)]
         except (TypeError, ValueError, IndexError):
             pass
-    # Sem fallback numerico ("0"/"1"): a posicao do inteiro na ClassLabel
-    # varia entre MNLI (3 classes) e QNLI (2 classes) — mapear so pelo nome
-    # da classe (via feature_names) evita inverter o rotulo silenciosamente.
     key = s(raw).upper().replace("-", "_")
-    return {
+    mapped = {
         "ENTAILMENT": "Implicação",
         "NEUTRAL": "Neutro",
         "CONTRADICTION": "Contradição",
         "NOT_ENTAILMENT": "Não-implicação",
-    }.get(key, s(raw))
+    }.get(key)
+    if mapped is not None:
+        return mapped
+    # Sem ClassLabel (names=None) e nome de classe nao reconhecido: usa o
+    # fallback numerico explicito da tarefa, se fornecido -- NUNCA um
+    # fallback numerico generico/compartilhado (a posicao do inteiro varia
+    # entre MNLI de 3 classes e QNLI de 2 classes, ver comentario acima).
+    if int_labels is not None:
+        try:
+            return int_labels.get(int(raw))
+        except (TypeError, ValueError):
+            return None
+    return None
 
 
-def conv_extraglue_nli(ds):
+def conv_extraglue_nli(ds, int_labels=None):
     """MNLI/QNLI traduzidos: entailment (2 ou 3 classes, tolerante a ambos)."""
     names = feature_names(ds, "label")
     inst = ("Determine a relação lógica entre as duas frases. Responda com uma palavra: "
@@ -429,9 +454,9 @@ def conv_extraglue_nli(ds):
         lab = first(ex, "label", default=None)
         if not a or not b or lab in (None, ""):
             continue
-        out = _extraglue_nli_label(lab, names)
+        out = _extraglue_nli_label(lab, names, int_labels)
         if out not in ("Implicação", "Neutro", "Contradição", "Não-implicação"):
-            continue  # nome de classe nao reconhecido (ClassLabel ausente) -- nao gera rotulo cru
+            continue  # nome de classe/int nao reconhecido -- nao gera rotulo cru
         yield {"instruction": inst, "input": f"Frase 1: {a}\nFrase 2: {b}", "output": out}
 
 
@@ -495,12 +520,14 @@ TASKS = {
     # no config nao existe de fato no repo; validation e o unico split
     # deste config com rotulos reais, equivalente ao dev_matched do GLUE
     # original).
-    "extraglue_mnli": ("PORTULAN/extraglue", "mnli_matched_pt-BR", "validation", conv_extraglue_nli),
+    "extraglue_mnli": ("PORTULAN/extraglue", "mnli_matched_pt-BR", "validation",
+                       functools.partial(conv_extraglue_nli, int_labels=_MNLI_INT_LABELS)),
     # split "train" (nao "test"): confirmado ao vivo que qnli_pt-BR/train.jsonl
     # tem rotulos reais (label int 0/1); o split "test" produzia 0 exemplos
     # apos conversao -- suspeita de rotulos mascarados (convencao GLUE) e/ou
     # nomes de coluna diferentes no split de teste.
-    "extraglue_qnli": ("PORTULAN/extraglue", "qnli_pt-BR",         "train", conv_extraglue_nli),
+    "extraglue_qnli": ("PORTULAN/extraglue", "qnli_pt-BR",         "train",
+                       functools.partial(conv_extraglue_nli, int_labels=_QNLI_INT_LABELS)),
     "extraglue_stsb": ("PORTULAN/extraglue", "stsb_pt-BR",         "test", conv_extraglue_stsb),
     "extraglue_mrpc": ("PORTULAN/extraglue", "mrpc_pt-BR",         "test", conv_extraglue_mrpc),
 }
