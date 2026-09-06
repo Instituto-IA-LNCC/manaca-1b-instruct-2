@@ -99,7 +99,7 @@ def main() -> int:
     args = ap.parse_args()
 
     try:
-        from datasets import load_dataset
+        from datasets import get_dataset_split_names, load_dataset
     except ImportError as e:
         print(f"[ERRO] 'datasets' ausente ({e}). Rode na imagem manaca-posttrain.")
         return 1
@@ -160,7 +160,36 @@ def main() -> int:
 
     # ── 3. Uma passada nas passagens, retendo so as necessarias ───────────
     print(f"[quati] escaneando passagens ({CFG_PASSAGES}, streaming, 1 passada)...")
-    passages_ds = load_dataset(HF_REPO_ID, CFG_PASSAGES, split=CFG_PASSAGES, streaming=True, trust_remote_code=True)
+    # CFG_PASSAGES (10M linhas) vem fatiado em sub-splits "_part_NN" -- o
+    # config nao tem um split unico com esse nome (confirmado ao vivo:
+    # "Bad split: quati_10M_passages. Available splits:
+    # ['quati_10M_passages_part_00', ..., '_part_04']"). Descobre os
+    # sub-splits reais (em vez de fixar o numero de partes no codigo) e
+    # encadeia os IterableDataset de cada um -- evita depender da sintaxe
+    # "split1+split2" do datasets em modo streaming, que nao e garantida
+    # pela versao usada neste projeto.
+    all_splits = get_dataset_split_names(HF_REPO_ID, CFG_PASSAGES, trust_remote_code=True)
+    parts = sorted(sp for sp in all_splits if sp.startswith(f"{CFG_PASSAGES}_part_"))
+    if not parts:
+        parts = [CFG_PASSAGES]
+    print(f"[quati] passagens: {len(parts)} parte(s) -- {parts}")
+
+    class ChainedSplits:
+        """Encadeia varios splits streaming de um mesmo config. Suporta
+        __iter__ multiplas vezes (reabre do primeiro split a cada chamada),
+        igual a uma datasets.IterableDataset -- necessario porque o resto
+        do script faz next(iter(dataset)) (deteccao de coluna) e depois um
+        `for row in dataset` separado; um itertools.chain(...) puro e um
+        generator de passagem unica e perderia a 1a linha nesse padrao.
+        """
+        def __init__(self, hf_id, cfg, parts):
+            self.hf_id, self.cfg, self.parts = hf_id, cfg, parts
+
+        def __iter__(self):
+            for p in self.parts:
+                yield from load_dataset(self.hf_id, self.cfg, split=p, streaming=True, trust_remote_code=True)
+
+    passages_ds = ChainedSplits(HF_REPO_ID, CFG_PASSAGES, parts)
     pfirst = next(iter(passages_ds))
     ppid = next((c for c in ["passage_id"] if c in pfirst), None)
     ptxt = next((c for c in ["passage", "text"] if c in pfirst), None)
