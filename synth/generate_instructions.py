@@ -224,47 +224,70 @@ def _has_replacement_char(text: str) -> bool:
 
 
 def sample_passages(source_dir: Path, max_examples: int, oversample: int, seed: int) -> list[dict]:
-    """Amostra passagens com viés de qualidade (score) sem carregar todo o texto na RAM."""
+    """Amostra passagens com viés de qualidade (score) sem carregar todo o texto na RAM.
+
+    A chave de identidade interna e (shard_idx, row_idx) -- posicao fisica da
+    linha dentro do shard Parquet, estavel entre leituras -- e NAO a coluna
+    'id' do corpus-fonte. Confirmado ao vivo no ClassiCC-PT (script de
+    aquisicao corpus/scripts/02_acquire_classiccpt.py): o campo 'id' la NAO e
+    um identificador por documento, e sim um id de segmento/WARC do Common
+    Crawl compartilhado por CENTENAS de documentos totalmente diferentes
+    (99,86% de "duplicacao" numa checagem real: 600.000 linhas, so 13.503
+    valores distintos de 'id'; um unico valor apareceu em 609 documentos
+    diferentes numa amostra de 3.000). O campo realmente unico nesse dataset
+    e 'url', que o script de aquisicao nem preservou. Usar 'id' como chave
+    (como este codigo fazia antes) fazia a Passada 2 devolver um texto
+    ARBITRARIO entre os que compartilham aquele id -- nao necessariamente o
+    que foi de fato pontuado/selecionado na Passada 1 -- e também colidia
+    como `custom_id` na Batches API (ver cmd_submit). Row-index dentro do
+    shard nao depende de nenhum campo do dado-fonte, entao e imune a esse
+    tipo de problema em qualquer corpus, nao so no ClassiCC-PT."""
     shards = sorted(source_dir.glob("shard_*.parquet"))
     if not shards:
         raise FileNotFoundError(f"Nenhum shard encontrado em {source_dir}. Rode o corpus/scripts/ correspondente antes.")
 
-    # Passada 1: so id + score
-    pool: list[tuple[str, float, int]] = []  # (id, score, shard_index)
+    # Passada 1: so score (id nao e mais necessario aqui -- ver docstring)
+    pool: list[tuple[int, int, float]] = []  # (shard_idx, row_idx, score)
     for shard_idx, shard in enumerate(shards):
-        t = pq.read_table(shard, columns=["id", "score"])
-        ids, scores = t["id"].to_pylist(), t["score"].to_pylist()
-        pool.extend((str(i), float(sc or 0.0), shard_idx) for i, sc in zip(ids, scores))
+        t = pq.read_table(shard, columns=["score"])
+        scores = t["score"].to_pylist()
+        pool.extend((shard_idx, row_idx, float(sc or 0.0)) for row_idx, sc in enumerate(scores))
 
     pool_size = min(len(pool), max_examples * oversample) or len(pool)
-    pool.sort(key=lambda x: x[1], reverse=True)
+    pool.sort(key=lambda x: x[2], reverse=True)
     top_pool = pool[:pool_size]
     rng = random.Random(seed)
     rng.shuffle(top_pool)
     selected = top_pool[:max_examples]
-    wanted_ids = {sid for sid, _, _ in selected}
-    wanted_shards = {shard_idx for _, _, shard_idx in selected}
+    wanted_by_shard: dict[int, set[int]] = {}
+    for shard_idx, row_idx, _ in selected:
+        wanted_by_shard.setdefault(shard_idx, set()).add(row_idx)
 
-    # Passada 2: re-le so os shards necessarios, filtrando pelos ids sorteados
-    found: dict[str, dict] = {}
+    # Passada 2: re-le so os shards necessarios, pelas posicoes sorteadas
+    found: dict[tuple[int, int], dict] = {}
     n_corrupted = 0
-    for shard_idx in sorted(wanted_shards):
+    for shard_idx, row_idxs in wanted_by_shard.items():
         t = pq.read_table(shards[shard_idx], columns=["id", "text", "source", "score"])
-        for i, text, src, sc in zip(t["id"].to_pylist(), t["text"].to_pylist(),
-                                     t["source"].to_pylist(), t["score"].to_pylist()):
-            i = str(i)
-            if i not in wanted_ids or i in found:
-                continue
+        ids = t["id"].to_pylist()
+        texts = t["text"].to_pylist()
+        srcs = t["source"].to_pylist()
+        scores = t["score"].to_pylist()
+        for row_idx in row_idxs:
+            text = texts[row_idx]
             if _has_replacement_char(text):
                 n_corrupted += 1
                 continue
-            found[i] = {"id": i, "text": text, "source": src, "score": sc}
+            key = (shard_idx, row_idx)
+            found[key] = {
+                "id": str(ids[row_idx]), "uid": f"{shard_idx}_{row_idx}",
+                "text": text, "source": srcs[row_idx], "score": scores[row_idx],
+            }
 
     if n_corrupted:
         print(f"[amostragem] {n_corrupted} passagem(ns) descartada(s) por conter U+FFFD "
               f"(corrupcao de encoding no dado-fonte, ver _has_replacement_char)")
 
-    return [found[sid] for sid, _, _ in selected if sid in found]
+    return [found[(shard_idx, row_idx)] for shard_idx, row_idx, _ in selected if (shard_idx, row_idx) in found]
 
 
 # ── Prompt e parsing ──────────────────────────────────────────────────────────
@@ -318,7 +341,7 @@ def cmd_submit(args) -> dict:
         print("[dry-run] nenhuma chamada de API sera feita. Exemplos de prompt:")
         for p in passages[: min(3, len(passages))]:
             print("=" * 60)
-            print(f"id={p['id']} score={p['score']}")
+            print(f"uid={p['uid']} id={p['id']} score={p['score']}")
             print(build_user_message(p["text"])[:500])
         return {"dry_run": True, "n_sampled": len(passages)}
 
@@ -336,7 +359,7 @@ def cmd_submit(args) -> dict:
         chunk = passages[chunk_start: chunk_start + CHUNK]
         requests = []
         for p in chunk:
-            custom_id = f"{args.source}_{p['id']}"
+            custom_id = f"{args.source}_{p['uid']}"
             passages_by_custom_id[custom_id] = p
             requests.append(Request(
                 custom_id=custom_id,

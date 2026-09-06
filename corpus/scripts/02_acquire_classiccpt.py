@@ -302,7 +302,17 @@ def acquire(max_docs: int, min_edu: float, max_toxic: float) -> dict[str, Any]:
 
     first = next(iter(dataset))
     text_col = next((c for c in ["text", "content", "body"] if c in first), list(first.keys())[0])
-    id_col   = next((c for c in ["id", "url", "doc_id"] if c in first), None)
+    # 'url' ANTES de 'id' de proposito: confirmado ao vivo que o campo 'id'
+    # do ClassiCC-Corpus/ClassiCC-PT NAO identifica um documento -- e um id
+    # de segmento/WARC do Common Crawl compartilhado por CENTENAS de
+    # documentos diferentes (99,86% de "duplicacao" numa checagem real:
+    # 600.000 linhas ja adquiridas, so 13.503 valores distintos de 'id'; um
+    # unico valor cobria 609 documentos DIFERENTES numa amostra de 3.000).
+    # 'url' e o campo que de fato varia por documento nesse dataset. Isso so
+    # afeta aquisicoes NOVAS -- os shards ja gravados antes dessa correcao
+    # tem 'id' errado, mas synth/generate_instructions.py:sample_passages()
+    # nao depende mais dele (usa posicao fisica da linha no shard).
+    id_col   = next((c for c in ["url", "id", "doc_id"] if c in first), None)
     logger.info(f"Coluna texto: '{text_col}'  |  Coluna ID: '{id_col or 'gerado'}'")
     logger.info(f"Campos disponiveis: {list(first.keys())}")
 

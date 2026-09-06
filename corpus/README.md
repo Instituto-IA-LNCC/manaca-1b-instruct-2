@@ -25,6 +25,19 @@ As diferenças estão documentadas no docstring de cada script.
 | 06 | `06_acquire_hplt2.py` | `HPLT/HPLT2.0_cleaned` (config `por_Latn`) | Web geral, cobertura temporal distinta | CC0 (domínio público) |
 | 07 | `07_acquire_portuguese_pd.py` | `PleIAs/Portuguese-PD` | Registro histórico/literário (pré-1884) | Domínio público |
 
+### ClassiCC-PT — campo `id` não é confiável nos shards já adquiridos
+
+Confirmado ao vivo (checagem em todo o corpus já baixado): o campo `id` do
+`ClassiCC-Corpus/ClassiCC-PT` **não identifica um documento** — é um id de
+segmento/WARC do Common Crawl compartilhado por centenas de documentos
+diferentes (99,86% de "duplicação": 600.000 linhas, só 13.503 valores
+distintos de `id`; um único valor cobria 609 documentos diferentes numa
+amostra de 3.000). O campo que de fato varia por documento é `url`, que os
+shards já gravados não preservam. `02_acquire_classiccpt.py` já foi
+corrigido para preferir `url` em aquisições novas; `synth/generate_instructions.py:sample_passages()`
+não depende mais de `id` para nada (usa a posição física da linha no shard
+como chave), então os shards antigos continuam utilizáveis sem reaquisição.
+
 ### Fontes 04-06 — por que estavam descartadas e agora não estão
 
 MADLAD-400, FineWeb-2 e HPLT 2.0 faziam parte do Tier 1 do **plano** de

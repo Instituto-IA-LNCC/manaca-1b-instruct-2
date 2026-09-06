@@ -310,7 +310,7 @@ def main() -> int:
         print("[dry-run] nenhuma chamada sera feita. Exemplos de prompt:")
         for p in passages[: min(3, len(passages))]:
             print("=" * 60)
-            print(f"id={p['id']} score={p['score']}")
+            print(f"uid={p['uid']} id={p['id']} score={p['score']}")
             print(build_user_message(p["text"])[:500])
         return 0
 
@@ -343,7 +343,7 @@ def main() -> int:
         print(f"[resume] retomando de manifest anterior: {n} ja gravados, "
               f"{len(processed_ids)} passagens ja processadas (puladas/gravadas)")
 
-    todo = [p for p in passages if p["id"] not in processed_ids]
+    todo = [p for p in passages if p["uid"] not in processed_ids]
     print(f"[local] {len(todo)} passagens a processar ({len(passages) - len(todo)} ja feitas)")
 
     file_mode = "a" if can_resume and os.path.exists(out_path) else "w"
@@ -362,7 +362,7 @@ def main() -> int:
             fatal_error.append(e)
             return
         with manifest_lock:
-            processed_ids.add(p["id"])
+            processed_ids.add(p["uid"])
             if result is None:
                 n_failed += 1
                 return
