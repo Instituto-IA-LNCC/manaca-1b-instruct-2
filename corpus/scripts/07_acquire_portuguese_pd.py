@@ -56,7 +56,7 @@ from typing import Any
 try:
     import pyarrow as pa
     import pyarrow.parquet as pq
-    from datasets import load_dataset
+    from huggingface_hub import HfApi, hf_hub_download
     from loguru import logger
     from tqdm import tqdm
 except ImportError as e:
@@ -66,7 +66,6 @@ except ImportError as e:
 
 SOURCE_NAME  = "portuguese_pd"
 HF_REPO_ID   = "PleIAs/Portuguese-PD"
-HF_SPLIT     = "train"
 LICENSE      = "public-domain (pre-1884, regra de 70 anos pos-morte do autor)"
 REFERENCE    = "PleIAs (2024). Portuguese-PD."
 
@@ -151,6 +150,44 @@ def quality_score(text: str) -> float:
     return round(0.4 * alpha + 0.3 * ttr + 0.3 * lscore, 4)
 
 
+class ParquetRepoRows:
+    """Le todos os arquivos .parquet de um repo HF diretamente via pyarrow,
+    UM ARQUIVO POR VEZ, tolerante a schemas diferentes entre arquivos.
+
+    Por que nao usar `datasets.load_dataset(..., streaming=True)` aqui: os
+    shards deste dataset tem schemas DIVERGENTES entre si (reproduzido ao
+    vivo: `portuguese_pd_5.parquet` tem colunas extras -- language,
+    language_code, character_count -- que os outros arquivos nao tem, alem
+    de int32 vs int64 nos campos numericos). O `datasets` em modo streaming
+    infere UM schema unico a partir do primeiro arquivo e falha com
+    `CastError` ao tentar unificar os demais. Lendo cada arquivo com seu
+    proprio `pyarrow.parquet.ParquetFile` (sem unificacao de schema entre
+    arquivos), cada linha vira um dict so com as colunas que aquele arquivo
+    especifico realmente tem -- a deteccao de coluna ja tolerante do
+    restante do script (`text_col`/`id_col`/`title_col`) absorve a
+    diferenca normalmente.
+
+    Suporta `__iter__` multiplas vezes (reabre do primeiro arquivo a cada
+    chamada), igual a uma `datasets.IterableDataset` -- necessario porque o
+    resto do script faz `next(iter(dataset))` mais de uma vez (deteccao de
+    coluna + loop principal).
+    """
+
+    def __init__(self, repo_id: str):
+        self.repo_id = repo_id
+
+    def __iter__(self):
+        api = HfApi()
+        files = sorted(f for f in api.list_repo_files(self.repo_id, repo_type="dataset")
+                       if f.endswith(".parquet"))
+        logger.info(f"{len(files)} arquivos parquet encontrados em {self.repo_id}")
+        for fname in files:
+            path = hf_hub_download(repo_id=self.repo_id, filename=fname, repo_type="dataset")
+            pf = pq.ParquetFile(path)
+            for batch in pf.iter_batches():
+                yield from batch.to_pylist()
+
+
 def write_shard(docs: list[dict], shard_id: int, output_dir: Path) -> dict[str, Any]:
     path = output_dir / f"shard_{shard_id:06d}.parquet"
     table = pa.table({
@@ -193,7 +230,7 @@ def acquire(max_docs: int) -> dict[str, Any]:
                      f"mantidos | pulando os primeiros {docs_to_skip:,} docs do stream bruto")
     logger.info("=" * 60)
 
-    dataset = load_dataset(HF_REPO_ID, split=HF_SPLIT, streaming=True)
+    dataset = ParquetRepoRows(HF_REPO_ID)
     first = next(iter(dataset))
     text_col = next((c for c in ["text", "content"] if c in first), list(first.keys())[0])
     id_col = next((c for c in ["id", "identifier", "doc_id"] if c in first), None)
