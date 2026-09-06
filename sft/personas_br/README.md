@@ -71,3 +71,25 @@ propósito — o comando para com erro em vez de sobrescrever silenciosamente
 exemplos já pagos. Use `--out <outro-diretório>` para um lote novo separado
 (mesmo padrão do `personas_br_batch2`), ou `--overwrite` se a intenção é
 mesmo descartar o que está no diretório atual.
+
+## Variante via LLM local (sem custo de API)
+
+`generate_personas_sft_local.py` — mesmo pipeline (persona -> pedido +
+resposta, mesmo `SYSTEM_PROMPT`/decontaminação/emoji-zero), mas fala com
+endpoint(s) vLLM locais (`scripts/docker/run_vllm_serve.sh`) em vez da API
+da Anthropic, pra escalar sem custo. Mesma trava de `--overwrite` e mesmo
+padrão de resume (via `manifest.json`), com `processed_ids` em vez de um
+`processed_idx` único (as chamadas rodam em paralelo via `ThreadPoolExecutor`,
+terminam fora de ordem).
+
+Auditoria (`--audit-sample N`, via Claude) usa critérios próprios
+(`plausivel`/`fluente`/`util`) em vez de "grounded" — aqui não há um texto-
+fonte pra checar fidelidade literal (o `input` do exemplo final continua
+vazio de propósito, a persona é só andaime pra gerar o pedido, não deve
+aparecer no exemplo de treino).
+
+```bash
+make llm-serve-0 && make llm-serve-1
+make personas-br-local-dry-run
+make personas-br-local-run ARGS="--out data/sft/personas_br_local --num_personas 5000 --seed 100 --audit-sample 60"
+```

@@ -10,7 +10,7 @@
 #   make sft ARGS="..."     # SFT v1    |  make sft-v2       -> SFT v2
 # =============================================================================
 SHELL := /bin/bash
-.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all gigaverbo-v2-sft-data corpus-madlad400 corpus-fineweb2 corpus-hplt2 corpus-portuguese-pd corpus-all-raw tucano-sft-data quati-data dpo-gigaverbo-v2-preferences dpo-reward-aira dpo-preferences-data synth-run synth-submit synth-collect synth-dry-run safety-mine-refusals safety-mine-refusals-audit safety-ambiguous-seeds safety-ambiguous-seeds-stats safety-mine-prompts safety-mine-prompts-audit safety-generate-benign safety-generate-benign-dry-run safety-generate-harmful safety-generate-harmful-dry-run safety-generate-harmful-audit safety-project-size medpt-data aya-pt-data jaster-healthqa-br juristcu-data personas-br-dry-run personas-br-data aes-enem-dry-run aes-enem-data llm-serve-0 llm-serve-1 synth-local-dry-run synth-local-run
+.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all gigaverbo-v2-sft-data corpus-madlad400 corpus-fineweb2 corpus-hplt2 corpus-portuguese-pd corpus-all-raw tucano-sft-data quati-data dpo-gigaverbo-v2-preferences dpo-reward-aira dpo-preferences-data synth-run synth-submit synth-collect synth-dry-run safety-mine-refusals safety-mine-refusals-audit safety-ambiguous-seeds safety-ambiguous-seeds-stats safety-mine-prompts safety-mine-prompts-audit safety-generate-benign safety-generate-benign-dry-run safety-generate-harmful safety-generate-harmful-dry-run safety-generate-harmful-audit safety-project-size medpt-data aya-pt-data jaster-healthqa-br juristcu-data personas-br-dry-run personas-br-data personas-br-local-dry-run personas-br-local-run aes-enem-dry-run aes-enem-data llm-serve-0 llm-serve-1 synth-local-dry-run synth-local-run
 .RECIPEPREFIX := >
 
 help:  ## Lista os alvos
@@ -129,6 +129,12 @@ personas-br-dry-run:  ## Mostra o prompt de geracao de SFT a partir de personas 
 
 personas-br-data:  ## Gera SFT via Claude a partir de Nemotron-Personas-Brazil (CC BY 4.0) -> data/sft/personas_br
 > ./scripts/docker/run_posttrain.sh python sft/personas_br/generate_personas_sft.py $(ARGS)
+
+personas-br-local-dry-run:  ## Mostra o prompt de geracao de personas via LLM local sem gastar (make personas-br-local-dry-run)
+> ./scripts/docker/run_posttrain.sh python sft/personas_br/generate_personas_sft_local.py --dry-run $(ARGS)
+
+personas-br-local-run:  ## Gera SFT via LLM local (llm-serve-0/1 precisam estar de pe) -> data/sft/personas_br_local
+> ./scripts/docker/run_posttrain.sh python sft/personas_br/generate_personas_sft_local.py $(ARGS)
 
 aes-enem-dry-run:  ## Mostra o prompt de feedback de redacao ENEM sem gastar
 > ./scripts/docker/run_posttrain.sh python sft/aes_enem/generate_aes_enem_feedback.py --dry-run $(ARGS)
