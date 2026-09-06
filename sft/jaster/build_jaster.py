@@ -381,6 +381,17 @@ def conv_healthqa_br(ds):
 # Nomes de config inferidos por amostra real (commit do dataset no HF
 # mostrou "data/mnli_matched_pt-BR/test.jsonl"); se algum não bater, a
 # tarefa é pulada com aviso (ver main()) — corrigir via --source.
+#
+# BUG real confirmado ao vivo (Netuno): o config "mnli_matched_pt-BR" não
+# tem `train.jsonl` no repo (só existem test.jsonl e validation.jsonl —
+# confirmado via HfApi.list_repo_files), mas `load_dataset(hf_id, cfg,
+# split=...)` falha com FileNotFoundError citando justamente esse
+# train.jsonl inexistente, MESMO pedindo split="validation" ou "train"
+# explicitamente — os metadados do config no HF declaram um split que
+# nunca foi enviado ao repo, e o `datasets` tenta resolver todos os
+# splits declarados antes de filtrar. Fix: bypassa a resolução de config
+# com `data_files` explícito (mesmo padrão usado em
+# corpus/scripts/04_acquire_madlad400.py) — ver DATA_FILES_OVERRIDE.
 
 def _extraglue_nli_label(raw, names):
     """
@@ -480,10 +491,28 @@ TASKS = {
     # ExtraGLUE (PORTULAN, MIT, traduzido pt-BR) — ver nota de proveniencia
     # acima de conv_extraglue_nli. Configs inferidas por amostra real do
     # HF; corrigir via --source se algum nome nao bater.
-    "extraglue_mnli": ("PORTULAN/extraglue", "mnli_matched_pt-BR", "test", conv_extraglue_nli),
-    "extraglue_qnli": ("PORTULAN/extraglue", "qnli_pt-BR",         "test", conv_extraglue_nli),
+    # split "validation" -- ver nota de bug acima (train.jsonl declarado
+    # no config nao existe de fato no repo; validation e o unico split
+    # deste config com rotulos reais, equivalente ao dev_matched do GLUE
+    # original).
+    "extraglue_mnli": ("PORTULAN/extraglue", "mnli_matched_pt-BR", "validation", conv_extraglue_nli),
+    # split "train" (nao "test"): confirmado ao vivo que qnli_pt-BR/train.jsonl
+    # tem rotulos reais (label int 0/1); o split "test" produzia 0 exemplos
+    # apos conversao -- suspeita de rotulos mascarados (convencao GLUE) e/ou
+    # nomes de coluna diferentes no split de teste.
+    "extraglue_qnli": ("PORTULAN/extraglue", "qnli_pt-BR",         "train", conv_extraglue_nli),
     "extraglue_stsb": ("PORTULAN/extraglue", "stsb_pt-BR",         "test", conv_extraglue_stsb),
     "extraglue_mrpc": ("PORTULAN/extraglue", "mrpc_pt-BR",         "test", conv_extraglue_mrpc),
+}
+
+# Overrides de data_files para tarefas cujo config declarado no HF aponta
+# para um split que nao existe de fato no repo (ver nota acima de
+# extraglue_mnli) -- bypassa a resolucao automatica de splits do config.
+DATA_FILES_OVERRIDE = {
+    "extraglue_mnli": {
+        "validation": "data/mnli_matched_pt-BR/validation.jsonl",
+        "test": "data/mnli_matched_pt-BR/test.jsonl",
+    },
 }
 
 # Conjunto padrão (curado): tarefas mais robustas de conversão automática.
@@ -556,8 +585,12 @@ def main() -> int:
             split = args.split or split
             try:
                 print(f"[jaster] {name}: baixando {hf_id}" + (f" ({cfg})" if cfg else "") + f" [{split}]...")
-                ds = (load_dataset(hf_id, cfg, split=split, trust_remote_code=trust) if cfg
-                      else load_dataset(hf_id, split=split, trust_remote_code=trust))
+                if name in DATA_FILES_OVERRIDE:
+                    ds = load_dataset(hf_id, data_files=DATA_FILES_OVERRIDE[name], split=split)
+                elif cfg:
+                    ds = load_dataset(hf_id, cfg, split=split, trust_remote_code=trust)
+                else:
+                    ds = load_dataset(hf_id, split=split, trust_remote_code=trust)
             except Exception as e:  # ID/config/split errado, sem rede, gated... -> pula
                 print(f"[aviso] {name}: falha ao carregar {hf_id} ({type(e).__name__}: {e}). PULADA.")
                 counts[name] = 0
