@@ -210,6 +210,19 @@ def is_contaminated(instruction: str, decontam_set: set[str]) -> bool:
 
 # ── Amostragem (2 passadas) ───────────────────────────────────────────────────
 
+def _has_replacement_char(text: str) -> bool:
+    """Detecta U+FFFD (caractere de substituicao Unicode) -- confirmado ao vivo
+    no ClassiCC-PT (corpus/scripts/02_acquire_classiccpt.py): alguns documentos
+    do dataset upstream ja chegam com trechos corrompidos (bytes originais
+    perdidos, ex.: "Educa��o" em vez de "Educação"), sem que nosso
+    script de aquisicao faca nenhum decode manual -- e ruido do proprio
+    ClassiCC-PT, comum em corpora derivados de Common Crawl com deteccao de
+    encoding imperfeita na pagina original. Nao da pra recuperar o caractere
+    perdido, entao a passagem inteira e descartada da amostra em vez de virar
+    exemplo de treino com lacunas visiveis."""
+    return "�" in text
+
+
 def sample_passages(source_dir: Path, max_examples: int, oversample: int, seed: int) -> list[dict]:
     """Amostra passagens com viés de qualidade (score) sem carregar todo o texto na RAM."""
     shards = sorted(source_dir.glob("shard_*.parquet"))
@@ -234,13 +247,22 @@ def sample_passages(source_dir: Path, max_examples: int, oversample: int, seed: 
 
     # Passada 2: re-le so os shards necessarios, filtrando pelos ids sorteados
     found: dict[str, dict] = {}
+    n_corrupted = 0
     for shard_idx in sorted(wanted_shards):
         t = pq.read_table(shards[shard_idx], columns=["id", "text", "source", "score"])
         for i, text, src, sc in zip(t["id"].to_pylist(), t["text"].to_pylist(),
                                      t["source"].to_pylist(), t["score"].to_pylist()):
             i = str(i)
-            if i in wanted_ids and i not in found:
-                found[i] = {"id": i, "text": text, "source": src, "score": sc}
+            if i not in wanted_ids or i in found:
+                continue
+            if _has_replacement_char(text):
+                n_corrupted += 1
+                continue
+            found[i] = {"id": i, "text": text, "source": src, "score": sc}
+
+    if n_corrupted:
+        print(f"[amostragem] {n_corrupted} passagem(ns) descartada(s) por conter U+FFFD "
+              f"(corrupcao de encoding no dado-fonte, ver _has_replacement_char)")
 
     return [found[sid] for sid, _, _ in selected if sid in found]
 
