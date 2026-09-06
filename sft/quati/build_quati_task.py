@@ -107,7 +107,10 @@ def main() -> int:
     # ── 1. Topics (pequeno, carrega inteiro) ──────────────────────────────
     print(f"[quati] carregando topics ({CFG_TOPICS})...")
     try:
-        topics_ds = load_dataset(HF_REPO_ID, CFG_TOPICS, split="train", trust_remote_code=True)
+        # split == nome do config (script custom do HF nao usa "train" --
+        # confirmado ao vivo: "Unknown split 'train'. Should be one of
+        # ['quati_all_topics']").
+        topics_ds = load_dataset(HF_REPO_ID, CFG_TOPICS, split=CFG_TOPICS, trust_remote_code=True)
     except Exception as e:
         print(f"[ERRO] falha ao carregar topics: {e}")
         return 1
@@ -121,7 +124,7 @@ def main() -> int:
 
     # ── 2. Qrels (streaming, ate acumular max_examples validos) ───────────
     print(f"[quati] carregando qrels ({CFG_QRELS}, streaming)...")
-    qrels_ds = load_dataset(HF_REPO_ID, CFG_QRELS, split="train", streaming=True, trust_remote_code=True)
+    qrels_ds = load_dataset(HF_REPO_ID, CFG_QRELS, split=CFG_QRELS, streaming=True, trust_remote_code=True)
     first = next(iter(qrels_ds))
     qcol = next((c for c in ["query_id"] if c in first), None)
     pcol = next((c for c in ["passage_id"] if c in first), None)
@@ -157,7 +160,7 @@ def main() -> int:
 
     # ── 3. Uma passada nas passagens, retendo so as necessarias ───────────
     print(f"[quati] escaneando passagens ({CFG_PASSAGES}, streaming, 1 passada)...")
-    passages_ds = load_dataset(HF_REPO_ID, CFG_PASSAGES, split="train", streaming=True, trust_remote_code=True)
+    passages_ds = load_dataset(HF_REPO_ID, CFG_PASSAGES, split=CFG_PASSAGES, streaming=True, trust_remote_code=True)
     pfirst = next(iter(passages_ds))
     ppid = next((c for c in ["passage_id"] if c in pfirst), None)
     ptxt = next((c for c in ["passage", "text"] if c in pfirst), None)
