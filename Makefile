@@ -10,7 +10,7 @@
 #   make sft ARGS="..."     # SFT v1    |  make sft-v2       -> SFT v2
 # =============================================================================
 SHELL := /bin/bash
-.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all gigaverbo-v2-sft-data corpus-madlad400 corpus-fineweb2 corpus-hplt2 corpus-portuguese-pd corpus-all-raw tucano-sft-data quati-data dpo-gigaverbo-v2-preferences dpo-reward-aira dpo-preferences-data synth-run synth-submit synth-collect synth-dry-run safety-mine-refusals safety-mine-refusals-audit safety-ambiguous-seeds safety-ambiguous-seeds-stats safety-mine-prompts safety-mine-prompts-audit safety-generate-benign safety-generate-benign-dry-run safety-generate-harmful safety-generate-harmful-dry-run safety-generate-harmful-audit safety-project-size medpt-data aya-pt-data jaster-healthqa-br juristcu-data personas-br-dry-run personas-br-data aes-enem-dry-run aes-enem-data llm-serve-0 llm-serve-1
+.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all gigaverbo-v2-sft-data corpus-madlad400 corpus-fineweb2 corpus-hplt2 corpus-portuguese-pd corpus-all-raw tucano-sft-data quati-data dpo-gigaverbo-v2-preferences dpo-reward-aira dpo-preferences-data synth-run synth-submit synth-collect synth-dry-run safety-mine-refusals safety-mine-refusals-audit safety-ambiguous-seeds safety-ambiguous-seeds-stats safety-mine-prompts safety-mine-prompts-audit safety-generate-benign safety-generate-benign-dry-run safety-generate-harmful safety-generate-harmful-dry-run safety-generate-harmful-audit safety-project-size medpt-data aya-pt-data jaster-healthqa-br juristcu-data personas-br-dry-run personas-br-data aes-enem-dry-run aes-enem-data llm-serve-0 llm-serve-1 synth-local-dry-run synth-local-run
 .RECIPEPREFIX := >
 
 help:  ## Lista os alvos
@@ -141,6 +141,12 @@ llm-serve-0:  ## Sobe vLLM (OpenAI-compatible) na GPU 0 -- ver scripts/docker/ru
 
 llm-serve-1:  ## Sobe vLLM (OpenAI-compatible) na GPU 1 -- rode junto com llm-serve-0 pra escalar 2x (2 instancias independentes)
 > GPU=1 PORT=8001 ./scripts/docker/run_vllm_serve.sh
+
+synth-local-dry-run:  ## Mostra os prompts da geracao via LLM local sem gastar tempo de GPU (make synth-local-dry-run ARGS="--source X")
+> ./scripts/docker/run_posttrain.sh python synth/generate_instructions_local.py --dry-run $(ARGS)
+
+synth-local-run:  ## Gera instrucao sintetica via vLLM local (llm-serve-0/1 precisam estar de pe) -> data/synth_local/<source>
+> ./scripts/docker/run_posttrain.sh python synth/generate_instructions_local.py $(ARGS)
 
 dpo-gigaverbo-v2-preferences:  ## Converte Polygl0t/gigaverbo-v2-preferences (Apache-2.0) -> dpo_onpolicy/gigaverbo_v2_preferences
 > ./scripts/docker/run_posttrain.sh python dpo/gigaverbo_v2_preferences/build_gigaverbo_v2_preferences.py $(ARGS)

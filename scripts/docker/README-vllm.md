@@ -48,21 +48,38 @@ Parar: `docker stop manaca-vllm-0 manaca-vllm-1 && docker rm manaca-vllm-0 manac
 
 ## Status
 
-**Ainda não testado neste cluster.** Primeira vez rodando vLLM no Netuno —
-espere possíveis problemas de compatibilidade driver/CUDA da imagem vLLM com
-o driver do host (mesma classe de problema já visto com a imagem NGC PyTorch
-neste projeto). Rode e cole o log de erro se travar na largada.
+**Validado ao vivo no Netuno** (06/09/2026): as duas instâncias sobem OK
+com `ENFORCE_EAGER=1` (ver nota abaixo). Teste de geração em PT-BR
+respondeu correto, fluente e sem alucinação visível pra uma pergunta
+factual simples.
 
-## Próximo passo (depois que o servidor subir OK)
+Nota sobre `ENFORCE_EAGER=1`: sem essa flag, a primeira subida (cold
+start) inclui uma fase de compilação/captura de CUDA graph que demorou
+vários minutos sem emitir log nenhum nesse hardware (RTX A5000, sem as
+otimizações de datacenter) — fácil de confundir com um travamento. Rodar
+com `ENFORCE_EAGER=1` pula essa fase (custa algum throughput de
+inferência) e é o que foi usado na validação. Revisitar se vale tirar
+depois de confirmar throughput suficiente em uso real.
 
-Adaptar um script de geração (provavelmente uma cópia de
-`sft/personas_br/generate_personas_sft.py` ou um script novo em cima do
-mesmo padrão de decontaminação/manifesto/emoji-zero deste projeto) pra
-apontar pro client OpenAI-compatible do vLLM em vez do client Anthropic,
-com round-robin entre as portas 8000/8001. **Importante**: manter uma
-camada barata de auditoria via Claude sobre uma AMOSTRA do que o modelo
-local gerar antes de confiar no lote inteiro — modelos abertos menores
-tendem a alucinar mais e ser menos disciplinados em "não inventar fatos
-além do texto" do que o Claude, que é a mesma preocupação de qualidade
-que motivou o cuidado com grounding no resto do pipeline sintético deste
-projeto.
+## Geração via LLM local
+
+`synth/generate_instructions_local.py` — mesmo pipeline de
+`synth/generate_instructions.py` (amostragem de passagens, SYSTEM_PROMPT,
+decontaminação, esquema de saída `{instruction, input, output, task}`),
+mas falando com os endpoints OpenAI-compatible do vLLM em vez da API da
+Anthropic. Mesma política de emoji zero de `sft/personas_br/` e
+`sft/aes_enem/`, resume via manifest.json incremental, circuit-breaker que
+tira um endpoint da rotação se ele cair, e uma auditoria opcional barata
+via Claude (`--audit-sample N`) sobre uma amostra do lote gerado —
+**recomendado** rodar pelo menos uma vez por fonte antes de confiar no
+lote inteiro, já que um modelo aberto menor tende a alucinar mais e ser
+menos disciplinado em "não inventar fatos" do que o Claude.
+
+```bash
+make synth-local-dry-run ARGS="--source classiccpt --max-examples 5"
+make synth-local-run ARGS="--source classiccpt --max-examples 2000 --audit-sample 30"
+```
+
+Saída: `data/synth_local/<source>/<source>_synth.jsonl` + `manifest.json`
+(+ `audit_report.json` se `--audit-sample > 0`) — mesmo uso via `--extra`
+de `sft/prepare_data.py` que os demais builders deste repo.
