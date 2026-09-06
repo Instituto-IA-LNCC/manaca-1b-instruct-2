@@ -202,21 +202,31 @@ def acquire(max_docs: int) -> dict[str, Any]:
 
     # MADLAD-400 usa um loading script customizado do HF (419 idiomas x
     # limpo/ruidoso nao da pra mapear so com data_files simples) --
-    # `trust_remote_code=True` e OBRIGATORIO para isso funcionar, mesmo
-    # ajuste ja feito no Carolina Corpus (03_acquire_carolina.py). Sem
-    # isso, o `datasets` pula o script e cai no fallback de inferir
-    # arquivos "simples", que nao encontra nada e falha com
-    # "No (supported) data files found" (reproduzido ao vivo no Netuno).
+    # `trust_remote_code=True` e necessario, mas NAO suficiente sozinho
+    # (reproduzido ao vivo: falhou igual com e sem essa flag). A causa real
+    # e a ASSINATURA da chamada: o idioma nao e um config posicional
+    # (`load_dataset(repo, "pt")`), e sim um kwarg `languages=[...]`
+    # (confirmado no README/ficha do dataset: `load_dataset(
+    # "allenai/madlad-400", languages=["pt"], split="clean")`). Passar
+    # "pt" como config faz o `datasets` procurar uma config que nao existe
+    # e cair no fallback de "sem arquivos de dados", daí o erro
+    # "No (supported) data files found".
     attempts = [
-        {"split": HF_SPLIT, "streaming": True, "trust_remote_code": True},
-        {"split": "train", "streaming": True, "trust_remote_code": True},
-        {"streaming": True, "trust_remote_code": True},  # sem split explicito
+        {"languages": [HF_CONFIG], "split": HF_SPLIT, "streaming": True, "trust_remote_code": True},
+        {"languages": [HF_CONFIG], "split": "train", "streaming": True, "trust_remote_code": True},
+        {"languages": [HF_CONFIG], "streaming": True, "trust_remote_code": True},  # sem split explicito
+        # ultimo recurso: assinatura antiga (config posicional), caso a
+        # estrutura real do repo seja diferente do que a ficha documenta
+        {"streaming": True, "trust_remote_code": True, "_positional_config": True},
     ]
     dataset = None
     last_exc = None
     for i, kwargs in enumerate(attempts):
+        kwargs = dict(kwargs)
+        positional = kwargs.pop("_positional_config", False)
         try:
-            dataset = load_dataset(HF_REPO_ID, HF_CONFIG, **kwargs)
+            dataset = (load_dataset(HF_REPO_ID, HF_CONFIG, **kwargs) if positional
+                       else load_dataset(HF_REPO_ID, **kwargs))
             break
         except Exception as e:
             last_exc = e
