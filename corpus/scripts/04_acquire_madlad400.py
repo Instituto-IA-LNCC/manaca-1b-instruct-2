@@ -200,11 +200,29 @@ def acquire(max_docs: int) -> dict[str, Any]:
                      f"mantidos | pulando os primeiros {docs_to_skip:,} docs do stream bruto")
     logger.info("=" * 60)
 
-    try:
-        dataset = load_dataset(HF_REPO_ID, HF_CONFIG, split=HF_SPLIT, streaming=True)
-    except Exception as e:
-        logger.warning(f"split='{HF_SPLIT}' falhou ({e}); tentando split='train'...")
-        dataset = load_dataset(HF_REPO_ID, HF_CONFIG, split="train", streaming=True)
+    # MADLAD-400 usa um loading script customizado do HF (419 idiomas x
+    # limpo/ruidoso nao da pra mapear so com data_files simples) --
+    # `trust_remote_code=True` e OBRIGATORIO para isso funcionar, mesmo
+    # ajuste ja feito no Carolina Corpus (03_acquire_carolina.py). Sem
+    # isso, o `datasets` pula o script e cai no fallback de inferir
+    # arquivos "simples", que nao encontra nada e falha com
+    # "No (supported) data files found" (reproduzido ao vivo no Netuno).
+    attempts = [
+        {"split": HF_SPLIT, "streaming": True, "trust_remote_code": True},
+        {"split": "train", "streaming": True, "trust_remote_code": True},
+        {"streaming": True, "trust_remote_code": True},  # sem split explicito
+    ]
+    dataset = None
+    last_exc = None
+    for i, kwargs in enumerate(attempts):
+        try:
+            dataset = load_dataset(HF_REPO_ID, HF_CONFIG, **kwargs)
+            break
+        except Exception as e:
+            last_exc = e
+            logger.warning(f"tentativa {i + 1}/{len(attempts)} ({kwargs}) falhou: {e}")
+    if dataset is None:
+        raise last_exc
 
     first = next(iter(dataset))
     text_col = next((c for c in ["text", "content"] if c in first), list(first.keys())[0])
