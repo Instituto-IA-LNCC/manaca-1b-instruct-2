@@ -200,37 +200,39 @@ def acquire(max_docs: int) -> dict[str, Any]:
                      f"mantidos | pulando os primeiros {docs_to_skip:,} docs do stream bruto")
     logger.info("=" * 60)
 
-    # MADLAD-400 usa um loading script customizado do HF (419 idiomas x
-    # limpo/ruidoso nao da pra mapear so com data_files simples) --
-    # `trust_remote_code=True` e necessario, mas NAO suficiente sozinho
-    # (reproduzido ao vivo: falhou igual com e sem essa flag). A causa real
-    # e a ASSINATURA da chamada: o idioma nao e um config posicional
-    # (`load_dataset(repo, "pt")`), e sim um kwarg `languages=[...]`
-    # (confirmado no README/ficha do dataset: `load_dataset(
-    # "allenai/madlad-400", languages=["pt"], split="clean")`). Passar
-    # "pt" como config faz o `datasets` procurar uma config que nao existe
-    # e cair no fallback de "sem arquivos de dados", daí o erro
-    # "No (supported) data files found".
+    # MADLAD-400 tem ~19,5 TB / centenas de milhares de arquivos -- QUALQUER
+    # chamada que force o `datasets` a enumerar/inferir o repo inteiro
+    # (config posicional, kwarg `languages=[...]`, ou so `trust_remote_code`)
+    # trava por minutos e falha com "No (supported) data files found"
+    # (reproduzido ao vivo varias vezes, com e sem essas variantes -- nao e
+    # um problema de assinatura da chamada, e do TAMANHO do repo). A saida
+    # real e nunca deixar o `datasets` listar o repo: passar `data_files`
+    # com um glob explicito, restrito so a pasta do idioma. Estrutura real
+    # confirmada nos nomes de commit do proprio repo (duas convencoes
+    # coexistem, tenta a mais nova primeiro):
+    #   data-v1p5/{lang}/clean_docs_v2-*-of-*.jsonl.gz  (mais recente)
+    #   data/{lang}/{lang}_clean_*.jsonl.gz             (legado)
+    # Isso tambem elimina a necessidade de trust_remote_code=True: com
+    # data_files explicito, o `datasets` usa o builder generico "json" (nao
+    # o script customizado), resolvendo so o glob pedido, nao o repo inteiro.
     attempts = [
-        {"languages": [HF_CONFIG], "split": HF_SPLIT, "streaming": True, "trust_remote_code": True},
-        {"languages": [HF_CONFIG], "split": "train", "streaming": True, "trust_remote_code": True},
-        {"languages": [HF_CONFIG], "streaming": True, "trust_remote_code": True},  # sem split explicito
-        # ultimo recurso: assinatura antiga (config posicional), caso a
-        # estrutura real do repo seja diferente do que a ficha documenta
-        {"streaming": True, "trust_remote_code": True, "_positional_config": True},
+        {"data_files": f"data-v1p5/{HF_CONFIG}/clean_docs_v2-*-of-*.jsonl.gz", "split": "train", "streaming": True},
+        {"data_files": f"data-v1p5/{HF_CONFIG}/noisy_docs_v2-*-of-*.jsonl.gz", "split": "train", "streaming": True},
+        {"data_files": f"data/{HF_CONFIG}/{HF_CONFIG}_clean_*.jsonl.gz", "split": "train", "streaming": True},
+        {"data_files": f"data/{HF_CONFIG}/{HF_CONFIG}_noisy_*.jsonl.gz", "split": "train", "streaming": True},
     ]
     dataset = None
     last_exc = None
     for i, kwargs in enumerate(attempts):
-        kwargs = dict(kwargs)
-        positional = kwargs.pop("_positional_config", False)
         try:
-            dataset = (load_dataset(HF_REPO_ID, HF_CONFIG, **kwargs) if positional
-                       else load_dataset(HF_REPO_ID, **kwargs))
+            dataset = load_dataset(HF_REPO_ID, **kwargs)
+            first_probe = next(iter(dataset))  # forca resolver o glob AGORA (falha rapido se vazio)
+            logger.info(f"tentativa {i + 1}/{len(attempts)} ({kwargs['data_files']}) OK")
             break
         except Exception as e:
             last_exc = e
-            logger.warning(f"tentativa {i + 1}/{len(attempts)} ({kwargs}) falhou: {e}")
+            logger.warning(f"tentativa {i + 1}/{len(attempts)} ({kwargs['data_files']}) falhou: {e}")
+            dataset = None
     if dataset is None:
         raise last_exc
 
