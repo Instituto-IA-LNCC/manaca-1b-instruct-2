@@ -206,6 +206,43 @@ def call_with_retry(client, max_retries=5, base_delay=1.0, **kwargs):
     raise last_exc
 
 
+_FATAL_MSG_MARKERS = ("credit", "balance", "quota", "insufficient")
+
+
+def _is_fatal_credit_error(exc: Exception) -> bool:
+    """Detecta erro de saldo/creditos esgotados (HTTP 400/403 da Anthropic
+    com mensagem mencionando credito/saldo/quota) -- NAO um erro generico de
+    requisicao invalida, que deve continuar sendo tratado como falha pontual
+    (PULADA) e nao interromper a rodada inteira."""
+    import anthropic
+    if not isinstance(exc, anthropic.APIStatusError):
+        return False
+    status = getattr(exc, "status_code", None)
+    if status not in (400, 403):
+        return False
+    msg = str(exc).lower()
+    return any(marker in msg for marker in _FATAL_MSG_MARKERS)
+
+
+def load_manifest(out_dir: str) -> dict:
+    path = os.path.join(out_dir, "manifest.json")
+    if os.path.exists(path):
+        try:
+            with open(path, encoding="utf-8") as fp:
+                return json.load(fp)
+        except (json.JSONDecodeError, OSError):
+            pass
+    return {}
+
+
+def save_manifest_atomic(out_dir: str, manifest: dict) -> None:
+    path = os.path.join(out_dir, "manifest.json")
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fp:
+        json.dump(manifest, fp, ensure_ascii=False, indent=2)
+    os.replace(tmp, path)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Gera SFT (instrucao+resposta) a partir de personas brasileiras via Claude")
     ap.add_argument("--out", default="data/sft/personas_br", help="diretorio de saida")
@@ -257,11 +294,59 @@ def main() -> int:
     os.makedirs(args.out, exist_ok=True)
     out_path = os.path.join(args.out, "personas_br.jsonl")
 
-    n, n_skip_model, n_skip_unparseable, n_skip_contam, in_tok, out_tok = 0, 0, 0, 0, 0, 0
-    with open(out_path, "w", encoding="utf-8") as fp:
+    # ── Retomada: uma rodada anterior pode ter parado no meio (creditos
+    # esgotados, Ctrl-C, container derrubado). O reservoir sample e
+    # deterministico (mesma seed + mesmo num_personas + mesmo stream), entao
+    # "personas[i]" e igual em toda rodada -- basta gravar ate onde
+    # chegamos (processed_idx) e, ao retomar, pular os indices ja
+    # tentados e ABRIR O ARQUIVO EM MODO APPEND (nunca sobrescrever o que
+    # ja foi pago e gravado).
+    prev = load_manifest(args.out)
+    can_resume = (
+        prev.get("status") in ("in_progress", "stopped_fatal_error")
+        and prev.get("personas_sampled") == len(personas)
+        and prev.get("seed") == args.seed
+        and prev.get("model") == args.model
+    )
+    processed_idx = prev.get("processed_idx", -1) if can_resume else -1
+    n = prev.get("total", 0) if can_resume else 0
+    n_skip_model = prev.get("skipped_model_decidiu", 0) if can_resume else 0
+    n_skip_unparseable = prev.get("skipped_json_invalido", 0) if can_resume else 0
+    n_skip_contam = prev.get("skipped_contaminado", 0) if can_resume else 0
+    n_skip_api_fail = prev.get("skipped_api_failure", 0) if can_resume else 0
+    in_tok = prev.get("tokens_input", 0) if can_resume else 0
+    out_tok = prev.get("tokens_output", 0) if can_resume else 0
+    if can_resume:
+        print(f"[personas-br] RETOMANDO: {processed_idx + 1:,}/{len(personas):,} personas ja "
+              f"tentadas, {n:,} exemplos ja gravados em {out_path}")
+
+    SAVE_EVERY = 20  # checkpoint do manifest a cada N personas tentadas
+
+    def save_manifest(status: str) -> None:
+        price_in, price_out = PRICING_SNAPSHOT.get(args.model, (None, None))
+        est_cost = (round(in_tok / 1e6 * price_in + out_tok / 1e6 * price_out, 4)
+                    if price_in is not None else None)
+        save_manifest_atomic(args.out, {
+            "dataset": "personas_br", "hf_repo": HF_REPO_ID, "license": LICENSE, "reference": REFERENCE,
+            "model": args.model, "seed": args.seed, "personas_sampled": len(personas),
+            "status": status, "processed_idx": last_completed_idx, "total": n,
+            "skipped_model_decidiu": n_skip_model, "skipped_json_invalido": n_skip_unparseable,
+            "skipped_contaminado": n_skip_contam, "skipped_api_failure": n_skip_api_fail,
+            "tokens_input": in_tok, "tokens_output": out_tok, "estimated_cost_usd": est_cost,
+            "estimated_cost_note": "Chamadas sincronas, SEM desconto de Batches. Conferir preco vigente.",
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+        })
+
+    last_completed_idx = processed_idx
+    stop_reason = None
+    file_mode = "a" if can_resume else "w"
+    with open(out_path, file_mode, encoding="utf-8") as fp:
         for i, row in enumerate(personas):
+            if i <= processed_idx:
+                continue
             persona_text = persona_to_text(row)
             if not persona_text:
+                last_completed_idx = i
                 continue
             try:
                 resp = call_with_retry(
@@ -270,7 +355,16 @@ def main() -> int:
                     messages=[{"role": "user", "content": f"Persona:\n{persona_text[:3000]}"}],
                 )
             except Exception as e:
+                if _is_fatal_credit_error(e):
+                    print(f"\n[personas-br] ERRO FATAL na persona {i} (provavel esgotamento de "
+                          f"creditos/quota): {e}")
+                    print(f"[personas-br] parando aqui -- {n:,} exemplos ja gravados em {out_path}. "
+                          "Rode o MESMO comando de novo apos resolver o credito para retomar.")
+                    stop_reason = "fatal_api_error"
+                    break
                 print(f"[aviso] persona {i}: falha na API ({e}). PULADA.")
+                n_skip_api_fail += 1
+                last_completed_idx = i
                 continue
 
             in_tok += resp.usage.input_tokens
@@ -279,40 +373,40 @@ def main() -> int:
             obj = parse_json_obj(text)
             if not obj or obj.get("skip"):
                 n_skip_model += 1
+                last_completed_idx = i
                 continue
             instr, out = s(obj.get("instruction")), s(obj.get("output"))
             if not instr or not out:
                 n_skip_unparseable += 1
+                last_completed_idx = i
                 continue
             if is_contaminated(instr, decontam):
                 n_skip_contam += 1
+                last_completed_idx = i
                 continue
 
             fp.write(json.dumps({"instruction": instr, "input": "", "output": out, "task": "personas_br"},
                                  ensure_ascii=False) + "\n")
+            fp.flush()
             n += 1
+            last_completed_idx = i
             if (i + 1) % 100 == 0:
                 print(f"[personas-br] {i + 1}/{len(personas)} processadas, {n} gravadas")
+            if (i + 1) % SAVE_EVERY == 0:
+                save_manifest("in_progress")
+
+    save_manifest("stopped_fatal_error" if stop_reason else "completed")
 
     price_in, price_out = PRICING_SNAPSHOT.get(args.model, (None, None))
     est_cost = (round(in_tok / 1e6 * price_in + out_tok / 1e6 * price_out, 4)
                 if price_in is not None else None)
-
-    manifest = {
-        "dataset": "personas_br", "hf_repo": HF_REPO_ID, "license": LICENSE, "reference": REFERENCE,
-        "model": args.model, "personas_sampled": len(personas), "total": n,
-        "skipped_model_decidiu": n_skip_model, "skipped_json_invalido": n_skip_unparseable,
-        "skipped_contaminado": n_skip_contam,
-        "tokens_input": in_tok, "tokens_output": out_tok, "estimated_cost_usd": est_cost,
-        "estimated_cost_note": "Chamadas sincronas, SEM desconto de Batches. Conferir preco vigente.",
-        "generated_at": datetime.now(timezone.utc).isoformat(),
-    }
-    with open(os.path.join(args.out, "manifest.json"), "w", encoding="utf-8") as fp:
-        json.dump(manifest, fp, ensure_ascii=False, indent=2)
-
     print(f"\n[personas-br] TOTAL: {n:,} exemplos -> {out_path}")
     print(f"[personas-br] tokens: {in_tok:,} entrada / {out_tok:,} saida"
           + (f" | custo estimado: US${est_cost}" if est_cost is not None else ""))
+    if stop_reason:
+        print(f"[personas-br] PARADO ANTES DO FIM (motivo: {stop_reason}) -- rode o mesmo comando "
+              "de novo para retomar de onde parou.")
+        return 2
     return 0
 
 

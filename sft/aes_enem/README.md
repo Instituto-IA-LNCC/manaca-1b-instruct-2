@@ -31,3 +31,15 @@ make aes-enem-data ARGS="--config sourceAWithGraders --max_examples 500"
 
 Saída: `data/sft/aes_enem/aes_enem_feedback.jsonl` (Alpaca) + manifest com
 colunas detectadas e custo estimado.
+
+## Retomada (créditos limitados)
+
+Cada exemplo é gravado no disco (e o arquivo, `flush`ado) assim que sai
+da API — nada fica só em memória. O manifest grava `processed_idx`
+(posição no dataset) a cada 20 exemplos e ao final. Se a rodada parar no
+meio (créditos esgotados, Ctrl-C, container derrubado) — inclusive se o
+próprio script detectar um erro 400/403 de saldo/crédito e parar sozinho
+(status `stopped_fatal_error`, saída com código 2) — **rode o mesmo
+comando de novo** com o mesmo `--config`/`--model`: ele pula os exemplos
+já tentados e usa modo *append* no arquivo de saída, sem duplicar nem
+pagar de novo pelo que já foi processado.

@@ -150,6 +150,43 @@ def call_with_retry(client, max_retries=5, base_delay=1.0, **kwargs):
     raise last_exc
 
 
+_FATAL_MSG_MARKERS = ("credit", "balance", "quota", "insufficient")
+
+
+def _is_fatal_credit_error(exc: Exception) -> bool:
+    """Detecta erro de saldo/creditos esgotados (HTTP 400/403 da Anthropic
+    com mensagem mencionando credito/saldo/quota) -- NAO um erro generico de
+    requisicao invalida, que deve continuar sendo tratado como falha pontual
+    (PULADO) e nao interromper a rodada inteira."""
+    import anthropic
+    if not isinstance(exc, anthropic.APIStatusError):
+        return False
+    status = getattr(exc, "status_code", None)
+    if status not in (400, 403):
+        return False
+    msg = str(exc).lower()
+    return any(marker in msg for marker in _FATAL_MSG_MARKERS)
+
+
+def load_manifest(out_dir: str) -> dict:
+    path = os.path.join(out_dir, "manifest.json")
+    if os.path.exists(path):
+        try:
+            with open(path, encoding="utf-8") as fp:
+                return json.load(fp)
+        except (json.JSONDecodeError, OSError):
+            pass
+    return {}
+
+
+def save_manifest_atomic(out_dir: str, manifest: dict) -> None:
+    path = os.path.join(out_dir, "manifest.json")
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fp:
+        json.dump(manifest, fp, ensure_ascii=False, indent=2)
+    os.replace(tmp, path)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Gera feedback de redacao ENEM via Claude, grounded na nota real")
     ap.add_argument("--out", default="data/sft/aes_enem", help="diretorio de saida")
@@ -221,15 +258,59 @@ def main() -> int:
     os.makedirs(args.out, exist_ok=True)
     out_path = os.path.join(args.out, "aes_enem_feedback.jsonl")
 
-    n, n_no_grades, n_api_fail, in_tok, out_tok = 0, 0, 0, 0, 0
-    with open(out_path, "w", encoding="utf-8") as fp:
+    # ── Retomada: uma rodada anterior pode ter parado no meio (creditos
+    # esgotados, Ctrl-C, container derrubado). `ds` nao-streaming tem ordem
+    # deterministica (mesma config = mesmas linhas na mesma ordem), entao
+    # basta gravar ate onde chegamos (processed_idx) e, ao retomar, pular
+    # os indices ja tentados e ABRIR O ARQUIVO EM MODO APPEND (nunca
+    # sobrescrever o que ja foi pago e gravado).
+    prev = load_manifest(args.out)
+    can_resume = (
+        prev.get("status") in ("in_progress", "stopped_fatal_error")
+        and prev.get("config") == cfg
+        and prev.get("model") == args.model
+    )
+    processed_idx = prev.get("processed_idx", -1) if can_resume else -1
+    n = prev.get("total", 0) if can_resume else 0
+    n_no_grades = prev.get("skipped_no_grades", 0) if can_resume else 0
+    n_api_fail = prev.get("skipped_api_failure", 0) if can_resume else 0
+    in_tok = prev.get("tokens_input", 0) if can_resume else 0
+    out_tok = prev.get("tokens_output", 0) if can_resume else 0
+    if can_resume:
+        print(f"[aes-enem] RETOMANDO: {processed_idx + 1:,} exemplos ja tentados, "
+              f"{n:,} ja gravados em {out_path}")
+
+    SAVE_EVERY = 20  # checkpoint do manifest a cada N exemplos tentados
+
+    def save_manifest(status: str) -> None:
+        price_in, price_out = PRICING_SNAPSHOT.get(args.model, (None, None))
+        est_cost = (round(in_tok / 1e6 * price_in + out_tok / 1e6 * price_out, 4)
+                    if price_in is not None else None)
+        save_manifest_atomic(args.out, {
+            "dataset": "aes_enem_feedback", "hf_repo": HF_REPO_ID, "config": cfg,
+            "license": LICENSE, "reference": REFERENCE, "model": args.model,
+            "essay_column": essay_col, "single_grade_column": single_col, "competency_columns": comp_cols,
+            "status": status, "processed_idx": last_completed_idx, "total": n,
+            "skipped_no_grades": n_no_grades, "skipped_api_failure": n_api_fail,
+            "tokens_input": in_tok, "tokens_output": out_tok, "estimated_cost_usd": est_cost,
+            "estimated_cost_note": "Chamadas sincronas, SEM desconto de Batches. Conferir preco vigente.",
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+        })
+
+    last_completed_idx = processed_idx
+    stop_reason = None
+    file_mode = "a" if can_resume else "w"
+    with open(out_path, file_mode, encoding="utf-8") as fp:
         for i, ex in enumerate(ds):
+            if i <= processed_idx:
+                continue
             if args.max_examples and n >= args.max_examples:
                 break
             essay = s(ex.get(essay_col))
             grades_text = build_grades_text(ex, single_col, comp_cols)
             if not essay or not grades_text:
                 n_no_grades += 1
+                last_completed_idx = i
                 continue
             user_msg = f"Redação:\n{essay}\n\nNotas já atribuídas pelo corretor:\n{grades_text}"
             try:
@@ -239,40 +320,46 @@ def main() -> int:
                     messages=[{"role": "user", "content": user_msg}],
                 )
             except Exception as e:
+                if _is_fatal_credit_error(e):
+                    print(f"\n[aes-enem] ERRO FATAL no exemplo {i} (provavel esgotamento de "
+                          f"creditos/quota): {e}")
+                    print(f"[aes-enem] parando aqui -- {n:,} exemplos ja gravados em {out_path}. "
+                          "Rode o MESMO comando de novo apos resolver o credito para retomar.")
+                    stop_reason = "fatal_api_error"
+                    break
                 print(f"[aviso] exemplo {i}: falha na API ({e}). PULADO.")
                 n_api_fail += 1
+                last_completed_idx = i
                 continue
             in_tok += resp.usage.input_tokens
             out_tok += resp.usage.output_tokens
             feedback = next((b.text for b in resp.content if b.type == "text"), "").strip()
             if not feedback:
                 n_api_fail += 1
+                last_completed_idx = i
                 continue
             fp.write(json.dumps({"instruction": INSTRUCTION, "input": essay, "output": feedback,
                                  "task": "aes_enem_feedback"}, ensure_ascii=False) + "\n")
+            fp.flush()
             n += 1
+            last_completed_idx = i
             if (n) % 50 == 0:
                 print(f"[aes-enem] {n} exemplos gravados...")
+            if (i + 1) % SAVE_EVERY == 0:
+                save_manifest("in_progress")
+
+    save_manifest("stopped_fatal_error" if stop_reason else "completed")
 
     price_in, price_out = PRICING_SNAPSHOT.get(args.model, (None, None))
     est_cost = (round(in_tok / 1e6 * price_in + out_tok / 1e6 * price_out, 4)
                 if price_in is not None else None)
-
-    manifest = {
-        "dataset": "aes_enem_feedback", "hf_repo": HF_REPO_ID, "config": cfg,
-        "license": LICENSE, "reference": REFERENCE, "model": args.model,
-        "essay_column": essay_col, "single_grade_column": single_col, "competency_columns": comp_cols,
-        "total": n, "skipped_no_grades": n_no_grades, "skipped_api_failure": n_api_fail,
-        "tokens_input": in_tok, "tokens_output": out_tok, "estimated_cost_usd": est_cost,
-        "estimated_cost_note": "Chamadas sincronas, SEM desconto de Batches. Conferir preco vigente.",
-        "generated_at": datetime.now(timezone.utc).isoformat(),
-    }
-    with open(os.path.join(args.out, "manifest.json"), "w", encoding="utf-8") as fp:
-        json.dump(manifest, fp, ensure_ascii=False, indent=2)
-
     print(f"\n[aes-enem] TOTAL: {n:,} exemplos -> {out_path}")
     print(f"[aes-enem] tokens: {in_tok:,} entrada / {out_tok:,} saida"
           + (f" | custo estimado: US${est_cost}" if est_cost is not None else ""))
+    if stop_reason:
+        print(f"[aes-enem] PARADO ANTES DO FIM (motivo: {stop_reason}) -- rode o mesmo comando "
+              "de novo para retomar de onde parou.")
+        return 2
     return 0
 
 

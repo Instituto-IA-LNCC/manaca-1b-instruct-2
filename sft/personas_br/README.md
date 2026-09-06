@@ -26,3 +26,15 @@ make personas-br-data ARGS="--num_personas 2000"
 
 Saída: `data/sft/personas_br/personas_br.jsonl` (Alpaca) + manifest com
 custo estimado (tokens reais, sem desconto de Batches).
+
+## Retomada (créditos limitados)
+
+Cada exemplo é gravado no disco (e o arquivo, `flush`ado) assim que sai
+da API — nada fica só em memória. O manifest grava `processed_idx`
+(posição na amostra) a cada 20 personas e ao final. Se a rodada parar no
+meio (créditos esgotados, Ctrl-C, container derrubado) — inclusive se o
+próprio script detectar um erro 400/403 de saldo/crédito e parar sozinho
+(status `stopped_fatal_error`, saída com código 2) — **rode o mesmo
+comando de novo** com os mesmos `--num_personas`/`--seed`/`--model`: ele
+pula as personas já tentadas e usa modo *append* no arquivo de saída, sem
+duplicar nem pagar de novo pelo que já foi processado.
