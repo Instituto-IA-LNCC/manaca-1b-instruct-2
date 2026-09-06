@@ -3,17 +3,17 @@
   "source": "corpus/scripts/01_acquire_legalpt.py (config acordaos_tcu)",
   "license": "dominio-publico (documento governamental, Art. 216 CF/1988)",
   "reference": "eduagarcia/LegalPT_dedup (config acordaos_tcu) via HuggingFace",
-  "generation_method": "MANUAL -- gerado por Claude diretamente nesta sessao de codigo, seguindo o mesmo SYSTEM_PROMPT/regras de synth/generate_instructions.py (grounded no texto, sem inventar fatos, task_type dentre resumo/pergunta_resposta/explicacao_simples/extracao_pontos_chave/reescrita_tom/questao_estilo_prova), SEM custo de API -- as passagens de origem foram coladas manualmente no chat pelo usuario (brunolsm), extraidas do 1o shard de corpus/raw/legalpt/ no Netuno (documentos 1-10 em 2 lotes de 5, depois documentos 11-40 e 43-72 em 2 lotes de 30 -- alguns ids do dataset tem lacunas, ex. 34/36/37/41/42 nao apareceram no lote 11-40, e 41/42 ja tinham sido cobertos no lote anterior). O shard 0 tem apenas 100 documentos no total (config acordaos_tcu parece ser pequena); faltam os documentos 73-100 pra esgotar o shard e bater a meta de ~100 pedida pelo usuario.",
-  "total": 70,
+  "generation_method": "MANUAL -- gerado por Claude diretamente nesta sessao de codigo, seguindo o mesmo SYSTEM_PROMPT/regras de synth/generate_instructions.py (grounded no texto, sem inventar fatos, task_type dentre resumo/pergunta_resposta/explicacao_simples/extracao_pontos_chave/reescrita_tom/questao_estilo_prova), SEM custo de API -- as passagens de origem foram coladas manualmente no chat pelo usuario (brunolsm), extraidas do 1o shard de corpus/raw/legalpt/ no Netuno (documentos 1-10 em 2 lotes de 5, depois documentos 11-40, 43-72 e 73-102 em 3 lotes de 30 -- alguns ids do dataset tem lacunas, ex. 34/36/37/41/42 nao apareceram no lote 11-40, e 41/42 ja tinham sido cobertos no lote anterior). O shard 0 tem exatamente 100 documentos no total (config acordaos_tcu); este lote esgota o shard e completa a meta de ~100 exemplos pedida pelo usuario ('mais um pouco de legalpt, depois trocamos de fonte, quero uns 100'). Proximo passo combinado com o usuario: trocar de fonte de corpus.",
+  "total": 100,
   "task_type_distribution": {
-    "pergunta_resposta": 20,
-    "extracao_pontos_chave": 16,
-    "resumo": 15,
-    "explicacao_simples": 12,
+    "pergunta_resposta": 32,
+    "extracao_pontos_chave": 26,
+    "resumo": 19,
+    "explicacao_simples": 16,
     "reescrita_tom": 4,
     "questao_estilo_prova": 3
   },
   "decontaminated": true,
-  "decontamination_note": "Verificado contra bench/ifeval_pt, bench/mtbench_pt, bench/safety_pt, bench/overrefusal_pt, dpo/dpo_seeds/safety_prompts, sft/safety_seeds/benign_help (245 prompts estaticos) -- nenhuma contaminacao encontrada. Confirmado tambem que nenhuma das 70 passagens de contexto se repete.",
-  "generated_at": "2026-09-06T18:10:00.000000+00:00"
+  "decontamination_note": "Verificado contra bench/ifeval_pt, bench/mtbench_pt, bench/safety_pt, bench/overrefusal_pt, dpo/dpo_seeds/safety_prompts, sft/safety_seeds/benign_help (245 prompts/turns estaticos, incluindo o campo 'turns' de ifeval_pt e mtbench_pt) -- nenhuma contaminacao encontrada. Confirmado tambem que nenhuma das 100 passagens de contexto se repete e nenhuma instrucao e identica a outra do proprio lote.",
+  "generated_at": "2026-09-06T21:40:00.000000+00:00"
 }
