@@ -4,7 +4,7 @@ Manacá-1B-Instruct-2 — Script 06: Aquisição do HPLT 2.0 (pt)
 ================================================================
 LNCC × NII/LLM-jp | Corpus-fonte para instrução sintética (Fase "instruct-2")
 
-Baixa `HPLT/HPLT2.0_cleaned` (config `pt`) e grava em Apache Parquet +
+Baixa `HPLT/HPLT2.0_cleaned` (config `por_Latn`) e grava em Apache Parquet +
 Zstandard, em shards de 50.000 documentos. Idempotente.
 
 POR QUE ESTA FONTE ESTAVA DESCARTADA E AGORA NÃO ESTÁ:
@@ -61,7 +61,8 @@ except ImportError as e:
 
 SOURCE_NAME  = "hplt2"
 HF_REPO_ID   = "HPLT/HPLT2.0_cleaned"
-HF_CONFIG    = "pt"
+HF_CONFIG    = "por_Latn"  # BCP-47 idioma+script (confirmado ao vivo: 'pt' nao existe -- ver
+                           # BuilderConfig 'pt' not found. Available: [..., 'por_Latn', ...])
 HF_SPLIT     = "train"
 LICENSE      = "cc0-1.0"
 REFERENCE    = "de Gibert et al. (2024). HPLT 2.0. arXiv:2403.05010."
@@ -285,7 +286,7 @@ def verify() -> None:
 
 
 if __name__ == "__main__":
-    ap = argparse.ArgumentParser(description="Aquisicao do HPLT 2.0 (config pt)")
+    ap = argparse.ArgumentParser(description="Aquisicao do HPLT 2.0 (config por_Latn)")
     ap.add_argument("--max-docs", type=int, default=DEFAULT_MAX_DOCS,
                      help=f"teto de documentos mantidos (default {DEFAULT_MAX_DOCS:,}; 0 = sem limite)")
     args = ap.parse_args()

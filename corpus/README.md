@@ -22,7 +22,7 @@ As diferenças estão documentadas no docstring de cada script.
 | 03 | `03_acquire_carolina.py` | `carolina-c4ai/corpus-carolina` (rev. `v1.2`) | Diversidade de registro/gênero (escrita, roleplay) | CC BY-NC-SA 4.0 — **não comercial** |
 | 04 | `04_acquire_madlad400.py` | `allenai/MADLAD-400` (config `pt`) | Web geral, domínios/períodos distintos do GigaVerbo | Apache 2.0 |
 | 05 | `05_acquire_fineweb2.py` | `HuggingFaceFW/fineweb-2` (config `por_Latn`) | Web de alta qualidade (pipeline FineWeb) | ODC-By 1.0 |
-| 06 | `06_acquire_hplt2.py` | `HPLT/HPLT2.0_cleaned` (config `pt`) | Web geral, cobertura temporal distinta | CC0 (domínio público) |
+| 06 | `06_acquire_hplt2.py` | `HPLT/HPLT2.0_cleaned` (config `por_Latn`) | Web geral, cobertura temporal distinta | CC0 (domínio público) |
 | 07 | `07_acquire_portuguese_pd.py` | `PleIAs/Portuguese-PD` | Registro histórico/literário (pré-1884) | Domínio público |
 
 ### Fontes 04-06 — por que estavam descartadas e agora não estão
