@@ -1,0 +1,18 @@
+{
+  "dataset": "synth_legalpt_manual",
+  "source": "corpus/scripts/01_acquire_legalpt.py (config acordaos_tcu)",
+  "license": "dominio-publico (documento governamental, Art. 216 CF/1988)",
+  "reference": "eduagarcia/LegalPT_dedup (config acordaos_tcu) via HuggingFace",
+  "generation_method": "MANUAL -- gerado por Claude diretamente nesta sessao de codigo, seguindo o mesmo SYSTEM_PROMPT/regras de synth/generate_instructions.py (grounded no texto, sem inventar fatos, task_type dentre resumo/pergunta_resposta/explicacao_simples/extracao_pontos_chave/reescrita_tom/questao_estilo_prova), SEM custo de API -- as 5 passagens de origem foram coladas manualmente no chat pelo usuario (brunolsm), extraidas do 1o shard de corpus/raw/legalpt/ no Netuno.",
+  "total": 5,
+  "task_type_distribution": {
+    "extracao_pontos_chave": 1,
+    "resumo": 1,
+    "explicacao_simples": 1,
+    "questao_estilo_prova": 1,
+    "pergunta_resposta": 1
+  },
+  "decontaminated": true,
+  "decontamination_note": "Verificado contra bench/ifeval_pt, bench/mtbench_pt, bench/safety_pt, bench/overrefusal_pt, dpo/dpo_seeds/safety_prompts, sft/safety_seeds/benign_help (245 prompts estaticos) -- nenhuma contaminacao encontrada.",
+  "generated_at": "2026-09-06T15:46:46.130724+00:00"
+}
