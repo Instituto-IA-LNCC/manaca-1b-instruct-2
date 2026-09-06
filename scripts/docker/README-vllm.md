@@ -80,6 +80,15 @@ make synth-local-dry-run ARGS="--source classiccpt --max-examples 5"
 make synth-local-run ARGS="--source classiccpt --max-examples 2000 --audit-sample 30"
 ```
 
+**Escalando um lote já rodado**: rodar de novo com parâmetros diferentes
+(ex.: outro `--seed`) sobre o MESMO `--out` de um lote já `completed` é
+bloqueado de propósito — para com erro em vez de sobrescrever
+silenciosamente o que já foi gerado (bug real que aconteceu ao vivo aqui:
+escalar o ClassiCC-PT de 998 para 5000 com `--seed` novo apagou um lote
+de 891 exemplos, sem custo de API perdido mas com tempo de GPU
+desperdiçado). Use `--out <outro-diretório>` para manter os dois lotes
+separados, ou `--overwrite` se a intenção é mesmo descartar o anterior.
+
 Saída: `data/synth_local/<source>/<source>_synth.jsonl` + `manifest.json`
 (+ `audit_report.json` se `--audit-sample > 0`) — mesmo uso via `--extra`
 de `sft/prepare_data.py` que os demais builders deste repo.

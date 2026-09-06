@@ -294,11 +294,41 @@ def main() -> int:
     ap.add_argument("--audit-sample", type=int, default=0,
                      help="apos gerar, audita N exemplos aleatorios via Claude (custo pequeno)")
     ap.add_argument("--audit-model", default="claude-haiku-4-5")
+    ap.add_argument("--overwrite", action="store_true",
+                     help="permite sobrescrever um lote existente em --out cujo status/parametros "
+                          "nao permitem retomada (sem isso, o comando para com erro em vez de "
+                          "truncar silenciosamente um lote ja completo ou de parametros diferentes)")
     args = ap.parse_args()
 
     out_dir = args.out or f"data/synth_local/{args.source}"
     os.makedirs(out_dir, exist_ok=True)
     out_path = os.path.join(out_dir, f"{args.source}_synth.jsonl")
+
+    # Checagem de seguranca ANTES de amostrar/gerar qualquer coisa: um lote
+    # anterior em --out so pode ser retomado (append) se status e parametros
+    # baterem EXATAMENTE (ver can_resume abaixo); qualquer outro caso (lote
+    # 'completed', ou parametros diferentes tipo --seed novo) cai no modo
+    # "w" (sobrescreve) mais abaixo -- o que ja aconteceu ao vivo aqui e
+    # apagou silenciosamente um lote de 891 exemplos. Falha cedo em vez de
+    # truncar sem avisar; --overwrite e a saida explicita quando a intencao
+    # e mesmo descartar o que esta em --out.
+    _prev_check = load_manifest(out_dir)
+    _can_resume_check = (
+        _prev_check.get("status") in ("in_progress", "stopped_fatal_error")
+        and _prev_check.get("source") == args.source
+        and _prev_check.get("model") == args.model
+        and _prev_check.get("max_examples") == args.max_examples
+        and _prev_check.get("oversample") == args.oversample
+        and _prev_check.get("seed") == args.seed
+    )
+    if (not args.dry_run and not _can_resume_check and not args.overwrite
+            and os.path.exists(out_path) and os.path.getsize(out_path) > 0):
+        print(f"[ERRO] {out_path} ja existe (lote anterior: status={_prev_check.get('status')!r}, "
+              f"total={_prev_check.get('total')}, seed={_prev_check.get('seed')}) e os parametros "
+              "deste comando nao permitem retomada -- rodar assim SOBRESCREVERIA esse lote. Use "
+              "--out <outro-diretorio> para um lote novo separado (preservando o anterior), ou "
+              "--overwrite se a intencao e mesmo descartar o que esta em " + out_path + ".")
+        return 1
 
     source_dir = WORK_DIR / "raw" / SOURCES[args.source]
     passages = sample_passages(source_dir, args.max_examples, args.oversample, args.seed)
@@ -322,15 +352,8 @@ def main() -> int:
         decontam_set = load_decontamination_set(args.repo_root)
         print(f"[decontam] {len(decontam_set)} prompts normalizados")
 
-    prev = load_manifest(out_dir)
-    can_resume = (
-        prev.get("status") in ("in_progress", "stopped_fatal_error")
-        and prev.get("source") == args.source
-        and prev.get("model") == args.model
-        and prev.get("max_examples") == args.max_examples
-        and prev.get("oversample") == args.oversample
-        and prev.get("seed") == args.seed
-    )
+    prev = _prev_check
+    can_resume = _can_resume_check
     processed_ids: set[str] = set(prev.get("processed_ids", [])) if can_resume else set()
     n = prev.get("total", 0) if can_resume else 0
     n_skip_model = prev.get("skipped_by_model", 0) if can_resume else 0

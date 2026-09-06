@@ -64,3 +64,10 @@ próprio script detectar um erro 400/403 de saldo/crédito e parar sozinho
 comando de novo** com os mesmos `--num_personas`/`--seed`/`--model`: ele
 pula as personas já tentadas e usa modo *append* no arquivo de saída, sem
 duplicar nem pagar de novo pelo que já foi processado.
+
+**Rodar de novo com parâmetros DIFERENTES sobre o mesmo `--out`** (lote já
+`completed`, ou `--num_personas`/`--seed`/`--model` mudados) é bloqueado de
+propósito — o comando para com erro em vez de sobrescrever silenciosamente
+exemplos já pagos. Use `--out <outro-diretório>` para um lote novo separado
+(mesmo padrão do `personas_br_batch2`), ou `--overwrite` se a intenção é
+mesmo descartar o que está no diretório atual.

@@ -227,6 +227,10 @@ def main() -> int:
                          "simples (default 'low'; ver nota de custo no README)")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--dry-run", action="store_true", help="mostra o prompt de sistema e o 1o exemplo, sem chamar a API")
+    ap.add_argument("--overwrite", action="store_true",
+                    help="permite sobrescrever um lote existente em --out cujo status/parametros "
+                         "nao permitem retomada (sem isso, o comando para com erro em vez de "
+                         "truncar silenciosamente um lote ja pago e completo)")
     args = ap.parse_args()
 
     try:
@@ -328,6 +332,19 @@ def main() -> int:
             "estimated_cost_note": "Chamadas sincronas, SEM desconto de Batches. Conferir preco vigente.",
             "generated_at": datetime.now(timezone.utc).isoformat(),
         })
+
+    # Trava de seguranca: ver mesmo comentario/motivo em
+    # sft/personas_br/generate_personas_sft.py e
+    # synth/generate_instructions_local.py (bug real confirmado ao vivo la:
+    # rodar de novo com parametro diferente sobre o mesmo --out apagou
+    # silenciosamente um lote ja gerado).
+    if not can_resume and not args.overwrite and os.path.exists(out_path) and os.path.getsize(out_path) > 0:
+        print(f"[ERRO] {out_path} ja existe (lote anterior: status={prev.get('status')!r}, "
+              f"total={prev.get('total')}, config={prev.get('config')}) e os parametros deste "
+              "comando nao permitem retomada -- rodar assim SOBRESCREVERIA exemplos ja pagos. Use "
+              "--out <outro-diretorio> para um lote novo separado (preservando o anterior), ou "
+              "--overwrite se a intencao e mesmo descartar o que esta em " + out_path + ".")
+        return 1
 
     last_completed_idx = processed_idx
     stop_reason = None
