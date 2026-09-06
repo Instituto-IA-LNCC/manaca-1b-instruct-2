@@ -80,6 +80,14 @@ echo "[run_vllm_serve] container=${CNAME} (2o plano -- sobrevive ao logout do SS
 
 docker rm -f "${CNAME}" >/dev/null 2>&1 || true
 
+# ENFORCE_EAGER=1 pula compilacao/captura de CUDA graph do motor V1 -- na
+# primeira subida numa GPU de workstation (sem NVLink/otimizacoes de
+# datacenter) essa etapa pode levar minutos e nao emite log nenhum ate
+# terminar; ative pra diagnosticar se o servidor esta so lento ou realmente
+# travado, ou pra iterar mais rapido (custa throughput de inferencia).
+EXTRA_ARGS=()
+[ "${ENFORCE_EAGER:-0}" = "1" ] && EXTRA_ARGS+=(--enforce-eager)
+
 docker run -d --name "${CNAME}" \
   --gpus "device=${GPU}" --network host --ipc host --shm-size=16g \
   "${RESOLV_MOUNT[@]}" \
@@ -89,7 +97,8 @@ docker run -d --name "${CNAME}" \
   --model "${MODEL}" \
   --port "${PORT}" \
   --gpu-memory-utilization "${GPU_MEM_UTIL}" \
-  --max-model-len "${MAX_MODEL_LEN}"
+  --max-model-len "${MAX_MODEL_LEN}" \
+  "${EXTRA_ARGS[@]}"
 
 echo "[run_vllm_serve]   logs:    docker logs -f ${CNAME}"
 echo "[run_vllm_serve]   pronto quando aparecer: 'Uvicorn running on http://0.0.0.0:${PORT}'"
