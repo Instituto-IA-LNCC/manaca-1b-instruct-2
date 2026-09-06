@@ -16,6 +16,14 @@ chamada JSON. Chamadas síncronas (volume da ordem de milhares por rodada,
 não Batches). Decontamina contra os arquivos estáticos deste repo (mesmo
 mecanismo do `synth/generate_instructions.py`).
 
+Emoji não é banido — o registro varia por contexto (uma mensagem de
+WhatsApp de venda pode usar, uma resposta técnica não), e o próprio
+julgamento do MT-Bench-PT já penaliza a FALTA de emoji num post/mensagem
+informal. O que é descartado é excesso (`count_emojis(output) >
+MAX_EMOJIS_PER_OUTPUT`, default 6) — o modelo às vezes exagera e cobre
+cada linha de uma mensagem com emoji, o que soa como caricatura, não
+como uma pessoa real escrevendo.
+
 ## Uso
 
 ```bash

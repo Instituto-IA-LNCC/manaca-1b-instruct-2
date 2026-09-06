@@ -148,6 +148,29 @@ def is_contaminated(instruction: str, decontam_set: set[str]) -> bool:
     return any(norm in bench or bench in norm for bench in decontam_set if len(bench) > 20)
 
 
+# Faixas Unicode de emoji (pictogramas, emoticons, dingbats, simbolos
+# diversos, bandeiras). Conta CARACTERES de emoji, nao "sequencias" (um
+# emoji composto com ZWJ conta como varios) -- suficiente para detectar
+# excesso, sem precisar de uma lib externa so pra isso.
+_EMOJI_RE = re.compile(
+    "[\U0001F300-\U0001F5FF"  # simbolos/pictogramas diversos
+    "\U0001F600-\U0001F64F"   # emoticons
+    "\U0001F680-\U0001F6FF"   # transporte/mapas
+    "\U0001F900-\U0001F9FF"   # simbolos/pictogramas suplementares
+    "\U0001FA70-\U0001FAFF"   # simbolos/pictogramas extendidos-A
+    "\U00002600-\U000026FF"   # simbolos diversos
+    "\U00002700-\U000027BF"   # dingbats
+    "\U00002B00-\U00002BFF"   # simbolos/setas diversas (inclui ⭐ estrela)
+    "\U0001F1E6-\U0001F1FF"   # indicadores regionais (bandeiras)
+    "]"
+)
+MAX_EMOJIS_PER_OUTPUT = 6  # acima disso, a resposta soa como caricatura, nao mensagem real
+
+
+def count_emojis(text: str) -> int:
+    return len(_EMOJI_RE.findall(text))
+
+
 def reservoir_sample(iterable, k: int, rng: random.Random) -> list:
     """Amostragem por reservatório (Algorithm R): 1 passada, sem carregar tudo na RAM."""
     sample: list = []
@@ -313,6 +336,7 @@ def main() -> int:
     n_skip_model = prev.get("skipped_model_decidiu", 0) if can_resume else 0
     n_skip_unparseable = prev.get("skipped_json_invalido", 0) if can_resume else 0
     n_skip_contam = prev.get("skipped_contaminado", 0) if can_resume else 0
+    n_skip_emoji_heavy = prev.get("skipped_emoji_pesado", 0) if can_resume else 0
     n_skip_api_fail = prev.get("skipped_api_failure", 0) if can_resume else 0
     in_tok = prev.get("tokens_input", 0) if can_resume else 0
     out_tok = prev.get("tokens_output", 0) if can_resume else 0
@@ -331,7 +355,8 @@ def main() -> int:
             "model": args.model, "seed": args.seed, "personas_sampled": len(personas),
             "status": status, "processed_idx": last_completed_idx, "total": n,
             "skipped_model_decidiu": n_skip_model, "skipped_json_invalido": n_skip_unparseable,
-            "skipped_contaminado": n_skip_contam, "skipped_api_failure": n_skip_api_fail,
+            "skipped_contaminado": n_skip_contam, "skipped_emoji_pesado": n_skip_emoji_heavy,
+            "skipped_api_failure": n_skip_api_fail,
             "tokens_input": in_tok, "tokens_output": out_tok, "estimated_cost_usd": est_cost,
             "estimated_cost_note": "Chamadas sincronas, SEM desconto de Batches. Conferir preco vigente.",
             "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -382,6 +407,10 @@ def main() -> int:
                 continue
             if is_contaminated(instr, decontam):
                 n_skip_contam += 1
+                last_completed_idx = i
+                continue
+            if count_emojis(out) > MAX_EMOJIS_PER_OUTPUT:
+                n_skip_emoji_heavy += 1
                 last_completed_idx = i
                 continue
 
