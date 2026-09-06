@@ -3,17 +3,17 @@
   "source": "corpus/scripts/01_acquire_legalpt.py (config acordaos_tcu)",
   "license": "dominio-publico (documento governamental, Art. 216 CF/1988)",
   "reference": "eduagarcia/LegalPT_dedup (config acordaos_tcu) via HuggingFace",
-  "generation_method": "MANUAL -- gerado por Claude diretamente nesta sessao de codigo, seguindo o mesmo SYSTEM_PROMPT/regras de synth/generate_instructions.py (grounded no texto, sem inventar fatos, task_type dentre resumo/pergunta_resposta/explicacao_simples/extracao_pontos_chave/reescrita_tom/questao_estilo_prova), SEM custo de API -- as 10 passagens de origem foram coladas manualmente no chat pelo usuario (brunolsm), extraidas do 1o shard de corpus/raw/legalpt/ no Netuno (documentos 1-5 e 6-10 do shard, em 2 lotes).",
-  "total": 10,
+  "generation_method": "MANUAL -- gerado por Claude diretamente nesta sessao de codigo, seguindo o mesmo SYSTEM_PROMPT/regras de synth/generate_instructions.py (grounded no texto, sem inventar fatos, task_type dentre resumo/pergunta_resposta/explicacao_simples/extracao_pontos_chave/reescrita_tom/questao_estilo_prova), SEM custo de API -- as passagens de origem foram coladas manualmente no chat pelo usuario (brunolsm), extraidas do 1o shard de corpus/raw/legalpt/ no Netuno (documentos 1-10 em 2 lotes de 5, depois documentos 11-40 num lote de 30). O shard 0 tem apenas 100 documentos no total (config acordaos_tcu parece ser pequena); faltam os documentos 41-100 pra esgotar o shard.",
+  "total": 40,
   "task_type_distribution": {
-    "extracao_pontos_chave": 2,
-    "resumo": 2,
-    "explicacao_simples": 2,
-    "pergunta_resposta": 2,
-    "questao_estilo_prova": 1,
-    "reescrita_tom": 1
+    "pergunta_resposta": 12,
+    "extracao_pontos_chave": 9,
+    "resumo": 8,
+    "explicacao_simples": 7,
+    "questao_estilo_prova": 2,
+    "reescrita_tom": 2
   },
   "decontaminated": true,
-  "decontamination_note": "Verificado contra bench/ifeval_pt, bench/mtbench_pt, bench/safety_pt, bench/overrefusal_pt, dpo/dpo_seeds/safety_prompts, sft/safety_seeds/benign_help (245 prompts estaticos) -- nenhuma contaminacao encontrada. Confirmado tambem que nenhuma das 10 passagens de contexto se repete.",
-  "generated_at": "2026-09-06T17:05:00.000000+00:00"
+  "decontamination_note": "Verificado contra bench/ifeval_pt, bench/mtbench_pt, bench/safety_pt, bench/overrefusal_pt, dpo/dpo_seeds/safety_prompts, sft/safety_seeds/benign_help (245 prompts estaticos) -- nenhuma contaminacao encontrada. Confirmado tambem que nenhuma das 40 passagens de contexto se repete.",
+  "generated_at": "2026-09-06T17:35:00.000000+00:00"
 }
