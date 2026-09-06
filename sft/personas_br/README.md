@@ -16,13 +16,16 @@ chamada JSON. Chamadas síncronas (volume da ordem de milhares por rodada,
 não Batches). Decontamina contra os arquivos estáticos deste repo (mesmo
 mecanismo do `synth/generate_instructions.py`).
 
-Emoji não é banido — o registro varia por contexto (uma mensagem de
-WhatsApp de venda pode usar, uma resposta técnica não), e o próprio
-julgamento do MT-Bench-PT já penaliza a FALTA de emoji num post/mensagem
-informal. O que é descartado é excesso (`count_emojis(output) >
-MAX_EMOJIS_PER_OUTPUT`, default 6) — o modelo às vezes exagera e cobre
-cada linha de uma mensagem com emoji, o que soa como caricatura, não
-como uma pessoa real escrevendo.
+**Emoji é banido (tolerância zero), por causa do tokenizer, não de estilo.**
+O tokenizer do `manaca-1b-base` é um SentencePiece Unigram treinado do
+zero só no corpus PT-BR do projeto (`character_coverage=0.9995`,
+`byte_fallback=True`) — emoji não tem token dedicado, cada um vira ~4
+tokens de fallback por byte UTF-8, sem nenhuma exposição no pré-treino.
+Não é só "caro" (4x mais tokens que o normal): o modelo pode aprender a
+gerar só parte da sequência de bytes e produzir UTF-8 inválido. O
+`SYSTEM_PROMPT` já pede para não usar; `count_emojis(output) > 0` é uma
+rede de segurança contra o modelo ignorar a instrução (registrado no
+manifest como `skipped_emoji_pesado`).
 
 ## Uso
 

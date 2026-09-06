@@ -32,6 +32,10 @@ make aes-enem-data ARGS="--config sourceAWithGraders --max_examples 500"
 Saída: `data/sft/aes_enem/aes_enem_feedback.jsonl` (Alpaca) + manifest com
 colunas detectadas e custo estimado.
 
+Emoji é banido (tolerância zero) — o tokenizer do `manaca-1b-base` não tem
+token dedicado pra emoji (ver `sft/personas_br/README.md` para o detalhe
+técnico); descarte registrado no manifest como `skipped_emoji`.
+
 ## Retomada (créditos limitados)
 
 Cada exemplo é gravado no disco (e o arquivo, `flush`ado) assim que sai

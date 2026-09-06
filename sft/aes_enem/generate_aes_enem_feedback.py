@@ -50,6 +50,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 import time
 from datetime import datetime, timezone
@@ -87,11 +88,30 @@ Regras obrigatórias:
 aquela nota especificamente (pontos fortes E fracos observados no texto).
 - Cite trechos ou características concretas da redação (não seja genérico).
 - Termine com a nota total (soma das 5 competências) e um resumo de 1 frase.
+- NÃO use emojis.
 - Responda em português do Brasil, em texto corrido (não JSON)."""
 
 
 def s(x) -> str:
     return ("" if x is None else str(x)).strip()
+
+
+# O tokenizer do manaca-1b-base e um SentencePiece Unigram treinado do zero
+# SO no corpus PT-BR do projeto (character_coverage=0.9995, byte_fallback=
+# True). Emoji nao tem token dedicado: cada um vira ~4 tokens de fallback
+# por byte UTF-8, sem NENHUMA exposicao no pre-treino -- caro (4x mais
+# tokens) e arriscado (o modelo pode gerar so parte da sequencia de bytes
+# e produzir UTF-8 invalido). O SYSTEM_PROMPT ja pede pra nao usar, isto
+# aqui e so uma rede de seguranca contra o modelo ignorar a instrucao.
+_EMOJI_RE = re.compile(
+    "[\U0001F300-\U0001F5FF\U0001F600-\U0001F64F\U0001F680-\U0001F6FF"
+    "\U0001F900-\U0001F9FF\U0001FA70-\U0001FAFF\U00002600-\U000026FF"
+    "\U00002700-\U000027BF\U00002B00-\U00002BFF\U0001F1E6-\U0001F1FF]"
+)
+
+
+def count_emojis(text: str) -> int:
+    return len(_EMOJI_RE.findall(text))
 
 
 def detect_grade_columns(first_row: dict) -> tuple[str | None, list[str] | None]:
@@ -273,6 +293,7 @@ def main() -> int:
     processed_idx = prev.get("processed_idx", -1) if can_resume else -1
     n = prev.get("total", 0) if can_resume else 0
     n_no_grades = prev.get("skipped_no_grades", 0) if can_resume else 0
+    n_emoji = prev.get("skipped_emoji", 0) if can_resume else 0
     n_api_fail = prev.get("skipped_api_failure", 0) if can_resume else 0
     in_tok = prev.get("tokens_input", 0) if can_resume else 0
     out_tok = prev.get("tokens_output", 0) if can_resume else 0
@@ -291,7 +312,7 @@ def main() -> int:
             "license": LICENSE, "reference": REFERENCE, "model": args.model,
             "essay_column": essay_col, "single_grade_column": single_col, "competency_columns": comp_cols,
             "status": status, "processed_idx": last_completed_idx, "total": n,
-            "skipped_no_grades": n_no_grades, "skipped_api_failure": n_api_fail,
+            "skipped_no_grades": n_no_grades, "skipped_emoji": n_emoji, "skipped_api_failure": n_api_fail,
             "tokens_input": in_tok, "tokens_output": out_tok, "estimated_cost_usd": est_cost,
             "estimated_cost_note": "Chamadas sincronas, SEM desconto de Batches. Conferir preco vigente.",
             "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -336,6 +357,10 @@ def main() -> int:
             feedback = next((b.text for b in resp.content if b.type == "text"), "").strip()
             if not feedback:
                 n_api_fail += 1
+                last_completed_idx = i
+                continue
+            if count_emojis(feedback):
+                n_emoji += 1
                 last_completed_idx = i
                 continue
             fp.write(json.dumps({"instruction": INSTRUCTION, "input": essay, "output": feedback,

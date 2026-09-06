@@ -101,6 +101,8 @@ Regras obrigatórias:
 - Tudo em português do Brasil.
 - O pedido deve ser plausível e específico (não genérico como "me ajude com algo") -- reflita \
 a vida real e as circunstâncias da persona.
+- NÃO use emojis na resposta, nem quando o contexto for informal (ex.: mensagem de WhatsApp, \
+post de rede social) -- transmita o mesmo tom só com palavras.
 - Se a persona não render um pedido plausível e específico, responda {"skip": true}.
 - Responda APENAS com um objeto JSON válido, sem markdown, sem texto antes ou depois, no \
 formato exato: {"instruction": "...", "output": "..."}"""
@@ -151,7 +153,7 @@ def is_contaminated(instruction: str, decontam_set: set[str]) -> bool:
 # Faixas Unicode de emoji (pictogramas, emoticons, dingbats, simbolos
 # diversos, bandeiras). Conta CARACTERES de emoji, nao "sequencias" (um
 # emoji composto com ZWJ conta como varios) -- suficiente para detectar
-# excesso, sem precisar de uma lib externa so pra isso.
+# presenca, sem precisar de uma lib externa so pra isso.
 _EMOJI_RE = re.compile(
     "[\U0001F300-\U0001F5FF"  # simbolos/pictogramas diversos
     "\U0001F600-\U0001F64F"   # emoticons
@@ -164,7 +166,15 @@ _EMOJI_RE = re.compile(
     "\U0001F1E6-\U0001F1FF"   # indicadores regionais (bandeiras)
     "]"
 )
-MAX_EMOJIS_PER_OUTPUT = 6  # acima disso, a resposta soa como caricatura, nao mensagem real
+# O tokenizer do manaca-1b-base e um SentencePiece Unigram treinado do zero
+# SO no corpus PT-BR do projeto (character_coverage=0.9995, byte_fallback=
+# True -- ver tokenizer/scripts/02_train_spm.py do manaca-1b-base). Emoji
+# nao tem token dedicado: cada um vira ~4 tokens de fallback por byte UTF-8,
+# sem NENHUMA exposicao no pre-treino. Nao e so "excesso que soa artificial"
+# -- e token fora de distribuicao, caro (4x mais tokens que o normal) e
+# arriscado (o modelo pode gerar so parte da sequencia de bytes e produzir
+# UTF-8 invalido). Por isso o teto e ZERO, nao um limite de densidade.
+MAX_EMOJIS_PER_OUTPUT = 0
 
 
 def count_emojis(text: str) -> int:
