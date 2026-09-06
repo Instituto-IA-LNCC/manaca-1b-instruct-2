@@ -36,6 +36,16 @@ Emoji é banido (tolerância zero) — o tokenizer do `manaca-1b-base` não tem
 token dedicado pra emoji (ver `sft/personas_br/README.md` para o detalhe
 técnico); descarte registrado no manifest como `skipped_emoji`.
 
+## Custo real — `--effort low` por padrão
+
+`claude-sonnet-5`/`claude-opus-5` rodam com *thinking* adaptativo LIGADO
+por padrão quando `output_config.effort` não é especificado, gastando
+boa parte do `max_tokens` em raciocínio invisível (confirmado ao vivo no
+`personas_br`, mesma arquitetura de chamada — ver detalhe no README de
+lá). Por isso o script usa `--effort low` por padrão (ajustável via
+`--effort medium|high|xhigh|max` se a qualidade não for suficiente para
+uma justificativa de nota mais elaborada).
+
 ## Retomada (créditos limitados)
 
 Cada exemplo é gravado no disco (e o arquivo, `flush`ado) assim que sai

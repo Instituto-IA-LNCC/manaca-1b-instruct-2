@@ -68,7 +68,17 @@ REFERENCE  = "NVIDIA (2026). Nemotron-Personas-Brazil."
 
 DEFAULT_MODEL = os.environ.get("MODEL", "claude-opus-5")
 DEFAULT_NUM_PERSONAS = 2000
-DEFAULT_MAX_TOKENS = 1200
+# CUSTO REAL confirmado ao vivo: sem `output_config.effort` explicito, o
+# thinking adaptativo (ligado por padrao em claude-sonnet-5/claude-opus-5
+# quando o param `thinking` e omitido) consome boa parte do orcamento de
+# max_tokens em raciocinio invisivel -- numa rodada real de 500 personas,
+# a MEDIA de output foi ~1191 tokens/chamada (quase o teto), MESMO incluindo
+# as 452 chamadas que so deveriam responder {"skip": true} (deveria ser
+# quase de graca). Isso tambem provavelmente inflou a taxa de skip: o
+# modelo fica sem espaco de token pra escrever uma resposta boa. Fix:
+# --effort default "low" (tarefa simples, nao precisa de raciocinio
+# profundo) + teto um pouco mais alto pra nao truncar a resposta visivel.
+DEFAULT_MAX_TOKENS = 2000
 
 PRICING_SNAPSHOT = {
     "claude-opus-5":    (5.00, 25.00),
@@ -283,6 +293,9 @@ def main() -> int:
                     help=f"quantas personas amostrar/processar (default {DEFAULT_NUM_PERSONAS})")
     ap.add_argument("--model", default=DEFAULT_MODEL)
     ap.add_argument("--max_tokens", type=int, default=DEFAULT_MAX_TOKENS)
+    ap.add_argument("--effort", default="low", choices=["low", "medium", "high", "xhigh", "max"],
+                    help="output_config.effort -- 'low' evita gasto de thinking em excesso numa tarefa "
+                         "simples (default 'low'; ver nota de custo no README)")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--dry-run", action="store_true", help="mostra o prompt de sistema e uma persona amostrada, sem chamar a API")
     args = ap.parse_args()
@@ -387,6 +400,7 @@ def main() -> int:
                 resp = call_with_retry(
                     client, model=args.model, max_tokens=args.max_tokens,
                     system=SYSTEM_PROMPT,
+                    output_config={"effort": args.effort},
                     messages=[{"role": "user", "content": f"Persona:\n{persona_text[:3000]}"}],
                 )
             except Exception as e:

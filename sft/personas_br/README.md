@@ -38,6 +38,21 @@ make personas-br-data ARGS="--num_personas 2000"
 Saída: `data/sft/personas_br/personas_br.jsonl` (Alpaca) + manifest com
 custo estimado (tokens reais, sem desconto de Batches).
 
+## Custo real — `--effort low` por padrão
+
+`claude-sonnet-5`/`claude-opus-5` rodam com *thinking* adaptativo LIGADO
+por padrão quando `output_config.effort` não é especificado. Confirmado
+ao vivo: uma rodada de 500 personas gastou **US$7,15** e manteve só 48
+exemplos (90% descartados pelo próprio modelo) — a média de tokens de
+saída por chamada (~1.191) ficou quase no teto do `max_tokens`, mesmo
+contando as centenas de chamadas que só deveriam responder
+`{"skip": true}` (quase de graça). Ou seja, a maior parte do orçamento
+estava indo pra raciocínio invisível, não pra resposta em si — o que
+também explica a taxa alta de skip (o modelo ficava sem espaço de token
+pra escrever uma resposta completa). Por isso o script usa
+`--effort low` por padrão (ajustável via `--effort medium|high|xhigh|max`
+se a qualidade não for suficiente).
+
 ## Retomada (créditos limitados)
 
 Cada exemplo é gravado no disco (e o arquivo, `flush`ado) assim que sai

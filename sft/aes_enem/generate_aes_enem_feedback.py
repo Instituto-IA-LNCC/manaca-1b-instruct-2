@@ -60,7 +60,15 @@ LICENSE    = "mit"
 REFERENCE  = "kamel-usp (2025/2026). AES-ENEM Dataset."
 
 DEFAULT_MODEL = os.environ.get("MODEL", "claude-opus-5")
-DEFAULT_MAX_TOKENS = 1500
+# CUSTO REAL confirmado ao vivo (personas_br, mesma arquitetura de chamada):
+# sem `output_config.effort` explicito, o thinking adaptativo (ligado por
+# padrao em claude-sonnet-5/claude-opus-5 quando `thinking` e omitido)
+# consome boa parte do orcamento de max_tokens em raciocinio invisivel --
+# numa rodada de 500 chamadas, a media de output ficou em ~1191 tokens/
+# chamada, quase o teto, MESMO incluindo centenas de chamadas que deveriam
+# ser quase de graca. Fix: --effort default "low" (justificativa de nota
+# nao precisa de raciocinio profundo) + teto um pouco mais alto.
+DEFAULT_MAX_TOKENS = 2500
 DEFAULT_MAX_EXAMPLES = 500
 
 PRICING_SNAPSHOT = {
@@ -214,6 +222,9 @@ def main() -> int:
     ap.add_argument("--max_examples", type=int, default=DEFAULT_MAX_EXAMPLES)
     ap.add_argument("--model", default=DEFAULT_MODEL)
     ap.add_argument("--max_tokens", type=int, default=DEFAULT_MAX_TOKENS)
+    ap.add_argument("--effort", default="low", choices=["low", "medium", "high", "xhigh", "max"],
+                    help="output_config.effort -- 'low' evita gasto de thinking em excesso numa tarefa "
+                         "simples (default 'low'; ver nota de custo no README)")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--dry-run", action="store_true", help="mostra o prompt de sistema e o 1o exemplo, sem chamar a API")
     args = ap.parse_args()
@@ -338,6 +349,7 @@ def main() -> int:
                 resp = call_with_retry(
                     client, model=args.model, max_tokens=args.max_tokens,
                     system=SYSTEM_PROMPT,
+                    output_config={"effort": args.effort},
                     messages=[{"role": "user", "content": user_msg}],
                 )
             except Exception as e:
