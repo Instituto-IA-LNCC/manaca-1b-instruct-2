@@ -62,6 +62,8 @@ from generate_aes_enem_feedback import (  # noqa: E402
     build_grades_text,
     count_emojis,
     detect_grade_columns,
+    extract_grade_values,
+    feedback_cites_real_grades,
     load_essays_split,
     s,
 )
@@ -244,6 +246,7 @@ def main() -> int:
     n = prev.get("total", 0) if can_resume else 0
     n_no_grades = prev.get("skipped_no_grades", 0) if can_resume else 0
     n_emoji = prev.get("skipped_emoji", 0) if can_resume else 0
+    n_grade_mismatch = prev.get("skipped_grade_mismatch", 0) if can_resume else 0
     n_failed = prev.get("failed_requests", 0) if can_resume else 0
     if can_resume:
         print(f"[resume] retomando de manifest anterior: {n} ja gravados, "
@@ -260,12 +263,13 @@ def main() -> int:
     audit_pool: list[tuple[str, str, str]] = []
 
     def process_one(i: int) -> None:
-        nonlocal n, n_no_grades, n_emoji, n_failed
+        nonlocal n, n_no_grades, n_emoji, n_grade_mismatch, n_failed
         if fatal_error:
             return
         ex = ds[i]
         essay = s(ex.get(essay_col))
         grades_text = build_grades_text(ex, single_col, comp_cols)
+        grade_values = extract_grade_values(ex, single_col, comp_cols)
         if not essay or not grades_text:
             with manifest_lock:
                 processed_ids.add(str(i))
@@ -291,6 +295,9 @@ def main() -> int:
             if count_emojis(feedback):
                 n_emoji += 1
                 return
+            if grade_values and not feedback_cites_real_grades(feedback, grade_values):
+                n_grade_mismatch += 1
+                return
             row_out = {"instruction": INSTRUCTION, "input": essay, "output": feedback,
                        "task": "aes_enem_feedback"}
             with write_lock:
@@ -305,7 +312,8 @@ def main() -> int:
             "license": LICENSE, "reference": REFERENCE, "model": args.model, "endpoints": endpoints,
             "essay_column": essay_col, "single_grade_column": single_col, "competency_columns": comp_cols,
             "max_examples": args.max_examples, "total": n,
-            "skipped_no_grades": n_no_grades, "skipped_emoji": n_emoji, "failed_requests": n_failed,
+            "skipped_no_grades": n_no_grades, "skipped_emoji": n_emoji,
+            "skipped_grade_mismatch": n_grade_mismatch, "failed_requests": n_failed,
             "processed_ids": sorted(processed_ids),
             "status": status,
             "updated_at": datetime.now(timezone.utc).isoformat(),
@@ -356,7 +364,8 @@ def main() -> int:
     save_manifest_atomic(out_dir, manifest)
     print(f"\n[aes-enem-local] TOTAL: {n:,} exemplos -> {out_path}")
     print(f"[aes-enem-local] descartados: {n_no_grades} (sem redacao/nota) | "
-          f"{n_emoji} (emoji) | {n_failed} (falha de requisicao)")
+          f"{n_emoji} (emoji) | {n_grade_mismatch} (nao citou as notas reais) | "
+          f"{n_failed} (falha de requisicao)")
     return 1 if fatal_error else 0
 
 

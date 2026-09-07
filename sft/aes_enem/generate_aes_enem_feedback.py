@@ -92,10 +92,14 @@ JÁ FORAM DADAS -- sua única tarefa é escrever a JUSTIFICATIVA de cada nota, c
 da redação. NÃO invente uma nota diferente da fornecida; use as notas exatamente como estão.
 
 Regras obrigatórias:
+- FORMATO OBRIGATÓRIO: escreva exatamente 5 parágrafos, um por competência, e cada parágrafo \
+DEVE começar citando o número da nota por extenso, no formato "C1: <nota>", "C2: <nota>" etc. \
+(ex.: "C1: 160 - A redação demonstra..."). NÃO pule esse número em nenhuma competência, mesmo \
+que a justificativa já deixe a nota implícita no texto -- o número tem que aparecer literalmente.
 - Para cada uma das 5 competências, escreva 1-3 frases explicando por que a redação recebeu \
 aquela nota especificamente (pontos fortes E fracos observados no texto).
 - Cite trechos ou características concretas da redação (não seja genérico).
-- Termine com a nota total (soma das 5 competências) e um resumo de 1 frase.
+- Termine com uma linha "Nota total: <soma das 5 competências>" seguida de um resumo de 1 frase.
 - NÃO use emojis.
 - Responda em português do Brasil, em texto corrido (não JSON)."""
 
@@ -162,6 +166,43 @@ def build_grades_text(ex: dict, single_col: str | None, comp_cols) -> str | None
         return "\n".join(f"{COMPETENCIAS[i]}: {vals[i]}" for i in range(5))
     if single_col and ex.get(single_col) is not None:
         return f"Nota total: {ex.get(single_col)} (de 0 a 1000)"
+    return None
+
+
+def extract_grade_values(ex: dict, single_col: str | None, comp_cols) -> list[int] | None:
+    """Retorna [c1..c5, total] (calcula o total se so vier as 5
+    competencias), ou [total] se so houver nota unica -- usado por
+    feedback_cites_real_grades() pra validar se o texto gerado cita as
+    notas reais."""
+    if comp_cols == "grades_list":
+        vals = ex.get("grades")
+        if not (isinstance(vals, (list, tuple)) and len(vals) in (5, 6)):
+            return None
+        comp = [int(v) for v in vals[:5]]
+        total = int(vals[5]) if len(vals) == 6 else sum(comp)
+        return comp + [total]
+    if comp_cols:
+        vals = [ex.get(c) for c in comp_cols]
+        if any(v is None for v in vals):
+            return None
+        comp = [int(v) for v in vals]
+        return comp + [sum(comp)]
+    if single_col and ex.get(single_col) is not None:
+        return [int(ex.get(single_col))]
+    return None
+
+
+def feedback_cites_real_grades(feedback: str, grade_values: list[int]) -> bool:
+    """Confere se TODAS as notas reais (competencias + total) aparecem
+    literalmente no texto gerado. Achado ao vivo: numa rodada de 500,
+    210 (42%) tinham feedback qualitativamente correto mas SEM citar o
+    numero de alguma competencia (so a justificativa em prosa) -- a
+    auditoria via Claude reprovava isso como "nao fiel as notas" mesmo
+    quando a nota so estava ausente, nao errada. Mais barato e
+    deterministico resolver aqui (grep pelas notas reais) do que
+    depender de julgamento subjetivo de auditoria pra esse caso; so 1/500
+    (0,2%) tinha de fato numero errado."""
+    return all(re.search(rf"\b{v}\b", feedback) for v in grade_values)
     return None
 
 
@@ -336,6 +377,7 @@ def main() -> int:
     n = prev.get("total", 0) if can_resume else 0
     n_no_grades = prev.get("skipped_no_grades", 0) if can_resume else 0
     n_emoji = prev.get("skipped_emoji", 0) if can_resume else 0
+    n_grade_mismatch = prev.get("skipped_grade_mismatch", 0) if can_resume else 0
     n_api_fail = prev.get("skipped_api_failure", 0) if can_resume else 0
     in_tok = prev.get("tokens_input", 0) if can_resume else 0
     out_tok = prev.get("tokens_output", 0) if can_resume else 0
@@ -354,7 +396,8 @@ def main() -> int:
             "license": LICENSE, "reference": REFERENCE, "model": args.model,
             "essay_column": essay_col, "single_grade_column": single_col, "competency_columns": comp_cols,
             "status": status, "processed_idx": last_completed_idx, "total": n,
-            "skipped_no_grades": n_no_grades, "skipped_emoji": n_emoji, "skipped_api_failure": n_api_fail,
+            "skipped_no_grades": n_no_grades, "skipped_emoji": n_emoji,
+            "skipped_grade_mismatch": n_grade_mismatch, "skipped_api_failure": n_api_fail,
             "tokens_input": in_tok, "tokens_output": out_tok, "estimated_cost_usd": est_cost,
             "estimated_cost_note": "Chamadas sincronas, SEM desconto de Batches. Conferir preco vigente.",
             "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -384,6 +427,7 @@ def main() -> int:
                 break
             essay = s(ex.get(essay_col))
             grades_text = build_grades_text(ex, single_col, comp_cols)
+            grade_values = extract_grade_values(ex, single_col, comp_cols)
             if not essay or not grades_text:
                 n_no_grades += 1
                 last_completed_idx = i
@@ -417,6 +461,10 @@ def main() -> int:
                 continue
             if count_emojis(feedback):
                 n_emoji += 1
+                last_completed_idx = i
+                continue
+            if grade_values and not feedback_cites_real_grades(feedback, grade_values):
+                n_grade_mismatch += 1
                 last_completed_idx = i
                 continue
             fp.write(json.dumps({"instruction": INSTRUCTION, "input": essay, "output": feedback,
