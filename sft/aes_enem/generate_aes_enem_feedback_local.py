@@ -88,9 +88,26 @@ SAVE_EVERY = 20
 
 AUDIT_SYSTEM_PROMPT = """Você audita um feedback de redação ENEM gerado por outro modelo de \
 linguagem (não o Claude). Receberá a REDAÇÃO, as NOTAS REAIS (dadas por um corretor humano, por \
-competência C1-C5) e o FEEDBACK gerado a partir delas. Avalie três critérios, cada um true/false:
-- "fiel_as_notas": o feedback justifica EXATAMENTE as notas fornecidas (não menciona nem sugere \
-notas diferentes das reais, para nenhuma competência)?
+competência C1-C5) e o FEEDBACK gerado a partir delas.
+
+ESCALA REAL de cada competência (0 a 200, em passos de 40) -- USE ISSO pra julgar se o tom do \
+feedback é coerente com a nota, não sua intuição:
+- 200 = excelente domínio/desempenho
+- 160 = bom domínio, com pequenas imprecisões
+- 120 = domínio mediano -- NEM baixo nem alto, desempenho médio/regular com falhas reais mas \
+também acertos reais (NÃO é "quase perfeito" nem "muito abaixo da média")
+- 80 = domínio insuficiente
+- 40 = domínio precário
+- 0 = não desenvolveu o tema / fugiu do tema
+Um feedback que aponta falhas reais (erros gramaticais, argumentação rasa, etc.) numa \
+competência com nota 120 ou 160 está SENDO FIEL à nota, não contradizendo ela -- isso é \
+esperado nesses níveis intermediários, não é erro.
+
+Avalie três critérios, cada um true/false:
+- "fiel_as_notas": o TOM do feedback é coerente com o NÍVEL da nota na escala acima (não descreve \
+uma competência de nota 120/160 como se fosse perfeita, nem uma de nota 200 como se tivesse \
+falha grave)? E o feedback não inventa um erro concreto (ortográfico/gramatical citando uma \
+palavra ou trecho específico) que, ao conferir contra a REDAÇÃO fornecida, não existe nela?
 - "fluente": o feedback está em português do Brasil correto e fluente, em texto corrido (não JSON)?
 - "especifico": o feedback cita características/trechos concretos da redação (não é genérico a \
 ponto de servir pra qualquer redação)?
