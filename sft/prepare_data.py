@@ -197,7 +197,15 @@ def main() -> int:
                             line = line.strip()
                             if line:
                                 yield json.loads(line)
-                emit(fout, _read(), os.path.splitext(os.path.basename(path))[0])
+                # tag inclui o diretorio-pai, nao so o basename -- varios
+                # --extra podem ter o MESMO nome de arquivo em pastas
+                # diferentes (ex.: personas_br.jsonl em 3 lotes distintos),
+                # e sem isso o arquivo per-source de um sobrescreveria o do
+                # outro (o combinado final fica certo de qualquer forma,
+                # mas o breakdown por fonte no manifest ficava enganoso).
+                parent = os.path.basename(os.path.dirname(os.path.abspath(path))) or "extra"
+                base = os.path.splitext(os.path.basename(path))[0]
+                emit(fout, _read(), f"{parent}_{base}")
 
     if args.shuffle:
         with open(combined_path, encoding="utf-8") as fp:
