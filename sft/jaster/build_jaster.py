@@ -528,7 +528,12 @@ TASKS = {
     # nomes de coluna diferentes no split de teste.
     "extraglue_qnli": ("PORTULAN/extraglue", "qnli_pt-BR",         "train",
                        functools.partial(conv_extraglue_nli, int_labels=_QNLI_INT_LABELS)),
-    "extraglue_stsb": ("PORTULAN/extraglue", "stsb_pt-BR",         "test", conv_extraglue_stsb),
+    # split "train" (nao "test"): confirmado ao vivo que stsb_pt-BR/test tem
+    # 100% dos rotulos = -1.0 (convencao GLUE de esconder o gold label do
+    # test set) -- toda a saida virava a string fixa "-1.0", fora da escala
+    # 1-5 pedida no prompt. O split "train" (5.749 linhas) tem rotulos reais
+    # (0.0-5.0, distribuicao normal).
+    "extraglue_stsb": ("PORTULAN/extraglue", "stsb_pt-BR",         "train", conv_extraglue_stsb),
     "extraglue_mrpc": ("PORTULAN/extraglue", "mrpc_pt-BR",         "test", conv_extraglue_mrpc),
 }
 
