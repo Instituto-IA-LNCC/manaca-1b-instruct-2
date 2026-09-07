@@ -16,3 +16,16 @@ make dpo-reward-aira
 ```
 
 Saída: `dpo_onpolicy/reward_aira/reward_aira.jsonl` (não versionado).
+
+## Auditoria real (34.992 pares, medido — não amostra)
+
+- **Sem `<think>`** (0% dos pares) — diferente do `gigaverbo_v2_preferences`,
+  sem risco de formato de raciocínio não ensinado no SFT.
+- **Viés de verbosidade real e sistemático**: `chosen` é 37% mais longo em
+  média que `rejected` (1.703 vs 1.244 chars), e `chosen > rejected` em
+  67,7% dos pares — não é ruído de amostra, é o dataset inteiro. Risco
+  real do DPO aprender "responda mais longo" como atalho pra "responda
+  melhor" em vez de aprender qualidade de verdade. **Antes de usar**:
+  considerar balancear/filtrar pares com diferença de tamanho extrema, ou
+  pelo menos monitorar verbosidade do modelo pós-DPO na avaliação (não só
+  segurança/over-refusal).
