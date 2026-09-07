@@ -84,35 +84,61 @@ python3 bench/mtbench_pt/report.py \
 Se `seguranca` sobe e o resto se mantém, o DPO valeu e vira o `instruct-v2-dpo` oficial.
 Senão, o instruct-v2 (SFT) continua sendo o melhor, e a evidência fica registrada.
 
-## 4. ANTES de avaliar: descarte o confounder do merge (`dpo/diag_dpo.py`)
+## 4. O resultado real do v2 (com evidência, não só prosa) — e a lição mais importante do projeto
 
-Esta receita (on-policy, pequena, self-generated) foi tentada no v2 e **não mudou
-a geração livre** — mas existe uma segunda explicação possível pra "DPO não fez
-efeito" que não é sobre o dado: o merge do adapter LoRA no base roda em **bf16**
-(`dpo/train.py`, sem caminho fp32 no merge automático), e deltas `ΔW` pequenos
-do LoRA podem **desaparecer no arredondamento** de `W + ΔW` — o adapter mudou o
-comportamento de verdade, mas o modelo MESCLADO (o que se avalia) não reflete
-isso.
+Achado em [`docs/evaluation/safety-alignment-pt.md`](../docs/evaluation/safety-alignment-pt.md)
+(já existe neste repo, herdado do fork — só não tinha sido lido até agora
+nesta fase). Números reais, não estimativa:
 
-`dpo/diag_dpo.py` existe exatamente pra descartar essa hipótese antes de
-avaliar: gera a mesma resposta em base (SFT) vs. base+adapter (efeito real,
-sem arredondar) vs. merged (o que se avalia).
+| DPO | passos | rewards/chosen | margins | acurácia | segurança held-out |
+|---|---|---|---|---|---|
+| beta 0.1, LR 5e-7, 2 ép | 24 | ~0.00 | ~0.006 | 0.56 | — (sem efeito) |
+| beta 0.1, LR 1e-6, 3 ép | 153 | **+0.85** | **1.03** | ~1.0 | **0/16** |
 
-```bash
-python dpo/diag_dpo.py --base /workspace/checkpoints/manaca-1b-instruct-2-full \
-  --adapter /workspace/checkpoints/manaca-1b-instruct-2-dpo2 \
-  --merged /workspace/checkpoints/manaca-1b-instruct-2-dpo2-merged
-```
+A 2ª rodada teve curva de recompensa **perfeita** (margem 1.0, acurácia ~1.0,
+sem sobre-otimização) — e mesmo assim a geração livre **não mudou nada**: o
+`dpo/diag_dpo.py` confirmou que o **adapter sem merge** (efeito real do DPO,
+sem arredondamento) obedece **0/4 até nos próprios prompts de treino**. O bug
+de merge em bf16 (o que eu tinha levantado como hipótese aqui antes de achar
+esse documento) foi **formalmente descartado com essa evidência** — não é
+merge, é método.
 
-- **Adapter recusa, merged não** -> bug do merge em bf16. Mescle em fp32
-  (`sft/merge_lora.py` ou ajuste `dpo/train.py` pra carregar em fp32 antes do
-  `merge_and_unload()`) e reavalie — não descarte a receita por isso.
-- **Adapter também obedece** -> aí sim é dado/método (o que aconteceu na
-  tentativa do v2, segundo a nota em
-  [`gigaverbo_v2_preferences/README.md`](gigaverbo_v2_preferences/README.md) —
-  nunca formalmente registrado com log/eval, só citado em prosa).
+**Por que isso importa mais do que parece**: a métrica de treino do DPO
+(`rewards/margin`, acurácia) mede a razão de probabilidade de duas sequências
+específicas sob *teacher-forcing* — ela pode ficar perfeita sem nunca virar a
+decisão do **primeiro token** na geração livre (greedy/amostragem), que é o
+que realmente determina o comportamento. Quando o prior (aqui, "obedecer") é
+forte e o dataset é pequeno, **DPO pode "treinar perfeito" e mudar zero
+comportamento visível**. **Nunca confie em `rewards/margin`/acurácia como
+sinal de sucesso — sempre valide com geração livre de verdade**
+(`dpo/diag_dpo.py` ou amostras manuais), não só o log de treino.
 
-Rode isso **sempre**, pra qualquer tentativa de DPO daqui pra frente (inclusive
-com os datasets `gigaverbo_v2_preferences`/`reward_aira` do instruct-2) —
-principalmente porque a última vez que isso importou, a conclusão não ficou
-documentada com evidência, só com uma frase.
+**O que funcionou de verdade** (mesmo doc, §4): não foi um 3º ajuste de DPO —
+foi trocar de método. **Safety-SFT** (cross-entropy direto no alvo de recusa,
+estilo AnswerCarefully do LLM-jp) reverteu o comportamento onde o DPO não
+conseguiu: base recusa 0/4, adapter+merged do safety-SFT recusam 4/4 (treino
+e held-out), com o merge preservando o efeito dessa vez (prova incluída no
+mesmo diagnóstico). Config vencedora (`safe4`, escolhida entre 4 pontos da
+fronteira recusa:benigno): `K_REFUSE=4`, banco de contraste benigno
+**disjunto** da avaliação (50 exemplos), 200 exemplos gerais, LoRA r=32, DDP,
+3 épocas, LR 1e-4 — reproduzível via `sft/README-safety.md` no repo-mãe.
+
+**Lição de higiene de dado, à parte**: as duas primeiras tentativas
+(`safe`/`safe2`) usaram um conjunto de contraste benigno **contaminado** — os
+MESMOS prompts que apareciam na avaliação de over-refusal — o que inflava a
+métrica sem significar nada. Só ficou confiável a partir do `safe3`, com um
+conjunto disjunto. **Isso já foi evitado por construção no split de
+validação do SFT do instruct-2** (`manaca_sft_eval.jsonl` é excluído de
+`manaca_sft_train.jsonl` antes do treino, nunca aparece nos dois), mas vale
+manter essa disciplina explícita em qualquer dado de avaliação futuro
+(inclusive quando gerarmos os pares on-policy `MODE=safety`/`MODE=instruction`
+pro DPO/safety-SFT do instruct-2).
+
+**Conclusão prática pro instruct-2**: se a intenção da 3ª tentativa de DPO
+(`gigaverbo_v2_preferences` + `reward_aira`) for mudar comportamento
+categórico forte (segurança, recusa) — o precedente diz que **SFT direcionado
+tem mais chance de funcionar que DPO** para esse tipo de mudança neste
+projeto. DPO pode ainda valer a pena pra ajustes mais sutis de estilo/
+preferência onde não se está brigando contra um prior forte — mas pra
+segurança especificamente, considerar repetir a receita do safety-SFT
+(LoRA + cross-entropy no alvo) em vez de insistir em DPO puro.
