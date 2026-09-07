@@ -135,9 +135,13 @@ def detect_grade_columns(first_row: dict) -> tuple[str | None, list[str] | None]
     ]
     comp_cols = next((p for p in comp_patterns if all(c in first_row for c in p)), None)
     if not comp_cols and "grades" in first_row:
-        # 'grades' pode ser uma lista/dict com as 5 notas
+        # 'grades' pode ser uma lista/dict com as 5 notas (+ eventualmente o
+        # total). Confirmado ao vivo (kamel-usp/aes_enem_dataset, config
+        # JBCS2025): a lista tem 6 elementos -- [c1, c2, c3, c4, c5, total]
+        # (ex.: [160, 120, 120, 120, 80, 600], onde 600 = soma dos 5
+        # primeiros) -- nao 5 como o codigo assumia antes.
         val = first_row.get("grades")
-        if isinstance(val, (list, tuple)) and len(val) == 5:
+        if isinstance(val, (list, tuple)) and len(val) in (5, 6):
             comp_cols = "grades_list"  # sentinela: tratado especial no loop
     return single, comp_cols
 
@@ -145,9 +149,12 @@ def detect_grade_columns(first_row: dict) -> tuple[str | None, list[str] | None]
 def build_grades_text(ex: dict, single_col: str | None, comp_cols) -> str | None:
     if comp_cols == "grades_list":
         vals = ex.get("grades")
-        if not (isinstance(vals, (list, tuple)) and len(vals) == 5):
+        if not (isinstance(vals, (list, tuple)) and len(vals) in (5, 6)):
             return None
-        return "\n".join(f"{COMPETENCIAS[i]}: {vals[i]}" for i in range(5))
+        lines = [f"{COMPETENCIAS[i]}: {vals[i]}" for i in range(5)]
+        if len(vals) == 6:
+            lines.append(f"Nota total: {vals[5]} (de 0 a 1000)")
+        return "\n".join(lines)
     if comp_cols:
         vals = [ex.get(c) for c in comp_cols]
         if any(v is None for v in vals):
