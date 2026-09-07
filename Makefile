@@ -10,7 +10,7 @@
 #   make sft ARGS="..."     # SFT v1    |  make sft-v2       -> SFT v2
 # =============================================================================
 SHELL := /bin/bash
-.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all gigaverbo-v2-sft-data corpus-madlad400 corpus-fineweb2 corpus-hplt2 corpus-portuguese-pd corpus-all-raw tucano-sft-data quati-data dpo-gigaverbo-v2-preferences dpo-reward-aira dpo-preferences-data synth-run synth-submit synth-collect synth-dry-run safety-mine-refusals safety-mine-refusals-audit safety-ambiguous-seeds safety-ambiguous-seeds-stats safety-mine-prompts safety-mine-prompts-audit safety-generate-benign safety-generate-benign-dry-run safety-generate-harmful safety-generate-harmful-dry-run safety-generate-harmful-audit safety-project-size medpt-data aya-pt-data jaster-healthqa-br juristcu-data personas-br-dry-run personas-br-data personas-br-local-dry-run personas-br-local-run aes-enem-dry-run aes-enem-data aes-enem-local-dry-run aes-enem-local-run llm-serve-0 llm-serve-1 synth-local-dry-run synth-local-run
+.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-instruct2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all gigaverbo-v2-sft-data corpus-madlad400 corpus-fineweb2 corpus-hplt2 corpus-portuguese-pd corpus-all-raw tucano-sft-data quati-data dpo-gigaverbo-v2-preferences dpo-reward-aira dpo-preferences-data synth-run synth-submit synth-collect synth-dry-run safety-mine-refusals safety-mine-refusals-audit safety-ambiguous-seeds safety-ambiguous-seeds-stats safety-mine-prompts safety-mine-prompts-audit safety-generate-benign safety-generate-benign-dry-run safety-generate-harmful safety-generate-harmful-dry-run safety-generate-harmful-audit safety-project-size medpt-data aya-pt-data jaster-healthqa-br juristcu-data personas-br-dry-run personas-br-data personas-br-local-dry-run personas-br-local-run aes-enem-dry-run aes-enem-data aes-enem-local-dry-run aes-enem-local-run llm-serve-0 llm-serve-1 synth-local-dry-run synth-local-run
 .RECIPEPREFIX := >
 
 help:  ## Lista os alvos
@@ -61,6 +61,9 @@ sft:  ## SFT (Fase 3a): make sft ARGS="..."  (DETACH=1 para segundo plano)
 
 sft-v2:  ## SFT v2 (full FT) -> checkpoints/manaca-1b-instruct-v2-full (NAO sobrescreve a v1). DETACH=1 p/ 2o plano
 > ./scripts/docker/run_sft.sh sft --model_name_or_path menezesbruno/manaca-1b-base --data_files data/sft_v2/manaca_sft.jsonl --full_finetuning --gradient_accumulation_steps 128 --output_dir /workspace/checkpoints/manaca-1b-instruct-v2-full $(ARGS)
+
+sft-instruct2:  ## SFT instruct-2 (full FT, 498k ex.) -> checkpoints/manaca-1b-instruct-2-full (NAO sobrescreve o v2). DETACH=1 p/ 2o plano
+> ./scripts/docker/run_sft.sh sft --model_name_or_path menezesbruno/manaca-1b-base --data_files data/sft_instruct2/manaca_sft.jsonl --full_finetuning --gradient_accumulation_steps 128 --output_dir /workspace/checkpoints/manaca-1b-instruct-2-full $(ARGS)
 
 sft-safety:  ## Safety-SFT (LoRA sobre o v2, DDP): recusa o nocivo sem virar recusador cego -> instruct-v2-safe (o "safe"). Ver docs/evaluation/safety-alignment-pt.md
 > ACCELERATE_CONFIG=$${ACCELERATE_CONFIG:-configs/accelerate_config_ddp.yaml} ./scripts/docker/run_sft.sh sft --model_name_or_path /workspace/checkpoints/manaca-1b-instruct-v2-full --data_files sft_safety/safety_sft.jsonl --output_dir /workspace/checkpoints/manaca-1b-instruct-v2-safe --lora_r 32 --lora_alpha 64 --num_train_epochs 3 --learning_rate 1e-4 --gradient_accumulation_steps 8 --save_steps 200 $(ARGS)
