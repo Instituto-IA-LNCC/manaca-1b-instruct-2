@@ -94,6 +94,50 @@ Auditoria (`--audit-sample N`, via Claude) usa critérios próprios
 (as 5 notas fornecidas), então a auditoria checa se o feedback gerado é
 consistente com ELAS especificamente, não com um texto-fonte genérico.
 
+## LLM local ABANDONADO para esta fonte (qualidade insuficiente)
+
+Testado ao vivo (config `JBCS2025`, 500 exemplos, Qwen2.5-32B-AWQ) em 3
+rodadas, cada uma investigando e corrigindo a causa da reprovação
+anterior:
+
+1. **17,5% de aprovação** — causa: 42% dos exemplos não citavam a nota
+   de alguma competência explicitamente (só a justificativa em prosa).
+   Corrigido com `feedback_cites_real_grades()` (checagem determinística,
+   ver acima) — resolveu esse problema especificamente (0 descartes por
+   isso nas rodadas seguintes).
+2. **57,5% de aprovação** — causa: o PRÓPRIO AUDITOR (Claude Haiku)
+   interpretava mal a escala 0-200 do ENEM (achava que nota 120 era
+   "máxima" ou "muito acima da média", quando 120 é nível MEDIANO).
+   Corrigido dando ao `AUDIT_SYSTEM_PROMPT` os descritores reais da
+   escala (0=fugiu do tema .. 200=excelente).
+3. **20% de aprovação** — com a escala corrigida, a auditoria (agora mais
+   afiada) revelou o problema real e final: o modelo local **inventa
+   erros gramaticais/ortográficos específicos que não existem na redação**
+   (ex.: "falta acento em X" quando X já está acentuado, "falta crase"
+   onde não é obrigatória) para preencher a exigência de "citar
+   características concretas" ao justificar uma nota mediana. Diferente
+   das outras fontes (LegalPT/ClassiCC-PT/personas_br), essa tarefa exige
+   afirmações verificáveis palavra-por-palavra sobre o texto-fonte, não
+   só síntese/resumo geral — um padrão de alucinação mais difícil de
+   evitar com um modelo aberto de 32B nesse tipo específico de tarefa.
+
+**Decisão**: abandonar o LLM local para `aes_enem` por ora (não vale o
+esforço de mais uma rodada de fix). As outras fontes locais (LegalPT,
+ClassiCC-PT, personas_br, gigaverbo_v2_sft) não têm esse problema —
+continuam válidas. Se retomar essa fonte no futuro, o caminho mais
+promissor é a versão via Claude (`generate_aes_enem_feedback.py`, nunca
+testada em dado real neste projeto — cancelada antes de rodar), não mais
+tentativas com o LLM local sem uma mudança estrutural (ex.: validação
+determinística de que cada "erro citado" aparece literalmente no texto,
+não só que os números das notas aparecem).
+
+**Os 2 lotes de 500 gerados durante esse teste não são confiáveis —
+apague antes de montar o `prepare_data.py` final**:
+```bash
+rm -rf data/sft/aes_enem_local/aes_enem_feedback.jsonl data/sft/aes_enem_local/manifest.json
+rm -rf data/sft/aes_enem_local/JBCS2025
+```
+
 ```bash
 make llm-serve-0 && make llm-serve-1
 make aes-enem-local-dry-run
