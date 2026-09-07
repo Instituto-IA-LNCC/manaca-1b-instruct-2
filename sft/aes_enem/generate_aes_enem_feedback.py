@@ -165,6 +165,26 @@ def build_grades_text(ex: dict, single_col: str | None, comp_cols) -> str | None
     return None
 
 
+def load_essays_split(cfg: str):
+    """Carrega o split de redacoes de uma config. A maioria usa 'train',
+    mas confirmado ao vivo que 'sourceB' so tem um split chamado 'full'
+    (3.219 linhas) -- descobre o split disponivel em vez de fixar 'train'."""
+    from datasets import load_dataset
+    try:
+        return load_dataset(HF_REPO_ID, cfg, split="train")
+    except ValueError:
+        from datasets import get_dataset_split_names
+        splits = get_dataset_split_names(HF_REPO_ID, cfg)
+        if "train" in splits:
+            raise
+        if len(splits) == 1:
+            print(f"[aes-enem] config '{cfg}' nao tem split 'train', usando '{splits[0]}' "
+                  f"(unico disponivel)")
+            return load_dataset(HF_REPO_ID, cfg, split=splits[0])
+        raise ValueError(f"config '{cfg}' nao tem split 'train' e tem multiplos splits "
+                          f"{splits} -- ajuste load_essays_split() para escolher qual usar")
+
+
 def call_with_retry(client, max_retries=5, base_delay=1.0, **kwargs):
     import anthropic
     import random as _random
@@ -241,7 +261,7 @@ def main() -> int:
     args = ap.parse_args()
 
     try:
-        from datasets import get_dataset_config_names, load_dataset
+        from datasets import get_dataset_config_names
     except ImportError as e:
         print(f"[ERRO] 'datasets' ausente ({e}). Rode na imagem manaca-posttrain.")
         return 1
@@ -261,7 +281,7 @@ def main() -> int:
         print(f"[aes-enem] configs disponiveis: {configs} | usando: {cfg}")
 
     try:
-        ds = load_dataset(HF_REPO_ID, cfg, split="train")
+        ds = load_essays_split(cfg)
     except Exception as e:
         print(f"[ERRO] falha ao carregar {HF_REPO_ID} ({cfg}): {e}")
         return 1

@@ -62,6 +62,7 @@ from generate_aes_enem_feedback import (  # noqa: E402
     build_grades_text,
     count_emojis,
     detect_grade_columns,
+    load_essays_split,
     s,
 )
 
@@ -170,7 +171,7 @@ def main() -> int:
     out_path = os.path.join(out_dir, "aes_enem_feedback.jsonl")
 
     try:
-        from datasets import get_dataset_config_names, load_dataset
+        from datasets import get_dataset_config_names
     except ImportError as e:
         print(f"[ERRO] 'datasets' ausente ({e}). Rode na imagem manaca-posttrain.")
         return 1
@@ -206,7 +207,7 @@ def main() -> int:
         return 1
 
     try:
-        ds = load_dataset(HF_REPO_ID, cfg, split="train")
+        ds = load_essays_split(cfg)
     except Exception as e:
         print(f"[ERRO] falha ao carregar {HF_REPO_ID} ({cfg}): {e}")
         return 1
