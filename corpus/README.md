@@ -38,6 +38,27 @@ corrigido para preferir `url` em aquisições novas; `synth/generate_instruction
 não depende mais de `id` para nada (usa a posição física da linha no shard
 como chave), então os shards antigos continuam utilizáveis sem reaquisição.
 
+### Portuguese-PD — ABANDONADO para geração sintética (qualidade insuficiente)
+
+Testado ao vivo via `synth-local-run --source portuguese_pd`: primeiro
+erro foi técnico (documentos são LIVROS/PERIÓDICOS INTEIROS por linha —
+mediana de 287.780 caracteres, máximo de 29 milhões — estourava qualquer
+`--max-model-len`; corrigido em `sample_passages()` com uma janela
+aleatória de 12.000 caracteres, ver `_window_passage()`). Mas depois de
+corrigido, uma amostra de 3 janelas revelou um problema de conteúdo mais
+sério e não trivial de filtrar: **latim** (texto médico do séc. XVII),
+**grego antigo** com OCR seriamente corrompido, e **o próprio aviso legal
+do Google Books em inglês** ("Keep it legal... you are responsible for
+ensuring...") colado como se fosse conteúdo do livro. O corpus mistura
+bastante material não-português e ruído de OCR de scans antigos, além do
+boilerplate do Google Books que vazou pro campo de texto.
+
+**Decisão**: abandonado para geração sintética por agora (mesmo critério
+do `aes_enem` — ver `sft/aes_enem/README.md`). Se retomar, precisa de
+filtro de idioma (descartar janelas que não são majoritariamente PT-BR)
+antes de mandar pro modelo — amostragem aleatória sozinha cai em lixo com
+frequência alta demais pra valer a pena sem esse filtro.
+
 ### Fontes 04-06 — por que estavam descartadas e agora não estão
 
 MADLAD-400, FineWeb-2 e HPLT 2.0 faziam parte do Tier 1 do **plano** de
