@@ -174,6 +174,13 @@ def main() -> int:
     ap.add_argument("--attn", default="flash_attention_2", help="flash_attention_2 | sdpa | eager")
     ap.add_argument("--logging_steps", type=int, default=10)
     ap.add_argument("--save_steps", type=int, default=500)
+    ap.add_argument("--eval_steps", type=int, default=None,
+                    help="intervalo de avaliação em passos (default: igual a --save_steps; "
+                         "precisa ser múltiplo de --save_steps para --load_best_model_at_end)")
+    ap.add_argument("--load_best_model_at_end", action="store_true",
+                    help="Com --eval_data_files: ao final do treino, carrega o checkpoint de "
+                         "MENOR eval_loss (não o último) antes de salvar -- usa mais épocas/tempo "
+                         "sem risco de salvar um modelo já sobre-ajustado.")
     ap.add_argument("--resume_from_checkpoint", default=None,
                     help="Retomar treino: 'auto' (último checkpoint-XXX no output_dir) ou um caminho")
     ap.add_argument("--seed", type=int, default=42)
@@ -249,6 +256,15 @@ def main() -> int:
     )
     check_collator(collator, tokenizer, fmt, train_ds[0])  # obrigatória
 
+    if args.load_best_model_at_end and eval_ds is None:
+        print("[ERRO] --load_best_model_at_end precisa de --eval_data_files (nao ha o que comparar).")
+        return 1
+    eval_steps = args.eval_steps or args.save_steps
+    if args.load_best_model_at_end and eval_steps % args.save_steps != 0:
+        print(f"[ERRO] --eval_steps ({eval_steps}) precisa ser multiplo de --save_steps "
+              f"({args.save_steps}) para --load_best_model_at_end funcionar.")
+        return 1
+
     sft_config = SFTConfig(
         output_dir=args.output_dir,
         num_train_epochs=args.num_train_epochs,
@@ -271,6 +287,13 @@ def main() -> int:
         seed=args.seed,
         report_to=args.report_to,
         eval_strategy=("steps" if eval_ds is not None else "no"),
+        eval_steps=(eval_steps if eval_ds is not None else None),
+        # Ao terminar o treino, recarrega o checkpoint de MENOR eval_loss (nao
+        # o ultimo) antes do save_model() abaixo -- protege contra sobre-ajuste
+        # quando se usa mais epocas do que o minimo fiel ao LLM-jp.
+        load_best_model_at_end=args.load_best_model_at_end,
+        metric_for_best_model=("eval_loss" if args.load_best_model_at_end else None),
+        greater_is_better=(False if args.load_best_model_at_end else None),
     )
 
     trainer = SFTTrainer(
