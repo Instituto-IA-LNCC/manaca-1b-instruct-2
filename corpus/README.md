@@ -15,15 +15,19 @@ As diferenças estão documentadas no docstring de cada script.
 
 ## Fontes brutas (precisam do passo de geração sintética depois)
 
-| # | Script | Fonte HF | Papel | Licença |
-|---|--------|----------|-------|---------|
-| 01 | `01_acquire_legalpt.py` | `eduagarcia/LegalPT_dedup` (menos `tesemo_v2`) | Domínio jurídico — ataca o OAB no acaso do instruct v1/v2 | mista, verificar por config (ver script) |
-| 02 | `02_acquire_classiccpt.py` | `ClassiCC-Corpus/ClassiCC-PT` | Web nativo PT-BR filtrado por `edu_score`/`toxic_score` | aberta, herda termos do CC |
-| 03 | `03_acquire_carolina.py` | `carolina-c4ai/corpus-carolina` (rev. `v1.2`) | Diversidade de registro/gênero (escrita, roleplay) | CC BY-NC-SA 4.0 — **não comercial** |
-| 04 | `04_acquire_madlad400.py` | `allenai/MADLAD-400` (config `pt`) | Web geral, domínios/períodos distintos do GigaVerbo | Apache 2.0 |
-| 05 | `05_acquire_fineweb2.py` | `HuggingFaceFW/fineweb-2` (config `por_Latn`) | Web de alta qualidade (pipeline FineWeb) | ODC-By 1.0 |
-| 06 | `06_acquire_hplt2.py` | `HPLT/HPLT2.0_cleaned` (config `por_Latn`) | Web geral, cobertura temporal distinta | CC0 (domínio público) |
-| 07 | `07_acquire_portuguese_pd.py` | `PleIAs/Portuguese-PD` | Registro histórico/literário (pré-1884) | Domínio público |
+| # | Script | Fonte HF | Papel | Licença | Status na fase instruct-2 |
+|---|--------|----------|-------|---------|---------------------------|
+| 01 | `01_acquire_legalpt.py` | `eduagarcia/LegalPT_dedup` (menos `tesemo_v2`) | Domínio jurídico — ataca o OAB no acaso do instruct v1/v2 | mista, verificar por config (ver script) | ✅ usado — 5.043 exemplos |
+| 02 | `02_acquire_classiccpt.py` | `ClassiCC-Corpus/ClassiCC-PT` | Web nativo PT-BR filtrado por `edu_score`/`toxic_score` | aberta, herda termos do CC | ✅ usado — 4.658 exemplos |
+| 03 | `03_acquire_carolina.py` | `carolina-c4ai/corpus-carolina` (rev. `v1.2`) | Diversidade de registro/gênero (escrita, roleplay) | CC BY-NC-SA 4.0 — **não comercial** | ❌ **abandonado** — licença não-comercial incompatível; raw removido do disco |
+| 04 | `04_acquire_madlad400.py` | `allenai/MADLAD-400` (config `pt`) | Web geral, domínios/períodos distintos do GigaVerbo | Apache 2.0 | ✅ usado — 4.503 exemplos |
+| 05 | `05_acquire_fineweb2.py` | `HuggingFaceFW/fineweb-2` (config `por_Latn`) | Web de alta qualidade (pipeline FineWeb) | ODC-By 1.0 | ✅ usado — 4.648 exemplos |
+| 06 | `06_acquire_hplt2.py` | `HPLT/HPLT2.0_cleaned` (config `por_Latn`) | Web geral, cobertura temporal distinta | CC0 (domínio público) | ✅ usado — 4.704 exemplos |
+| 07 | `07_acquire_portuguese_pd.py` | `PleIAs/Portuguese-PD` | Registro histórico/literário (pré-1884) | Domínio público | ❌ **abandonado** — documentos gigantes + conteúdo não-português/OCR ruim; raw removido do disco (ver nota abaixo) |
+
+Ficha completa de contagens/status por fonte (incluindo as geradas fora de
+`corpus/scripts/`, como personas_br/gigaverbo_v2_sft/ExtraGLUE):
+[`docs/data/README-instruct2.md`](../docs/data/README-instruct2.md).
 
 ### ClassiCC-PT — campo `id` não é confiável nos shards já adquiridos
 

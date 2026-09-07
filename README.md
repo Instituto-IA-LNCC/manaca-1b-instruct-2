@@ -203,19 +203,27 @@ Já disponível neste repositório (o que funcionou e valeu, sem tentativas falh
   [`docs/data/`](docs/data/) · código de extração/tratamento em
   [`sft/prepare_data.py`](sft/prepare_data.py) e [`sft/jaster/build_jaster.py`](sft/jaster/build_jaster.py).
 - **Corpus-fonte para instrução sintética (instruct-2)** — LegalPT, ClassiCC-PT,
-  Carolina, MADLAD-400, FineWeb-2, HPLT 2.0 e Portuguese-PD, mesmo padrão de
-  extração do [`manaca/corpus/`](https://github.com/brunoleomenezes/manaca/tree/main/corpus):
-  [`corpus/README.md`](corpus/README.md) · scripts em [`corpus/scripts/`](corpus/scripts/)
-  (inclui a tabela completa de fontes avaliadas e excluídas, com motivo).
+  MADLAD-400, FineWeb-2 e HPLT 2.0 (usados); Carolina e Portuguese-PD
+  avaliados e **abandonados** (licença/qualidade, ver tabela de status), mesmo
+  padrão de extração do [`manaca/corpus/`](https://github.com/brunoleomenezes/manaca/tree/main/corpus):
+  [`corpus/README.md`](corpus/README.md) · scripts em [`corpus/scripts/`](corpus/scripts/).
 - **Geração de instrução sintética (instruct-2)** — transforma as passagens
-  brutas acima em `{instruction, input, output}` via Claude (Anthropic
-  Batches API), grounded no texto, com decontaminação e manifest de custo:
-  [`synth/README.md`](synth/README.md) · [`synth/generate_instructions.py`](synth/generate_instructions.py).
+  brutas acima em `{instruction, input, output}` grounded no texto, com
+  decontaminação: via Claude (Anthropic Batches API,
+  [`synth/README.md`](synth/README.md) · [`synth/generate_instructions.py`](synth/generate_instructions.py))
+  ou via LLM local (Qwen2.5-32B-Instruct-AWQ em vLLM na GPU do Netuno, sem
+  custo de API, [`scripts/docker/README-vllm.md`](scripts/docker/README-vllm.md) ·
+  [`synth/generate_instructions_local.py`](synth/generate_instructions_local.py)).
 - **Fontes de instrução já prontas (instruct-2)** — GigaVerbo-v2 SFT, Tucano-SFT,
-  Quati e ExtraGLUE, todas de licença aberta e sem geração sintética necessária:
+  Quati, ExtraGLUE e personas_br (Nemotron-Personas-Brazil, via Claude e via
+  LLM local), todas de licença aberta:
   [`sft/gigaverbo_v2_sft/README.md`](sft/gigaverbo_v2_sft/README.md) ·
   [`sft/tucano_sft/README.md`](sft/tucano_sft/README.md) ·
-  [`sft/quati/README.md`](sft/quati/README.md).
+  [`sft/quati/README.md`](sft/quati/README.md) ·
+  [`sft/personas_br/README.md`](sft/personas_br/README.md).
+- **Ficha completa de contagens/status do instruct-2** (só o que foi de fato
+  gerado, com `wc -l` real, fontes usadas vs. abandonadas e por quê):
+  [`docs/data/README-instruct2.md`](docs/data/README-instruct2.md).
 - **2ª tentativa de DPO (instruct-2)** — GigaVerbo-v2 Preferences e Reward-Aira,
   para retomar o DPO após o resultado negativo do v1/v2 com dado maior e de
   terceiros: [`dpo/gigaverbo_v2_preferences/README.md`](dpo/gigaverbo_v2_preferences/README.md) ·
