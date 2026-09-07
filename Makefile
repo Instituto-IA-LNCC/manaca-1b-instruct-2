@@ -10,7 +10,7 @@
 #   make sft ARGS="..."     # SFT v1    |  make sft-v2       -> SFT v2
 # =============================================================================
 SHELL := /bin/bash
-.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all gigaverbo-v2-sft-data corpus-madlad400 corpus-fineweb2 corpus-hplt2 corpus-portuguese-pd corpus-all-raw tucano-sft-data quati-data dpo-gigaverbo-v2-preferences dpo-reward-aira dpo-preferences-data synth-run synth-submit synth-collect synth-dry-run safety-mine-refusals safety-mine-refusals-audit safety-ambiguous-seeds safety-ambiguous-seeds-stats safety-mine-prompts safety-mine-prompts-audit safety-generate-benign safety-generate-benign-dry-run safety-generate-harmful safety-generate-harmful-dry-run safety-generate-harmful-audit safety-project-size medpt-data aya-pt-data jaster-healthqa-br juristcu-data personas-br-dry-run personas-br-data personas-br-local-dry-run personas-br-local-run aes-enem-dry-run aes-enem-data llm-serve-0 llm-serve-1 synth-local-dry-run synth-local-run
+.PHONY: help env build-posttrain sft-data sft-data-v2 sft sft-v2 sft-safety dpo corpus-legalpt corpus-classiccpt corpus-carolina corpus-all gigaverbo-v2-sft-data corpus-madlad400 corpus-fineweb2 corpus-hplt2 corpus-portuguese-pd corpus-all-raw tucano-sft-data quati-data dpo-gigaverbo-v2-preferences dpo-reward-aira dpo-preferences-data synth-run synth-submit synth-collect synth-dry-run safety-mine-refusals safety-mine-refusals-audit safety-ambiguous-seeds safety-ambiguous-seeds-stats safety-mine-prompts safety-mine-prompts-audit safety-generate-benign safety-generate-benign-dry-run safety-generate-harmful safety-generate-harmful-dry-run safety-generate-harmful-audit safety-project-size medpt-data aya-pt-data jaster-healthqa-br juristcu-data personas-br-dry-run personas-br-data personas-br-local-dry-run personas-br-local-run aes-enem-dry-run aes-enem-data aes-enem-local-dry-run aes-enem-local-run llm-serve-0 llm-serve-1 synth-local-dry-run synth-local-run
 .RECIPEPREFIX := >
 
 help:  ## Lista os alvos
@@ -141,6 +141,12 @@ aes-enem-dry-run:  ## Mostra o prompt de feedback de redacao ENEM sem gastar
 
 aes-enem-data:  ## Gera feedback de redacao ENEM via Claude, grounded na nota real (MIT) -> data/sft/aes_enem
 > ./scripts/docker/run_posttrain.sh python sft/aes_enem/generate_aes_enem_feedback.py $(ARGS)
+
+aes-enem-local-dry-run:  ## Mostra o prompt de feedback de redacao ENEM via LLM local sem gastar (make aes-enem-local-dry-run)
+> ./scripts/docker/run_posttrain.sh python sft/aes_enem/generate_aes_enem_feedback_local.py --dry-run $(ARGS)
+
+aes-enem-local-run:  ## Gera feedback via LLM local (llm-serve-0/1 precisam estar de pe) -> data/sft/aes_enem_local
+> ./scripts/docker/run_posttrain.sh python sft/aes_enem/generate_aes_enem_feedback_local.py $(ARGS)
 
 llm-serve-0:  ## Sobe vLLM (OpenAI-compatible) na GPU 0 -- ver scripts/docker/run_vllm_serve.sh (sem NVLink: 1 GPU por instancia)
 > GPU=0 PORT=8000 ./scripts/docker/run_vllm_serve.sh

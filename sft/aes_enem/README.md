@@ -63,3 +63,39 @@ pagar de novo pelo que já foi processado.
 comando para com erro em vez de sobrescrever silenciosamente exemplos já
 pagos. Use `--out <outro-diretório>` para um lote novo separado, ou
 `--overwrite` se a intenção é mesmo descartar o que está no diretório atual.
+
+## Bug real corrigido: `grades` tem 6 elementos, não 5
+
+A detecção de colunas de nota (`detect_grade_columns`) assumia que o
+campo `grades` (quando presente como lista) tinha exatamente 5 valores
+(C1-C5). Confirmado ao vivo (`kamel-usp/aes_enem_dataset`, config
+`JBCS2025`): a lista tem **6** elementos — `[c1, c2, c3, c4, c5, total]`
+(ex.: `[160, 120, 120, 120, 80, 600]`, onde `600` é a soma dos 5
+primeiros). Corrigido para aceitar `len(grades) in (5, 6)`; quando o 6º
+elemento existe, ele vira uma linha extra "Nota total: N (de 0 a 1000)"
+no texto passado ao modelo.
+
+## Variante via LLM local (sem custo de API)
+
+`generate_aes_enem_feedback_local.py` — mesmo pipeline (redação real +
+notas reais -> feedback grounded, mesmo `SYSTEM_PROMPT`/emoji-zero), mas
+fala com endpoint(s) vLLM locais em vez da API da Anthropic. Mesma trava
+de `--overwrite` e mesmo padrão de resume via `manifest.json` (com
+`processed_ids` em vez de `processed_idx` único, já que as chamadas rodam
+em paralelo via `ThreadPoolExecutor`).
+
+**Diferença deliberada**: `--max_examples` aqui limita quantas LINHAS do
+dataset são *tentadas* (por índice), não quantas são de fato *gravadas* —
+a versão via Claude para assim que o total gravado atinge o teto, o que
+não dá pra replicar de forma simples com processamento concorrente.
+
+Auditoria (`--audit-sample N`, via Claude) usa critérios próprios
+(`fiel_as_notas`/`fluente`/`especifico`) — aqui o "grounding" é literal
+(as 5 notas fornecidas), então a auditoria checa se o feedback gerado é
+consistente com ELAS especificamente, não com um texto-fonte genérico.
+
+```bash
+make llm-serve-0 && make llm-serve-1
+make aes-enem-local-dry-run
+make aes-enem-local-run ARGS="--out data/sft/aes_enem_local --max_examples 2000 --audit-sample 40"
+```
