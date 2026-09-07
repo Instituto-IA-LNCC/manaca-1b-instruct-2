@@ -128,6 +128,24 @@ DEFAULT_MAX_TOKENS = 1500
 DEFAULT_MAX_EXAMPLES = 2000
 DEFAULT_OVERSAMPLE = 5  # tamanho do pool ranqueado por score = max_examples * este fator
 
+# Confirmado ao vivo (Portuguese-PD): algumas fontes guardam DOCUMENTOS
+# inteiros por linha (livros/periodicos digitalizados), nao passagens --
+# mediana de 287.780 caracteres, maximo de 29 MILHOES, muito acima de
+# qualquer contexto de LLM (estourava --max-model-len do vLLM local,
+# rejeitando 100% das requisicoes com HTTP 400). ~12.000 caracteres e
+# generoso o bastante pra qualquer passagem de verdade (a maioria das
+# fontes tem documentos de poucos milhares de caracteres) mas protege
+# contra esse caso -- e uma janela ALEATORIA dentro do texto, nao só o
+# inicio, pra nao pegar so pagina de rosto/preambulo em documentos longos.
+MAX_PASSAGE_CHARS = 12_000
+
+
+def _window_passage(text: str, rng: random.Random, max_chars: int = MAX_PASSAGE_CHARS) -> str:
+    if len(text) <= max_chars:
+        return text
+    start = rng.randint(0, len(text) - max_chars)
+    return text[start:start + max_chars]
+
 TASK_TYPES = [
     "resumo", "pergunta_resposta", "explicacao_simples",
     "extracao_pontos_chave", "reescrita_tom", "questao_estilo_prova",
@@ -280,7 +298,7 @@ def sample_passages(source_dir: Path, max_examples: int, oversample: int, seed: 
             key = (shard_idx, row_idx)
             found[key] = {
                 "id": str(ids[row_idx]), "uid": f"{shard_idx}_{row_idx}",
-                "text": text, "source": srcs[row_idx], "score": scores[row_idx],
+                "text": _window_passage(text, rng), "source": srcs[row_idx], "score": scores[row_idx],
             }
 
     if n_corrupted:
