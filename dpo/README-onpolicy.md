@@ -83,3 +83,36 @@ python3 bench/mtbench_pt/report.py \
 
 Se `seguranca` sobe e o resto se mantém, o DPO valeu e vira o `instruct-v2-dpo` oficial.
 Senão, o instruct-v2 (SFT) continua sendo o melhor, e a evidência fica registrada.
+
+## 4. ANTES de avaliar: descarte o confounder do merge (`dpo/diag_dpo.py`)
+
+Esta receita (on-policy, pequena, self-generated) foi tentada no v2 e **não mudou
+a geração livre** — mas existe uma segunda explicação possível pra "DPO não fez
+efeito" que não é sobre o dado: o merge do adapter LoRA no base roda em **bf16**
+(`dpo/train.py`, sem caminho fp32 no merge automático), e deltas `ΔW` pequenos
+do LoRA podem **desaparecer no arredondamento** de `W + ΔW` — o adapter mudou o
+comportamento de verdade, mas o modelo MESCLADO (o que se avalia) não reflete
+isso.
+
+`dpo/diag_dpo.py` existe exatamente pra descartar essa hipótese antes de
+avaliar: gera a mesma resposta em base (SFT) vs. base+adapter (efeito real,
+sem arredondar) vs. merged (o que se avalia).
+
+```bash
+python dpo/diag_dpo.py --base /workspace/checkpoints/manaca-1b-instruct-2-full \
+  --adapter /workspace/checkpoints/manaca-1b-instruct-2-dpo2 \
+  --merged /workspace/checkpoints/manaca-1b-instruct-2-dpo2-merged
+```
+
+- **Adapter recusa, merged não** -> bug do merge em bf16. Mescle em fp32
+  (`sft/merge_lora.py` ou ajuste `dpo/train.py` pra carregar em fp32 antes do
+  `merge_and_unload()`) e reavalie — não descarte a receita por isso.
+- **Adapter também obedece** -> aí sim é dado/método (o que aconteceu na
+  tentativa do v2, segundo a nota em
+  [`gigaverbo_v2_preferences/README.md`](gigaverbo_v2_preferences/README.md) —
+  nunca formalmente registrado com log/eval, só citado em prosa).
+
+Rode isso **sempre**, pra qualquer tentativa de DPO daqui pra frente (inclusive
+com os datasets `gigaverbo_v2_preferences`/`reward_aira` do instruct-2) —
+principalmente porque a última vez que isso importou, a conclusão não ficou
+documentada com evidência, só com uma frase.
