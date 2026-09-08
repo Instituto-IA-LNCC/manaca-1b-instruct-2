@@ -269,6 +269,14 @@ def main() -> int:
         output_dir=args.output_dir,
         num_train_epochs=args.num_train_epochs,
         per_device_train_batch_size=args.per_device_train_batch_size,
+        # SFTConfig/TrainingArguments usa default=8 para eval se nao setado
+        # explicitamente -- MAIOR que per_device_train_batch_size (default 1
+        # aqui). Confirmado ao vivo: treino rodou 500 passos ocupando quase
+        # toda a VRAM (23.32/23.54 GB) so com batch=1; a primeira avaliacao
+        # pediu lote de 8 (o default silencioso) e estourou OOM antes mesmo
+        # do primeiro checkpoint salvar. Eval nao precisa de lote maior que o
+        # treino -- usa o mesmo valor por seguranca.
+        per_device_eval_batch_size=args.per_device_train_batch_size,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         learning_rate=args.learning_rate,
         warmup_ratio=args.warmup_ratio,
