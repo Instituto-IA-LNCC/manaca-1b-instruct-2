@@ -29,6 +29,17 @@ ADVERTÊNCIA (mesma do `mine_refusal_bank.py`): as categorias de dano do
 categoria/tópico se existir; senão usa o nome do subset). Auditar uma
 amostra (`--sample-audit N`) antes de treinar com isso.
 
+BUG REAL CORRIGIDO (auditoria ao vivo, 15 amostras): o subset harmful
+inclui slurs raciais/étnicos explícitos e pedidos associando PESSOAS
+PÚBLICAS REAIS (nome próprio) a violência sexual/genocídio — bem mais
+grave que os 50 seeds escritos à mão. `contains_slur()` descarta
+automaticamente os casos mais inequívocos (lista pequena, deliberadamente
+NÃO-exaustiva — não substitui a auditoria manual). Por isso a saída deste
+script está no `.gitignore` por padrão: NUNCA commitar
+`safety_prompts_mined.jsonl` direto — revisar a amostra, filtrar manualmente
+o que sobrar de grave, e só então promover as entradas aprovadas para um
+arquivo versionado à parte.
+
 Uso:
     python dpo/dpo_seeds/mine_harmful_prompts.py --sample-audit 15   # so audita
     python dpo/dpo_seeds/mine_harmful_prompts.py                    # grava
@@ -70,6 +81,22 @@ REFERENCE  = "Polygl0t / Tucano 2 (2026). GigaVerbo-v2 Preferences. arXiv:2603.0
 
 MIN_TEXT_LEN = 15
 MAX_TEXT_LEN = 800  # prompt de pedido costuma ser curto; textao aqui e sinal de schema errado
+
+# Triagem automatica de PRIMEIRA PASSADA (nao substitui a auditoria humana):
+# confirmado ao vivo que o subset harmful do gigaverbo-v2-preferences inclui
+# slurs raciais/etnicos explicitos (ingles e portugues) misturados ao pedido
+# sintetico. Lista pequena e deliberadamente NAO-exaustiva dos casos mais
+# inequivocos -- um pedido nocivo generico ("como invadir uma conta") ja
+# ensina a recusa sem precisar do slur; descartar esses exemplos so reduz
+# volume, nao perde cobertura de categoria.
+SLUR_MARKERS = [
+    "kike", "cadelas negras", "negros e kike", "raça inferior", "raca inferior",
+]
+
+
+def contains_slur(text: str) -> bool:
+    norm = _normalize(text)
+    return any(_normalize(m) in norm for m in SLUR_MARKERS)
 
 DEDUP_FILES_DEFAULT = [
     "dpo/dpo_seeds/safety_prompts.jsonl",
@@ -177,11 +204,15 @@ def main() -> int:
               f" | campos: {list(first.keys())}")
 
         n_kept = 0
+        n_slur_discarded = 0
         for ex in ds:
             if args.max_per_subset and n_kept >= args.max_per_subset:
                 break
             text = _flatten(ex.get(prompt_col))
             if not passes_sanity(text):
+                continue
+            if contains_slur(text):
+                n_slur_discarded += 1
                 continue
             norm = _normalize(text)
             if norm in seen_norm:
@@ -197,7 +228,8 @@ def main() -> int:
             })
             n_kept += 1
         counts[cfg] = n_kept
-        print(f"[harmful-prompts] {cfg}: {n_kept:,} prompts unicos minerados")
+        print(f"[harmful-prompts] {cfg}: {n_kept:,} prompts unicos minerados "
+              f"({n_slur_discarded:,} descartados por slur -- triagem automatica, ver SLUR_MARKERS)")
 
     if args.sample_audit:
         import random

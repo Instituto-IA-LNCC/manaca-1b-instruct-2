@@ -17,9 +17,15 @@ POR QUE ISSO NÃO TEM O PROBLEMA DE PRIVACIDADE DO ToLD-Br/HateBR: o campo
 já treinado para recusar com segurança), não fala de uma pessoa real — ao
 contrário de tweets/comentários reais do ToLD-Br/HateBR, reproduzir esse
 texto no repositório não expõe ninguém. Por isso este script escreve o
-texto minerado diretamente no `.jsonl` de saída (versionável), diferente de
-`dpo/dpo_seeds/build_ambiguous_seeds.py` (ver docstring lá) — nesse, o
-mesmo cuidado do projeto com dados sensíveis do HateBR se aplica.
+texto minerado diretamente no `.jsonl` de saída, sem o cuidado de
+privacidade que `dpo/dpo_seeds/build_ambiguous_seeds.py` tem com o HateBR
+(ver docstring lá). Isso NÃO significa que a saída deste script seja
+auto-versionável: uma auditoria (ver "BUG REAL CORRIGIDO" abaixo) achou
+conteúdo grave o suficiente na fonte-irmã (`mine_harmful_prompts.py`) para
+justificar manter TODOS os candidatos minerados/gerados fora do git por
+padrão (`.gitignore`) até revisão humana explícita — só o
+`safety_prompts.jsonl` original (50 seeds, escrito à mão) e um eventual
+`*_v2.jsonl` promovido a mão ficam versionados.
 
 ADVERTÊNCIA (da pesquisa que motivou este script): as categorias de dano do
 `gigaverbo-v2-preferences` NÃO são documentadas publicamente — não está
@@ -28,6 +34,14 @@ Este script produz um **POOL DE CANDIDATOS**, não um banco pronto para
 uso — audite uma amostra (`--sample-audit N`) antes de ligar isso ao
 `gen_safety_sft.py`. Essa integração é um passo SEPARADO, feito depois da
 auditoria manual, não por este script.
+
+BUG REAL CORRIGIDO (confirmado ao vivo na auditoria): o `chosen` desse
+dataset às vezes vem com um bloco `<think>...</think>` de raciocínio
+exposto (mesma fonte, mesmo problema documentado em
+`dpo/gigaverbo_v2_preferences/README.md`, ~48% dos pares). `strip_think()`
+remove o bloco antes de aceitar o texto como recusa; entradas com `<think>`
+sem fechamento (raciocínio truncado, sem resposta final) são descartadas
+(não há o que aproveitar).
 
 Uso:
     python sft/safety_seeds/mine_refusal_bank.py
@@ -85,6 +99,22 @@ def _flatten_response(v) -> str:
     return s(v)
 
 
+THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
+
+
+def strip_think(text: str) -> str | None:
+    """O `chosen` do gigaverbo-v2-preferences às vezes vem com um bloco
+    `<think>...</think>` de raciocínio exposto (confirmado ao vivo: ~48%
+    dos pares em `dpo/gigaverbo_v2_preferences/`, mesma fonte). Nosso SFT
+    nunca ensina esse formato -- usar como recusa treinaria o modelo a
+    emitir `<think>` tags soltas. Remove o bloco e devolve só a resposta
+    final; se a tag não tiver fechamento (reasoning truncado sem resposta
+    final, visto ao vivo na auditoria), não há o que aproveitar -> None."""
+    if "<think>" in text and "</think>" not in text:
+        return None
+    return THINK_RE.sub("", text).strip()
+
+
 def passes_sanity(text: str) -> bool:
     if len(text) < MIN_TEXT_LEN or len(text) > MAX_TEXT_LEN:
         return False
@@ -131,11 +161,17 @@ def main() -> int:
             continue
 
         n_kept = 0
+        n_think_discarded = 0
         for ex in ds:
             if args.max_per_subset and n_kept >= args.max_per_subset:
                 break
             chosen = ex.get("chosen") or ex.get("chosen_response")
             text = _flatten_response(chosen)
+            had_think = "<think>" in text
+            text = strip_think(text)
+            if text is None:
+                n_think_discarded += 1
+                continue
             if not passes_sanity(text):
                 continue
             norm = _normalize(text)
@@ -146,10 +182,12 @@ def main() -> int:
                 "id": f"mined_{len(mined):05d}",
                 "text": text,
                 "source_subset": cfg,
+                "had_think_block": had_think,
             })
             n_kept += 1
         counts[cfg] = n_kept
-        print(f"[refusal-bank] {cfg}: {n_kept:,} recusas unicas mineradas")
+        print(f"[refusal-bank] {cfg}: {n_kept:,} recusas unicas mineradas "
+              f"({n_think_discarded:,} descartadas por <think> sem fechamento)")
 
     if args.sample_audit:
         import random

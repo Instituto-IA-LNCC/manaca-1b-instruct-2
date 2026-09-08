@@ -16,10 +16,17 @@ QUAIS categorias de ódio/bullying de fato ocorrem em PT-BR, em volume:
 
   - ToLD-Br (`mteb/told-br`, CC BY-SA 4.0): ~21k tweets, categorias
     LGBTQ+fobia, racismo, xenofobia, misoginia, obsceno, insulto.
-  - HateBR (`franciellevargas/HateBR`, ver licença na ficha do HF): 7k
+  - HateBR (`ruanchaves/hatebr`, ver licença na ficha do HF): 7k
     comentários Instagram, 9 grupos: xenofobia, racismo, homofobia,
     sexismo, intolerância religiosa, partidarismo, apologia à ditadura,
-    antissemitismo, gordofobia.
+    antissemitismo, gordofobia. NOTA: o mirror `franciellevargas/HateBR`
+    (o repo "oficial" do autor) só expõe `label_final`/anotadores brutos
+    no HF hoje -- as 9 colunas booleanas de categoria (`xenophobia`,
+    `racism`, `homophobia`...) só estão disponíveis no mirror
+    `ruanchaves/hatebr` (já usado em `sft/jaster/build_jaster.py` deste
+    projeto). Confirmado ao vivo: usar `franciellevargas/HateBR` faz
+    `count_categories()` retornar zero em toda categoria, silenciosamente
+    (nenhuma coluna candidata bate com o schema real desse mirror).
 
 POR QUE ESTE SCRIPT NÃO REPRODUZ O TEXTO REAL DESSES CORPORA (diferença
 crítica vs. `sft/safety_seeds/mine_refusal_bank.py`): ToLD-Br e HateBR são
@@ -71,7 +78,7 @@ import sys
 import unicodedata
 
 TOLDBR_REPO = "mteb/told-br"
-HATEBR_REPO = "franciellevargas/HateBR"
+HATEBR_REPO = "ruanchaves/hatebr"
 
 # Nomes de coluna candidatos (schema tolerante — nao ha garantia da grafia
 # exata usada por cada mirror do HF; ver docstring).
@@ -163,7 +170,24 @@ def count_categories(repo_id: str, category_candidates: dict[str, list[str]], sp
         return {cat: 0 for cat in category_candidates}
 
     first = ds[0] if len(ds) else {}
-    print(f"[{repo_id}] campos disponiveis: {list(first.keys())}")
+    fields = list(first.keys())
+    print(f"[{repo_id}] campos disponiveis: {fields}")
+
+    # Falha alto se NENHUMA categoria tem coluna candidata presente no
+    # schema real -- sem isso, um repo/schema trocado silenciosamente
+    # zera todas as contagens sem avisar (bug real que aconteceu com
+    # franciellevargas/HateBR, ver nota no topo do arquivo).
+    matched = {cat: [c for c in cands if c in fields] for cat, cands in category_candidates.items()}
+    unmatched = [cat for cat, cols in matched.items() if not cols]
+    if unmatched:
+        print(f"[aviso] {repo_id}: nenhuma coluna candidata encontrada para {unmatched} "
+              f"(candidatas testadas: { {c: category_candidates[c] for c in unmatched} }). "
+              "Essas categorias vao ficar em ZERO -- schema do dataset pode ter mudado.")
+    if len(unmatched) == len(category_candidates):
+        raise RuntimeError(
+            f"{repo_id}: NENHUMA categoria bateu com o schema real (campos: {fields}). "
+            "O repo_id ou os nomes de coluna candidatos estao errados -- corrija antes de confiar "
+            "nas contagens (nao silencie isso retornando zeros).")
 
     counts = {cat: 0 for cat in category_candidates}
     for row in ds:

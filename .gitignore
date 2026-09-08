@@ -15,3 +15,19 @@ bench/safety_pt/answers/
 /dpo_onpolicy/
 sft_safety/
 
+# Candidatos de escala do safety-SFT (minerados/gerados, NAO auditados por
+# humano ainda) -- nunca commitar direto. So o safety_prompts.jsonl original
+# (50 seeds, escrito a mao) e um eventual *_v2.jsonl explicitamente revisado
+# e promovido a mao ficam versionados. Motivo real: uma auditoria confirmou
+# que o conteudo minerado de dpo_seeds/mine_harmful_prompts.py inclui slurs
+# raciais e nomes de pessoas publicas reais associados a violencia sexual/
+# genocidio -- risco real demais para entrar no historico do git por default.
+dpo/dpo_seeds/safety_prompts_ambiguous*.jsonl
+dpo/dpo_seeds/safety_prompts_mined*.jsonl
+dpo/dpo_seeds/safety_prompts_generated*.jsonl
+dpo/dpo_seeds/*_manifest.json
+sft/safety_seeds/refusal_bank_mined*.jsonl
+sft/safety_seeds/refusal_bank_manifest.json
+sft/safety_seeds/benign_help_generated*.jsonl
+sft/safety_seeds/benign_help_generated_manifest.json
+

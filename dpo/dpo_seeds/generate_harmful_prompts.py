@@ -187,13 +187,22 @@ def parse_json_array(raw_text: str) -> list[str] | None:
     text = re.sub(r"^```(json)?", "", text).strip()
     text = re.sub(r"```$", "", text).strip()
     match = re.search(r"\[.*\]", text, re.DOTALL)
-    if not match:
-        return None
-    try:
-        arr = json.loads(match.group(0))
-        return [s(x) for x in arr if s(x)]
-    except json.JSONDecodeError:
-        return None
+    if match:
+        try:
+            arr = json.loads(match.group(0))
+            result = [s(x) for x in arr if s(x)]
+            if result:
+                return result
+        except json.JSONDecodeError:
+            pass
+    # Fallback tolerante: a resposta pode nao ser um array JSON estrito (ex.:
+    # o modelo respondeu com preambulo/ressalva + lista numerada com os
+    # pedidos entre aspas, em vez do formato pedido) -- extrai strings entre
+    # aspas duplas plausiveis como pedido em vez de descartar tudo.
+    quoted = re.findall(r'"([^"\n]{10,300})"', text)
+    if quoted:
+        return [s(x) for x in quoted if s(x)]
+    return None
 
 
 def call_with_retry(client, max_retries=5, base_delay=1.0, **kwargs):
@@ -294,7 +303,9 @@ def main() -> int:
             text = next((b.text for b in resp.content if b.type == "text"), "")
             prompts = parse_json_array(text)
             if not prompts:
-                print(f"[aviso] {cat} (chamada {call_n}): resposta nao-parseavel. PULADA.")
+                snippet = text[:200].replace("\n", " ")
+                print(f"[aviso] {cat} (chamada {call_n}): resposta nao-parseavel. PULADA. "
+                      f"Inicio da resposta: {snippet!r}")
                 continue
 
             for p in prompts:
