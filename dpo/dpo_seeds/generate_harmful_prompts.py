@@ -88,7 +88,12 @@ import time
 import unicodedata
 from datetime import datetime, timezone
 
-DEFAULT_MODEL = os.environ.get("MODEL", "claude-opus-5")
+# claude-opus-5 bloqueia por completo (resposta vazia, nao recusa com texto)
+# as categorias ciberataque/malware/privacidade -- confirmado ao vivo, 3/3
+# chamadas vazias nas 3 categorias. claude-sonnet-5 gera normalmente as
+# mesmas categorias (30/30/30 pedidos plausiveis, sem conteudo extremo) e
+# e mais barato -- vira o default.
+DEFAULT_MODEL = os.environ.get("MODEL", "claude-sonnet-5")
 DEFAULT_PER_CATEGORY = 10
 DEFAULT_CALLS_PER_CATEGORY = 3
 DEFAULT_MAX_TOKENS = 2000
