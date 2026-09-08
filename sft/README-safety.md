@@ -250,3 +250,56 @@ python sft/gen_safety_sft.py --out sft_safety/safety_sft_v2.jsonl \
     --k_refuse 4 --general_data data/sft_v2/manaca_sft.jsonl --n_general 200 \
     --model <checkpoint-do-sft-v2>
 ```
+
+## 8. Auditoria dos 4 scripts de escala (instruct-2, resultado real)
+
+Rodei `--stats-only`/`--sample-audit`/`--dry-run` nos 4 scripts do §4 antes
+de gravar qualquer coisa. Dois bugs reais corrigidos, uma fonte abandonada,
+um problema de modelo (não de código) resolvido:
+
+- **`build_ambiguous_seeds.py`**: o repo `franciellevargas/HateBR` não expõe
+  mais as 9 colunas booleanas de categoria no HF (só anotadores brutos +
+  `label_final`) — `count_categories()` retornava **zero em toda categoria,
+  silenciosamente**. Trocado para `ruanchaves/hatebr` (já usado em
+  `sft/jaster/build_jaster.py`), que tem as colunas certas — números reais
+  confirmados (racismo 7, homofobia 13, sexismo 43, intolerância religiosa
+  44, gordofobia 23, antissemitismo 1). A função agora falha alto se
+  nenhuma categoria bater com o schema real, em vez de silenciar como zero.
+
+- **`mine_harmful_prompts.py` — ABANDONADO.** A auditoria de amostra (30
+  exemplos, 2 rodadas) achou conteúdo grave demais pra um filtro de
+  palavra-chave resolver: plano de assassinato de uma pessoa **real e
+  identificável** (o CEO da Apple), conteúdo antissemita repetido e
+  extremo, terrorismo em massa em local real (aeroporto JFK), conteúdo
+  envolvendo menores. Um filtro de slur (`contains_slur()`) foi adicionado
+  e ajuda um pouco, mas o problema não é vocabulário, são cenários
+  inteiros — mesmo padrão de decisão do aes_enem/Portuguese-PD: quando a
+  auditoria revela que a fonte é inadequada, a resposta é abandonar, não
+  filtrar mais. **Não usar esta fonte para os prompts do lado "recusa".**
+  Todos os candidatos minerados/gerados (deste script e dos outros 3) agora
+  ficam fora do git por padrão (`.gitignore`) — nunca commitar direto.
+
+- **`mine_refusal_bank.py`**: mesmo bug do `<think>` cru já documentado em
+  `dpo/gigaverbo_v2_preferences/README.md` (a fonte é a mesma). Corrigido
+  com `strip_think()` — bônus: recuperou entradas que antes eram
+  descartadas por estourar o limite de tamanho (o raciocínio cru inflava o
+  texto além de `MAX_TEXT_LEN`; sem ele, a resposta final cabe). Subiu de
+  3.191 para 3.996 recusas únicas só no subset `harmful-reasoning`. Amostra
+  de 15 conferida: limpa, sem `<think>`, boa qualidade em PT-BR. **Esta
+  fonte está OK pra usar** — extrai só as recusas (`chosen`), não os
+  pedidos nocivos.
+
+- **`generate_harmful_prompts.py`**: as 3 categorias mais "operacionalmente
+  sensíveis" (`ciberataque`, `malware`, `privacidade`) retornavam resposta
+  **vazia** com `claude-opus-5` (não é bug de parsing — não há texto
+  nenhum pra extrair). Testado com `claude-sonnet-5`: gerou 30/30/30
+  normalmente, conteúdo plausível e apropriado (spyware, phishing, quebra
+  de senha wifi, ransomware — nada de nomes reais, nada extremo). Trocado
+  o default do script pra `claude-sonnet-5` (também mais barato). As
+  outras 11 categorias já funcionavam com qualquer um dos dois modelos.
+
+**Conclusão prática**: a meta de ~2.055 exemplos (§7) continua de pé, mas
+sem o `mine_harmful_prompts.py` — o lado "recusa" escala via
+`generate_harmful_prompts.py` (agora com `claude-sonnet-5`, ~350 prompts
+nas 14 categorias) + `build_ambiguous_seeds.py` (templates, evidência real)
++ os 50 originais, não via mineração do `gigaverbo-v2-preferences`.
