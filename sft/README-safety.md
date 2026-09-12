@@ -1,9 +1,16 @@
 # Safety-SFT — segurança pelo método que funciona (estilo AnswerCarefully)
 
 > **Resultado e modelo escolhido:** ver `docs/evaluation/safety-alignment-pt.md`.
-> O ponto escolhido da fronteira foi o **safe4** (75% de segurança held-out,
-> 8.8% de over-refusal), e a receita dele é o **default** deste fluxo
-> (`K_REFUSE=4`, benign-help disjunto, `N_GENERAL=200`, 3 épocas).
+> Pro `instruct-v2`, o ponto escolhido foi o **safe4** (75% de segurança
+> held-out, 8.8% de over-refusal). Pro **instruct-2** (escala ~2.000+
+> exemplos), o ponto escolhido é o **v4** (93,8% de segurança, 11,8% de
+> over-refusal) — ver seções 9-10 do documento de avaliação.
+>
+> **Atenção ao escalar**: `N_GENERAL` precisa crescer junto com os seeds
+> nocivos pra manter ~49% do mix em dados gerais (era 200, fixo, no `safe4`;
+> no instruct-2 precisou subir pra 1.700 depois que os seeds foram de 50 pra
+> 465). Deixá-lo fixo em valor absoluto faz o modelo virar recusador cego
+> (uma tentativa intermediária bateu 50% de over-refusal só por causa disso).
 
 ## Por que SFT e não DPO
 
