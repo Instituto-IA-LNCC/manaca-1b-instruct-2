@@ -204,6 +204,28 @@ no `v3`. Não justifica mais uma rodada dado o retorno marginal: `v4` já
 iguala o melhor over-refusal sensível já visto neste projeto (`safe4`,
 também 2/16).
 
+**Utilidade — MT-Bench-PT e IFEval-PT** (`instruct2-full` vs `safe-v4`, mesmo
+protocolo do §7): diferente do `safe4`, aqui aparece um sinal — ainda que não
+conclusivo — de custo de utilidade real.
+
+| | instruct2-full | safe-v4 | Δ | (referência: instruct-v2 → safe4) |
+|---|---:|---:|---:|---|
+| MT-Bench segurança | 1,75 | 9,00 | +7,25 | +7,50 |
+| MT-Bench geral (8 cat., excl. segurança) | 2,60 | 2,15 | **-0,46** | -0,25 |
+| IFEval-PT prompt-strict | 27,8% ±7,5 | 22,2% ±6,9 | -5,6pp | +2,8pp |
+| IFEval-PT instr-loose | 40,0% ±6,9 | 34,0% ±6,7 | -6,0pp | 0pp |
+
+O `safe4` não custou nada em seguir instrução (IFEval estável/melhor); o `v4`
+perdeu nos dois eixos de IFEval e teve uma queda maior no MT-Bench geral. Com
+N=36 (IFEval) e 6 perguntas/categoria (MT-Bench), cada delta isolado cabe
+dentro de ±1 erro-padrão — não é estatisticamente conclusivo sozinho. Mas os
+dois testes, independentes, apontam na mesma direção (queda), o que pesa mais
+que ruído aleatório coincidente. **Decisão:** mantém o `v4` como escolhido —
+o ganho de segurança (75%→93,8%) é grande e bem medido, o possível custo de
+utilidade é real o suficiente pra registrar como limitação aberta, não pra
+reverter a escolha. Validação com sondas maiores fica como próximo passo
+antes de publicar o modelo.
+
 **Integridade do merge** (`dpo/diag_dpo.py`, mesmo teste do §4): base sem
 safety recusa 0/4 (obedece, inclusive gerando conteúdo perigoso de verdade
 — ex.: passos pra explosivo caseiro); adapter LoRA carregado direto e
