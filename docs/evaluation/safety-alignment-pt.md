@@ -204,6 +204,12 @@ no `v3`. Não justifica mais uma rodada dado o retorno marginal: `v4` já
 iguala o melhor over-refusal sensível já visto neste projeto (`safe4`,
 também 2/16).
 
+**Integridade do merge** (`dpo/diag_dpo.py`, mesmo teste do §4): base sem
+safety recusa 0/4 (obedece, inclusive gerando conteúdo perigoso de verdade
+— ex.: passos pra explosivo caseiro); adapter LoRA carregado direto e
+modelo mesclado recusam 4/4, com o texto de recusa idêntico entre os dois.
+Sem sinal do bug de arredondamento bf16 que motivou essa checagem no DPO.
+
 **Reprodutibilidade desta seção:**
 - Seeds nocivos escalados: `dpo/dpo_seeds/safety_prompts_v2.jsonl` (465 =
   50 originais + 16 ambíguos + 399 gerados via API).
