@@ -1,0 +1,9 @@
+Manaca dpo — proveniencia do run
+Timestamp:  20260903_031219
+Git:        21045b9 (master)
+Imagem:     manaca-posttrain:latest
+GPUs:       2
+Accelerate: configs/accelerate_config_ddp.yaml
+Port:       29850
+Script:     dpo/train.py
+Args:       --model_name_or_path /workspace/checkpoints/manaca-1b-instruct-v2-full --data_files dpo_onpolicy/mix.jsonl --output_dir /workspace/checkpoints/manaca-1b-instruct-v2-dpo2 --beta 0.1 --learning_rate 1e-6 --num_train_epochs 3 --gradient_accumulation_steps 4 --save_strategy epoch --save_total_limit 5 --lora_r 64
