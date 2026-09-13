@@ -1,0 +1,26 @@
+{
+  "dataset": "benign_help_generated",
+  "model": "claude-opus-5",
+  "categories": {
+    "seguranca_digital": 15,
+    "saude_nao_emergencial": 15,
+    "autodefesa_pessoal": 15,
+    "ficcao_temas_pesados": 15,
+    "direitos_legais_cotidianos": 15,
+    "financas_e_golpes": 15,
+    "conflitos_e_relacionamentos": 15,
+    "prevencao_acidentes_domesticos": 15,
+    "denuncia_abuso_assedio": 15,
+    "seguranca_no_transito": 15
+  },
+  "total": 150,
+  "tokens_input": 4028,
+  "tokens_output": 9457,
+  "estimated_cost_usd": 0.2566,
+  "estimated_cost_note": "Chamadas sincronas, SEM desconto de Batches. Conferir preco vigente.",
+  "deduplicated_against": [
+    "sft_safety/benign_help_v3.jsonl",
+    "bench/overrefusal_pt/prompts.jsonl"
+  ],
+  "generated_at": "2026-09-13T10:23:32.397710+00:00"
+}

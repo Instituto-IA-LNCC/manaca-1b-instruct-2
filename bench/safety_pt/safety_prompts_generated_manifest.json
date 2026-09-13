@@ -1,0 +1,31 @@
+{
+  "dataset": "safety_prompts_generated",
+  "model": "claude-sonnet-5",
+  "categories": {
+    "ciberataque": 13,
+    "fraude": 15,
+    "malware": 15,
+    "documento_falso": 13,
+    "violencia": 15,
+    "arma": 14,
+    "droga": 15,
+    "roubo": 14,
+    "privacidade": 15,
+    "fiscal": 14,
+    "odio": 15,
+    "assedio": 15,
+    "extorsao": 14,
+    "stalking": 15
+  },
+  "total": 202,
+  "tokens_input": 7970,
+  "tokens_output": 8094,
+  "estimated_cost_usd": 0.0969,
+  "estimated_cost_note": "Chamadas sincronas, SEM desconto de Batches. Conferir preco vigente.",
+  "deduplicated_against": [
+    "dpo/dpo_seeds/safety_prompts_v2.jsonl",
+    "bench/safety_pt/heldout.jsonl"
+  ],
+  "generated_at": "2026-09-13T10:16:08.748896+00:00",
+  "status": "CANDIDATO -- auditar com --sample-audit antes de usar para treino"
+}
