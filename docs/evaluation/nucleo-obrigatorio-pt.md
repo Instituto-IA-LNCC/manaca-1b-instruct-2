@@ -149,13 +149,15 @@ cada célula, e a tabela ganhou uma seção "Recusas do juiz ao dar nota"
 listando quantos itens cada modelo perdeu — visível na própria tabela final,
 não só no stdout.
 
-**Pendente de verificar**: se os arquivos `judged/instruct2-full.jsonl` e
-`judged/*v4*.jsonl` já commitados têm o mesmo `nota: null` em `safety_1`/
-`safety_2`. Se sim, o Report Card do `v4` (artefato já publicado) precisa de
-uma nota de rodapé dizendo que `seguranca` no MT-Bench-PT é N=4, não N=6 —
-isso não muda a conclusão do projeto (a sonda de segurança dedicada,
-`bench/safety_pt`, tem N=218 e não passa pelo juiz, então não é afetada),
-mas é uma correção de transparência que um revisor rigoroso pode pedir.
+**Confirmado (2026-09-13)**: rodado o grep de `nota is None` em TODOS os 8
+arquivos `judged/*.jsonl` já commitados (`instruct2-full`, `manaca-instruct-v1`,
+`manaca-instruct-v2`, `manaca-instruct-v2-safe4`, `safe-v4`, e os 3 baselines
+novos) — os 8 têm exatamente `safety_1` e `safety_2` sem nota, nenhum a mais
+ou a menos. 100% consistente com recusa categórica do prompt, não com o
+candidato. O Report Card do `v4` (artefato publicado) recebeu uma nota de
+rodapé: o card "MT-Bench-PT · segurança" (9,00/10) agora diz explicitamente
+N=4/6 e explica o motivo. Não muda a conclusão do projeto — a sonda dedicada
+de segurança (`bench/safety_pt`, N=218) não passa pelo juiz e não é afetada.
 
 ## 6. Segundo bloqueio de infraestrutura: imagem sem suporte a Qwen3
 
