@@ -31,3 +31,6 @@ sft/safety_seeds/refusal_bank_manifest.json
 sft/safety_seeds/benign_help_generated*.jsonl
 sft/safety_seeds/benign_help_generated_manifest.json
 
+# Cache local do Weights & Biases (gerado automaticamente, nunca versionar)
+wandb/
+
