@@ -321,6 +321,26 @@ QUESTIONS=$Q ANS_DIR=$A MODEL=/data/.../manaca-1b-instruct-2-safe-v4-merged \
   LABEL=safe-v4 ./scripts/eval/run_mtbench_pt.sh   # ajuste o caminho do checkpoint
 ```
 
+#### Resultado (rodado em 2026-09-13; `bench/ifeval_pt/ifeval-pt-nucleo.md`)
+
+| Modelo | Prompt-strict | Instr-loose |
+|---|---:|---:|
+| `safe-v4` (Manacá, aprovado) | 22,2% ±6,9 | 34,0% ±6,7 |
+| `instruct2-full` (Manacá, pré-safety-SFT) | 27,8% ±7,5 | 40,0% ±6,9 |
+| TeenyTinyLlama-460m-Chat | 8,3% ±4,6 | 18,0% ±5,4 |
+| Tucano-1b1-Instruct | 11,1% ±5,2 | 26,0% ±6,2 |
+| Tucano-2b4-Instruct | 13,9% ±5,8 | 26,0% ±6,2 |
+| Tucano2-qwen-1.5B-Instruct | **41,7% ±8,2** | **60,0% ±6,9** |
+
+Mesmo padrão do MT-Bench-PT: `v4` bate os 3 baselines de geração 1 com folga
+(quase o dobro do Tucano-2b4, que é maior), perde pro Tucano2-qwen (quase o
+dobro do `v4`) — de novo o efeito do continual-pretrain sobre Qwen3, não um
+problema de execução. `v4` também confirma, num conjunto de perguntas
+totalmente diferente do MT-Bench-PT, o mesmo custo de utilidade vs
+`instruct2-full` (22,2% vs 27,8%) — mais um ponto de consistência pro achado
+já registrado no Report Card (ainda N pequeno, mas repete a mesma direção
+num benchmark independente e sem juiz).
+
 ### 7.4 Segurança held-out (sondas expandidas, N=218) e over-refusal (N=184)
 
 Usa os conjuntos expandidos (`heldout_v2.jsonl`/`prompts_v2.jsonl`), pelo mesmo
