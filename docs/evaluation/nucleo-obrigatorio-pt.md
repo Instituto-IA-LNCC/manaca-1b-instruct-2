@@ -189,6 +189,19 @@ continuam na imagem original, sem risco de regressão.
 
 ## 7. Comandos (rodar na HPC, GPU, dentro do docker)
 
+**Use `tmux`/`screen` pra qualquer um destes comandos.** Uma queda de energia
+ou de rede no seu lado derruba a sessão SSH e mata o processo em foreground
+(SIGHUP) se ele não estiver dentro de uma sessão persistente — já aconteceu
+uma vez nesta rodada (o job do Tucano2-qwen sobreviveu por sorte/timing, não
+por design). Padrão:
+
+```bash
+tmux new -s eval        # cria a sessão (uma vez)
+# ... roda o comando normalmente aqui dentro ...
+# Ctrl+b, depois d       # desanexa sem matar o processo
+tmux attach -t eval      # reconecta depois, de onde parou
+```
+
 ### 7.1 MT-Bench-PT — gerar respostas
 
 ```bash
