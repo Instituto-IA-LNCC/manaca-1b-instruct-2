@@ -101,9 +101,59 @@ Corrigido (`bench/overrefusal_pt/run.py` + `scripts/eval/run_overrefusal_pt.sh`)
 Sem essa correção, os números de segurança/over-refusal dos baselines não
 seriam comparáveis com os do Manacá com o rigor que o resto do checklist exige.
 
-## 4. Comandos (rodar na HPC, GPU, dentro do docker)
+## 4. Confirmado na prática: truncamento é real, não hipotético
 
-### 4.1 MT-Bench-PT — gerar respostas
+Primeira rodada de MT-Bench-PT (768 tokens) nos 3 baselines já existentes,
+com a instrumentação de §2:
+
+| Modelo | Truncadas | % |
+|---|---:|---:|
+| TeenyTinyLlama-460m-Chat | 1/54 | 1,9% |
+| Tucano-1b1-Instruct | 3/54 | 5,6% |
+| Tucano-2b4-Instruct | 4/54 | 7,4% |
+
+Confirma o mecanismo do §2: nenhum é catastrófico neste `max_new_tokens=768`,
+mas todos os três baselines truncam em alguma taxa, e o padrão sobe com o
+tamanho do modelo (mais parâmetros → respostas mais longas → mais chance de
+bater no teto), não com o vocabulário — então o efeito medido aqui é uma
+mistura de "resposta naturalmente mais longa" e "tokenizador menos eficiente";
+não dá pra separar as duas causas só com essa contagem. Ainda assim, o Manacá
+precisa da mesma checagem (rodar `grep` no `instruct2-full.jsonl` já
+regenerado) antes de qualquer tabela final — se ele truncar 0/54 e os
+baselines não, a diferença de tokenizador passa a ser candidata real, não só
+teórica.
+
+## 5. Segundo bloqueio de infraestrutura: imagem sem suporte a Qwen3
+
+A 1ª tentativa de gerar o `Tucano2-qwen-1.5B-Instruct` falhou:
+`KeyError: 'qwen3'` / `ValueError: ... Transformers does not recognize this
+architecture`. Causa: `manaca-lmeval:latest` fixa `transformers==4.46.3`
+(ver `requirements/lmeval.txt`) **de propósito**, porque uma versão mais nova
+quebra contra o torch da imagem base
+(`ImportError: cannot import name 'TransformGetItemToIndex' from torch._dynamo`).
+Suporte a Qwen3 só entrou no transformers 4.51 (04/2025) — depois do pin.
+
+Em vez de mexer no `manaca-lmeval:latest` (arriscaria quebrar os 3 baselines
+que acabaram de funcionar + o Manacá), criei uma imagem **separada**:
+`scripts/eval/build_lmeval_qwen3_image.sh` — mesmo mecanismo do
+`build_lmeval_image.sh` (pip dentro de um container já existente + commit,
+já que `docker build`/`docker pull` de base nova quebram no DNS da HPC), só
+que instala `transformers==4.51.3` (a primeira versão com Qwen3, não "a mais
+nova", pra isolar uma variável só) numa imagem `manaca-lmeval-qwen3:latest`.
+
+```bash
+./scripts/eval/build_lmeval_qwen3_image.sh
+# se falhar com o MESMO erro de torch._dynamo, avisar antes de tentar subir o
+# torch também dentro dessa imagem separada — conferir o driver CUDA primeiro
+```
+
+Depois de construída, use `EVAL_IMAGE=manaca-lmeval-qwen3:latest` **só** nos
+comandos do Tucano2-qwen (seção 6) — os outros 3 baselines e o Manacá
+continuam na imagem original, sem risco de regressão.
+
+## 6. Comandos (rodar na HPC, GPU, dentro do docker)
+
+### 6.1 MT-Bench-PT — gerar respostas
 
 ```bash
 cd $HOME/manaca-1b-instruct-2
@@ -114,11 +164,14 @@ HFID=TucanoBR/Tucano-1b1-Instruct LABEL=tucano-1b1-instruct \
   ./scripts/eval/run_mtbench_pt.sh
 HFID=TucanoBR/Tucano-2b4-Instruct LABEL=tucano-2b4-instruct \
   ./scripts/eval/run_mtbench_pt.sh
-HFID=Polygl0t/Tucano2-qwen-1.5B-Instruct LABEL=tucano2-qwen-1b5-instruct \
+
+# Tucano2-qwen precisa da imagem separada (§5) -- transformers>=4.51 p/ Qwen3
+EVAL_IMAGE=manaca-lmeval-qwen3:latest \
+  HFID=Polygl0t/Tucano2-qwen-1.5B-Instruct LABEL=tucano2-qwen-1b5-instruct \
   ./scripts/eval/run_mtbench_pt.sh
 ```
 
-### 4.2 MT-Bench-PT — julgar e agregar
+### 6.2 MT-Bench-PT — julgar e agregar
 
 ```bash
 export ANTHROPIC_API_KEY=$(grep '^ANTHROPIC_API_KEY=' .env | cut -d= -f2-)
@@ -142,7 +195,7 @@ Mesmo juiz (`claude-opus-5`, Anthropic) já usado para julgar o `v4`/`instruct2-
 — item 2 do checklist (segundo juiz de outra família) continua bloqueado por
 custo de API, registrado como limitação, não simulado.
 
-### 4.3 IFEval-PT — gerar e pontuar (sem juiz, de graça)
+### 6.3 IFEval-PT — gerar e pontuar (sem juiz, de graça)
 
 ```bash
 Q=bench/ifeval_pt/prompts.jsonl; A=bench/ifeval_pt/answers
@@ -150,11 +203,14 @@ Q=bench/ifeval_pt/prompts.jsonl; A=bench/ifeval_pt/answers
 for HFID_LABEL in \
   "nicholasKluge/TeenyTinyLlama-460m-Chat ttl-460m-chat" \
   "TucanoBR/Tucano-1b1-Instruct tucano-1b1-instruct" \
-  "TucanoBR/Tucano-2b4-Instruct tucano-2b4-instruct" \
-  "Polygl0t/Tucano2-qwen-1.5B-Instruct tucano2-qwen-1b5-instruct"; do
+  "TucanoBR/Tucano-2b4-Instruct tucano-2b4-instruct"; do
   set -- $HFID_LABEL
   QUESTIONS=$Q ANS_DIR=$A HFID="$1" LABEL="$2" ./scripts/eval/run_mtbench_pt.sh
 done
+# Tucano2-qwen precisa da imagem separada (§5)
+QUESTIONS=$Q ANS_DIR=$A EVAL_IMAGE=manaca-lmeval-qwen3:latest \
+  HFID=Polygl0t/Tucano2-qwen-1.5B-Instruct LABEL=tucano2-qwen-1b5-instruct \
+  ./scripts/eval/run_mtbench_pt.sh
 
 python3 bench/ifeval_pt/score.py \
   bench/ifeval_pt/answers/instruct2-full.jsonl \
@@ -165,7 +221,7 @@ python3 bench/ifeval_pt/score.py \
   --out bench/ifeval_pt/ifeval-pt-nucleo
 ```
 
-### 4.4 Segurança held-out (sondas expandidas, N=218) e over-refusal (N=184)
+### 6.4 Segurança held-out (sondas expandidas, N=218) e over-refusal (N=184)
 
 Usa os conjuntos expandidos (`heldout_v2.jsonl`/`prompts_v2.jsonl`), pelo mesmo
 motivo do item 1 do checklist: N=16/34 não dá IC estreito o bastante pra
@@ -175,14 +231,22 @@ comparar 4 baselines a mais contra o `v4`.
 for HFID_LABEL in \
   "nicholasKluge/TeenyTinyLlama-460m-Chat ttl-460m-chat" \
   "TucanoBR/Tucano-1b1-Instruct tucano-1b1-instruct" \
-  "TucanoBR/Tucano-2b4-Instruct tucano-2b4-instruct" \
-  "Polygl0t/Tucano2-qwen-1.5B-Instruct tucano2-qwen-1b5-instruct"; do
+  "TucanoBR/Tucano-2b4-Instruct tucano-2b4-instruct"; do
   set -- $HFID_LABEL
   HFID="$1" LABEL="$2" ./scripts/eval/run_overrefusal_pt.sh \
     --prompts bench/safety_pt/heldout_v2.jsonl --out_dir bench/safety_pt/answers
   HFID="$1" LABEL="$2" ./scripts/eval/run_overrefusal_pt.sh \
     --prompts bench/overrefusal_pt/prompts_v2.jsonl --out_dir bench/overrefusal_pt/answers
 done
+# Tucano2-qwen precisa da imagem separada (§5)
+EVAL_IMAGE=manaca-lmeval-qwen3:latest \
+  HFID=Polygl0t/Tucano2-qwen-1.5B-Instruct LABEL=tucano2-qwen-1b5-instruct \
+  ./scripts/eval/run_overrefusal_pt.sh \
+  --prompts bench/safety_pt/heldout_v2.jsonl --out_dir bench/safety_pt/answers
+EVAL_IMAGE=manaca-lmeval-qwen3:latest \
+  HFID=Polygl0t/Tucano2-qwen-1.5B-Instruct LABEL=tucano2-qwen-1b5-instruct \
+  ./scripts/eval/run_overrefusal_pt.sh \
+  --prompts bench/overrefusal_pt/prompts_v2.jsonl --out_dir bench/overrefusal_pt/answers
 ```
 
 **Antes de tudo, checar truncamento** (§2): `grep -c '"truncado": true' bench/safety_pt/answers/*.jsonl bench/overrefusal_pt/answers/*.jsonl`.
@@ -195,7 +259,7 @@ Wilson de cada um com `scripts/eval/stats_power.py wilson --k <recusas> --n <tot
 e, se algum baseline for comparado par-a-par com o `v4` nos MESMOS itens,
 `stats_power.py mcnemar --a bench/safety_pt/answers/v4-scaled.jsonl --b bench/safety_pt/answers/<label>.jsonl`.
 
-## 5. Antes de commitar
+## 7. Antes de commitar
 
 - Auditar por amostra as respostas de segurança held-out dos baselines
   (mesmo protocolo de `safety-alignment-pt.md` §9) antes de versionar
@@ -207,7 +271,7 @@ e, se algum baseline for comparado par-a-par com o `v4` nos MESMOS itens,
   ANTES de rodar, pra garantir reprodutibilidade mesmo que a rodada falhe
   no meio.
 
-## 6. Reprodutibilidade
+## 8. Reprodutibilidade
 
 - Harness: `bench/mtbench_pt/run_mtbench_pt.sh` (já tinha modo `HFID=`),
   `bench/overrefusal_pt/run.py` + `scripts/eval/run_overrefusal_pt.sh`
@@ -219,3 +283,10 @@ e, se algum baseline for comparado par-a-par com o `v4` nos MESMOS itens,
 - Verificação dos HF IDs: busca web datada de 2026-09-13, registrada aqui por
   não ter sido possível confirmar por download direto nesta sandbox (egress
   bloqueado para `huggingface.co`); reconfirmar na HPC antes da rodada real.
+- Imagem: `scripts/eval/build_lmeval_qwen3_image.sh` (§5) — cria
+  `manaca-lmeval-qwen3:latest` (transformers 4.51.3) sem alterar
+  `manaca-lmeval:latest`; registrar no relatório final que o Tucano2-qwen
+  rodou numa imagem com transformers diferente dos outros 3 baselines
+  (versão de biblioteca diferente é, em princípio, um confundidor a menos
+  que se verifique que não afeta a geração dos outros modelos — não afeta,
+  já que cada imagem só é usada pelo modelo pra qual foi construída).
