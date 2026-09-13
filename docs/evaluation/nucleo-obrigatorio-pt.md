@@ -123,7 +123,41 @@ regenerado) antes de qualquer tabela final — se ele truncar 0/54 e os
 baselines não, a diferença de tokenizador passa a ser candidata real, não só
 teórica.
 
-## 5. Segundo bloqueio de infraestrutura: imagem sem suporte a Qwen3
+## 5. Achado: o JUIZ recusa nota em `safety_1`/`safety_2`, pra todo mundo
+
+Julgando os 3 baselines regerados, `safety_1` (invasão de e-mail) e
+`safety_2` (explosivo caseiro) deram `PARSE_ERRO (nota nao extraida)` nos
+**três** modelos. Investigado via `juiz_bruto` (guardado por `judge.py`
+mesmo quando o parse falha): não é falha de regex —
+`{"justificativa": "juiz recusou (stop_reason=refusal)", "nota": null}`. É
+**recusa categórica da API da Anthropic** ao gerar a nota, e acontece até
+para o TTL, cuja resposta a esses dois prompts nem é nociva (é incoerente:
+"a resposta não aborda o prompt"). Ou seja, não depende do que o candidato
+respondeu — o próprio prompt que `montar_prompt_juiz` monta pro juiz (que
+reproduz a pergunta nociva original) é o gatilho, não o conteúdo a avaliar.
+
+**Isso não é um bug de hoje.** `report.py` já tratava isso corretamente
+(pula a nota nula, `continue`, não corrompe a média) — mas a tabela markdown
+gerada nunca mostrava o N por célula, só a média±SE. Ou seja: **toda** nota
+de `seguranca` já publicada neste projeto (`v1`, `v2`, `v4`) muito
+provavelmente foi calculada sobre **4/6 itens**, não 6/6, sem isso aparecer
+em lugar nenhum do relatório final — só no `parse_err=N` impresso no stdout
+na hora de gerar, que ninguém guardou.
+
+Corrigido (`bench/mtbench_pt/report.py`): `fmt()` agora imprime `(n=X)` em
+cada célula, e a tabela ganhou uma seção "Recusas do juiz ao dar nota"
+listando quantos itens cada modelo perdeu — visível na própria tabela final,
+não só no stdout.
+
+**Pendente de verificar**: se os arquivos `judged/instruct2-full.jsonl` e
+`judged/*v4*.jsonl` já commitados têm o mesmo `nota: null` em `safety_1`/
+`safety_2`. Se sim, o Report Card do `v4` (artefato já publicado) precisa de
+uma nota de rodapé dizendo que `seguranca` no MT-Bench-PT é N=4, não N=6 —
+isso não muda a conclusão do projeto (a sonda de segurança dedicada,
+`bench/safety_pt`, tem N=218 e não passa pelo juiz, então não é afetada),
+mas é uma correção de transparência que um revisor rigoroso pode pedir.
+
+## 6. Segundo bloqueio de infraestrutura: imagem sem suporte a Qwen3
 
 A 1ª tentativa de gerar o `Tucano2-qwen-1.5B-Instruct` falhou:
 `KeyError: 'qwen3'` / `ValueError: ... Transformers does not recognize this
@@ -151,9 +185,9 @@ Depois de construída, use `EVAL_IMAGE=manaca-lmeval-qwen3:latest` **só** nos
 comandos do Tucano2-qwen (seção 6) — os outros 3 baselines e o Manacá
 continuam na imagem original, sem risco de regressão.
 
-## 6. Comandos (rodar na HPC, GPU, dentro do docker)
+## 7. Comandos (rodar na HPC, GPU, dentro do docker)
 
-### 6.1 MT-Bench-PT — gerar respostas
+### 7.1 MT-Bench-PT — gerar respostas
 
 ```bash
 cd $HOME/manaca-1b-instruct-2
@@ -171,7 +205,7 @@ EVAL_IMAGE=manaca-lmeval-qwen3:latest \
   ./scripts/eval/run_mtbench_pt.sh
 ```
 
-### 6.2 MT-Bench-PT — julgar e agregar
+### 7.2 MT-Bench-PT — julgar e agregar
 
 ```bash
 export ANTHROPIC_API_KEY=$(grep '^ANTHROPIC_API_KEY=' .env | cut -d= -f2-)
@@ -195,7 +229,7 @@ Mesmo juiz (`claude-opus-5`, Anthropic) já usado para julgar o `v4`/`instruct2-
 — item 2 do checklist (segundo juiz de outra família) continua bloqueado por
 custo de API, registrado como limitação, não simulado.
 
-### 6.3 IFEval-PT — gerar e pontuar (sem juiz, de graça)
+### 7.3 IFEval-PT — gerar e pontuar (sem juiz, de graça)
 
 ```bash
 Q=bench/ifeval_pt/prompts.jsonl; A=bench/ifeval_pt/answers
@@ -221,7 +255,7 @@ python3 bench/ifeval_pt/score.py \
   --out bench/ifeval_pt/ifeval-pt-nucleo
 ```
 
-### 6.4 Segurança held-out (sondas expandidas, N=218) e over-refusal (N=184)
+### 7.4 Segurança held-out (sondas expandidas, N=218) e over-refusal (N=184)
 
 Usa os conjuntos expandidos (`heldout_v2.jsonl`/`prompts_v2.jsonl`), pelo mesmo
 motivo do item 1 do checklist: N=16/34 não dá IC estreito o bastante pra
@@ -259,7 +293,7 @@ Wilson de cada um com `scripts/eval/stats_power.py wilson --k <recusas> --n <tot
 e, se algum baseline for comparado par-a-par com o `v4` nos MESMOS itens,
 `stats_power.py mcnemar --a bench/safety_pt/answers/v4-scaled.jsonl --b bench/safety_pt/answers/<label>.jsonl`.
 
-## 7. Antes de commitar
+## 8. Antes de commitar
 
 - Auditar por amostra as respostas de segurança held-out dos baselines
   (mesmo protocolo de `safety-alignment-pt.md` §9) antes de versionar
@@ -271,7 +305,7 @@ e, se algum baseline for comparado par-a-par com o `v4` nos MESMOS itens,
   ANTES de rodar, pra garantir reprodutibilidade mesmo que a rodada falhe
   no meio.
 
-## 8. Reprodutibilidade
+## 9. Reprodutibilidade
 
 - Harness: `bench/mtbench_pt/run_mtbench_pt.sh` (já tinha modo `HFID=`),
   `bench/overrefusal_pt/run.py` + `scripts/eval/run_overrefusal_pt.sh`

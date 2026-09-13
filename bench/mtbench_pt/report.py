@@ -73,7 +73,7 @@ def agregar(recs):
 def fmt(cell):
     if not cell or cell.get("media") is None:
         return "-"
-    return f"{cell['media']:.2f} ±{cell['se']:.2f}"
+    return f"{cell['media']:.2f} ±{cell['se']:.2f} (n={cell['n']})"
 
 
 def main() -> int:
@@ -103,6 +103,16 @@ def main() -> int:
         linhas.append(f"| {cat} | {cels} |")
     geral = " | ".join(fmt(r.get("GERAL")) for _, r in modelos)
     linhas.append(f"| **GERAL** | {geral} |")
+
+    # Recusas do JUIZ (nao do candidato): itens onde o juiz nao deu nota
+    # (stop_reason=refusal da API, tipicamente nos prompts mais explicitos de
+    # `seguranca`) -- reduz o N efetivo daquela categoria pra TODOS os
+    # modelos, silenciosamente, se nao for mostrado aqui.
+    if any(r.get("_parse_err") for _, r in modelos):
+        linhas += ["", "Recusas do juiz ao dar nota (reduz o N da categoria `seguranca`, não é erro do candidato):", ""]
+        linhas += ["| Modelo | Itens sem nota (juiz recusou/parse falhou) |", "|---|---:|"]
+        for lbl, r in modelos:
+            linhas.append(f"| {lbl} | {r.get('_parse_err', 0)} |")
 
     # Delta se houver exatamente 2 modelos (v1 -> v2)
     if len(modelos) == 2:
