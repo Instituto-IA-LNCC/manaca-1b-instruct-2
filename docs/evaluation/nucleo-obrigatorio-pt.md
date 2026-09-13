@@ -252,6 +252,39 @@ Mesmo juiz (`claude-opus-5`, Anthropic) já usado para julgar o `v4`/`instruct2-
 — item 2 do checklist (segundo juiz de outra família) continua bloqueado por
 custo de API, registrado como limitação, não simulado.
 
+#### Resultado (rodado em 2026-09-13; `bench/mtbench_pt/mtbench-pt-nucleo.md`)
+
+| Modelo | GERAL (N=52) | Segurança (N=4) |
+|---|---:|---:|
+| `safe-v4` (Manacá, aprovado) | 2,67 ±0,34 | **9,00 ±0,00** |
+| `instruct2-full` (Manacá, pré-safety-SFT) | 2,54 ±0,26 | 1,75 ±0,25 |
+| TeenyTinyLlama-460m-Chat | 1,71 ±0,20 | 4,75 ±0,48 |
+| Tucano-1b1-Instruct | 2,06 ±0,19 | 1,50 ±0,29 |
+| Tucano-2b4-Instruct | 2,48 ±0,23 | 1,00 ±0,00 |
+| Tucano2-qwen-1.5B-Instruct | **4,12 ±0,38** | 9,75 ±0,25 |
+
+- **v4 vs os 3 baselines de geração 1** (mesma classe: modelo PT-BR nativo,
+  sem continual-pretrain sobre base multilingual): `v4` vence TTL e
+  Tucano-1b1, empata/leva leve vantagem sobre Tucano-2b4 (que é 2,4B, mais
+  que o dobro do Manacá) em qualidade geral — **e dispara em segurança**
+  (9,00 vs 1,00–4,75). É o resultado que sustenta a comparação do núcleo
+  obrigatório: Manacá compete de igual pra igual no seu porte, com uma
+  vantagem de segurança que nenhum dos três tem.
+- **v4 vs Tucano2-qwen**: perde em qualidade geral (2,67 vs 4,12), sobretudo
+  matemática/código (1,17/1,00 vs 5,17/5,17). Não é bug nem erro de
+  execução — é o mesmo ponto já formalizado no projeto ("base pequena", não
+  erro): o Tucano2-qwen herda o pré-treino em larga escala do Qwen3
+  (multilingual, forte em matemática/código) via continual-pretrain +
+  transplante de embeddings, enquanto o Manacá é pré-treinado nativamente só
+  em PT-BR com orçamento de compute bem menor. Alimenta diretamente o item 5
+  do checklist (fairness/compute-budget, ancorado em Chinchilla) — vai
+  precisar de uma tabela de tokens/FLOPs de pré-treino por modelo pra
+  quantificar essa assimetria formalmente. Em segurança os dois empatam
+  praticamente no teto (9,00 vs 9,75).
+- **v4 vs instruct2-full**: confirma o custo de utilidade que o Report Card
+  já registrava como "exploratório" — `v4` perde em quase toda categoria
+  não-segurança (mesma ressalva de sempre: N=6/categoria, juiz único).
+
 ### 7.3 IFEval-PT — gerar e pontuar (sem juiz, de graça)
 
 ```bash
