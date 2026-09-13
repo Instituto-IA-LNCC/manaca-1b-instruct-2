@@ -45,7 +45,41 @@ antes de assumir qualquer ID:
   Rodar 0,5B e/ou 3,7B depois é trivial (mesmo comando, troca só o HFID) se o
   revisor pedir a faixa completa.
 
-## 2. Correção de justiça no harness ANTES de rodar (bug encontrado agora)
+## 2. Segundo detalhe de justiça: tokenizadores diferentes, `max_new_tokens` fixo
+
+Manacá usa um SentencePiece **64k** próprio (`nmt_nfkc_cf`). Os quatro baselines
+também têm tokenizador nativo em PT-BR, mas com vocabulários **menores**:
+
+| Modelo | Tokenizer | Vocab |
+|---|---|---:|
+| Manacá-1B | SentencePiece, `nmt_nfkc_cf` | 64.000 |
+| TeenyTinyLlama-460m | SentencePiece (treinado do zero) | 32.000 |
+| Tucano-1b1/2b4-Instruct (geração 1) | SentencePiece unigram | 32.000 |
+| Tucano2-qwen | BPE + normalização SentencePiece | 49.152 |
+
+Vocabulário maior costuma comprimir PT-BR em **menos tokens por palavra**. Como
+`run_mtbench_pt.sh`/`run_overrefusal_pt.sh` usam `--max_new_tokens` **fixo**
+(768/512) pra todos os modelos, isso não é um teto de tamanho igual: um baseline
+com vocabulário menor pode precisar de mais tokens pra dizer a mesma coisa e ser
+cortado no meio antes do Manacá, inflando a vantagem do Manacá em MT-Bench-PT
+(qualidade/completude) e IFEval-PT (restrições de tamanho) por um motivo que não
+tem nada a ver com a qualidade do modelo.
+
+**Instrumentado, não só documentado**: `gen_answers.py` e
+`bench/overrefusal_pt/run.py` agora gravam `n_tokens_gerados` e `truncado`
+(bateu no teto sem emitir EOS) em cada resposta, e imprimem um aviso agregado
+por modelo ao final da rodada. Antes de comparar os números:
+
+1. Rodar a geração normalmente.
+2. Checar o aviso `[AVISO] N/total bateram no teto` no stdout de cada modelo
+   (ou `grep -c '"truncado": true' bench/*/answers/<label>.jsonl`).
+3. Se **qualquer** baseline truncar de forma não-desprezível (e o Manacá não, ou
+   vice-versa), re-rodar aquele modelo com `--max_new_tokens` maior antes de
+   confiar na comparação — não misturar respostas cortadas com completas na
+   mesma tabela. Registrar no relatório final qual `--max_new_tokens` foi usado
+   por modelo, já que pode deixar de ser o mesmo número pra todos.
+
+## 3. Correção de justiça no harness (bug encontrado antes de rodar)
 
 O MT-Bench-PT/IFEval-PT (`bench/mtbench_pt/gen_answers.py`) já interroga cada
 baseline com o **seu próprio `chat_template`** (`--prompt_style auto`) — mas
@@ -67,9 +101,9 @@ Corrigido (`bench/overrefusal_pt/run.py` + `scripts/eval/run_overrefusal_pt.sh`)
 Sem essa correção, os números de segurança/over-refusal dos baselines não
 seriam comparáveis com os do Manacá com o rigor que o resto do checklist exige.
 
-## 3. Comandos (rodar na HPC, GPU, dentro do docker)
+## 4. Comandos (rodar na HPC, GPU, dentro do docker)
 
-### 3.1 MT-Bench-PT — gerar respostas
+### 4.1 MT-Bench-PT — gerar respostas
 
 ```bash
 cd $HOME/manaca-1b-instruct-2
@@ -84,7 +118,7 @@ HFID=Polygl0t/Tucano2-qwen-1.5B-Instruct LABEL=tucano2-qwen-1b5-instruct \
   ./scripts/eval/run_mtbench_pt.sh
 ```
 
-### 3.2 MT-Bench-PT — julgar e agregar
+### 4.2 MT-Bench-PT — julgar e agregar
 
 ```bash
 export ANTHROPIC_API_KEY=$(grep '^ANTHROPIC_API_KEY=' .env | cut -d= -f2-)
@@ -108,7 +142,7 @@ Mesmo juiz (`claude-opus-5`, Anthropic) já usado para julgar o `v4`/`instruct2-
 — item 2 do checklist (segundo juiz de outra família) continua bloqueado por
 custo de API, registrado como limitação, não simulado.
 
-### 3.3 IFEval-PT — gerar e pontuar (sem juiz, de graça)
+### 4.3 IFEval-PT — gerar e pontuar (sem juiz, de graça)
 
 ```bash
 Q=bench/ifeval_pt/prompts.jsonl; A=bench/ifeval_pt/answers
@@ -131,7 +165,7 @@ python3 bench/ifeval_pt/score.py \
   --out bench/ifeval_pt/ifeval-pt-nucleo
 ```
 
-### 3.4 Segurança held-out (sondas expandidas, N=218) e over-refusal (N=184)
+### 4.4 Segurança held-out (sondas expandidas, N=218) e over-refusal (N=184)
 
 Usa os conjuntos expandidos (`heldout_v2.jsonl`/`prompts_v2.jsonl`), pelo mesmo
 motivo do item 1 do checklist: N=16/34 não dá IC estreito o bastante pra
@@ -151,13 +185,17 @@ for HFID_LABEL in \
 done
 ```
 
+**Antes de tudo, checar truncamento** (§2): `grep -c '"truncado": true' bench/safety_pt/answers/*.jsonl bench/overrefusal_pt/answers/*.jsonl`.
+Se algum baseline aparecer com contagem não-trivial, re-rodar só ele com
+`--max_new_tokens` maior antes de seguir.
+
 Cada rodada imprime o resumo por categoria + `GERAL` no stdout (é a "pontuação";
 não há script de agregação separado, igual já era pro `v4`). Calcular o IC de
 Wilson de cada um com `scripts/eval/stats_power.py wilson --k <recusas> --n <total>`
 e, se algum baseline for comparado par-a-par com o `v4` nos MESMOS itens,
 `stats_power.py mcnemar --a bench/safety_pt/answers/v4-scaled.jsonl --b bench/safety_pt/answers/<label>.jsonl`.
 
-## 4. Antes de commitar
+## 5. Antes de commitar
 
 - Auditar por amostra as respostas de segurança held-out dos baselines
   (mesmo protocolo de `safety-alignment-pt.md` §9) antes de versionar
@@ -169,11 +207,13 @@ e, se algum baseline for comparado par-a-par com o `v4` nos MESMOS itens,
   ANTES de rodar, pra garantir reprodutibilidade mesmo que a rodada falhe
   no meio.
 
-## 5. Reprodutibilidade
+## 6. Reprodutibilidade
 
 - Harness: `bench/mtbench_pt/run_mtbench_pt.sh` (já tinha modo `HFID=`),
   `bench/overrefusal_pt/run.py` + `scripts/eval/run_overrefusal_pt.sh`
-  (modo `HFID=` e `--prompt_style` adicionados nesta rodada).
+  (modo `HFID=` e `--prompt_style` adicionados nesta rodada); ambos os
+  geradores (`gen_answers.py` e `run.py`) agora gravam `n_tokens_gerados`/
+  `truncado` por resposta (§2), pra auditar o confundidor de tokenizador.
 - Sondas: `bench/mtbench_pt/questions.jsonl`, `bench/ifeval_pt/prompts.jsonl`,
   `bench/safety_pt/heldout_v2.jsonl` (218), `bench/overrefusal_pt/prompts_v2.jsonl` (184).
 - Verificação dos HF IDs: busca web datada de 2026-09-13, registrada aqui por

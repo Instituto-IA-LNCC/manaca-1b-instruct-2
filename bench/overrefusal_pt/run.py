@@ -59,6 +59,14 @@ def construir_entrada(tok, instr, prompt_style, device):
     return mi
 
 
+def eos_ids_de(tok):
+    """Conjunto de ids de fim-de-sequencia do tokenizador (pode ser int ou lista)."""
+    e = tok.eos_token_id
+    if e is None:
+        return set()
+    return set(e) if isinstance(e, (list, tuple, set)) else {e}
+
+
 def gerar_greedy(tok, model, device, instr, max_new_tokens, prompt_style):
     import torch
     mi = construir_entrada(tok, instr, prompt_style, device)
@@ -67,7 +75,15 @@ def gerar_greedy(tok, model, device, instr, max_new_tokens, prompt_style):
                              max_new_tokens=max_new_tokens,
                              pad_token_id=tok.pad_token_id, eos_token_id=tok.eos_token_id)
     ini = mi["input_ids"].shape[1]
-    return tok.decode(out[0][ini:], skip_special_tokens=True).strip()
+    gerado_ids = out[0][ini:]
+    eos_ids = eos_ids_de(tok)
+    # Idem gen_answers.py: vocabularios diferentes (Manaca 64k vs baselines
+    # 32-49k) rendem tokens-por-palavra diferentes, entao um --max_new_tokens
+    # fixo nao e um teto de tamanho igual pra todos os modelos.
+    truncado = (len(gerado_ids) >= max_new_tokens
+                and (len(gerado_ids) == 0 or int(gerado_ids[-1]) not in eos_ids))
+    texto = tok.decode(gerado_ids, skip_special_tokens=True).strip()
+    return texto, truncado, int(len(gerado_ids))
 
 
 def main() -> int:
@@ -94,10 +110,11 @@ def main() -> int:
     out_path = os.path.join(args.out_dir, f"{args.label}.jsonl")
 
     por_tipo = {}   # tipo -> [total, recusas]
-    total = recusas = 0
+    total = recusas = truncados = 0
     with open(out_path, "w", encoding="utf-8") as out:
         for p in prompts:
-            resp = gerar_greedy(tok, model, device, p["prompt"], args.max_new_tokens, args.prompt_style)
+            resp, truncado, n_tok = gerar_greedy(
+                tok, model, device, p["prompt"], args.max_new_tokens, args.prompt_style)
             rec = eh_recusa(resp)
             tp = p.get("tipo", "benigno")
             por_tipo.setdefault(tp, [0, 0])
@@ -105,10 +122,13 @@ def main() -> int:
             por_tipo[tp][1] += int(rec)
             total += 1
             recusas += int(rec)
+            truncados += int(truncado)
             out.write(json.dumps({"id": p["id"], "tipo": tp, "prompt": p["prompt"],
-                                  "resposta": resp, "recusou": rec},
+                                  "resposta": resp, "recusou": rec,
+                                  "n_tokens_gerados": n_tok, "truncado": truncado},
                                  ensure_ascii=False) + "\n")
             marca = "RECUSOU" if rec else "ok"
+            marca += " [TRUNCADO]" if truncado else ""
             print(f"  [{args.label}] {p['id']:<8} {tp:<18} {marca}")
 
     print()
@@ -117,6 +137,11 @@ def main() -> int:
         print(f"  {tp:<18} recusa {r}/{t} = {100.0*r/t:5.1f}%  (quanto menor, melhor)")
     print(f"  {'GERAL':<18} recusa {recusas}/{total} = {100.0*recusas/total:5.1f}%")
     print(f"[over-refusal] respostas salvas em {out_path}")
+    if truncados:
+        print(f"[over-refusal] AVISO: {truncados}/{total} respostas bateram no teto de "
+              f"--max_new_tokens={args.max_new_tokens} sem EOS. Confira manualmente se "
+              f"alguma recusa/nao-recusa foi decidida em cima de texto cortado antes de "
+              f"comparar com outros modelos.")
     return 0
 
 

@@ -55,6 +55,14 @@ TEMP_POR_CATEGORIA = {
 }
 
 
+def eos_ids_de(tok):
+    """Conjunto de ids de fim-de-sequencia do tokenizador (pode ser int ou lista)."""
+    e = tok.eos_token_id
+    if e is None:
+        return set()
+    return set(e) if isinstance(e, (list, tuple, set)) else {e}
+
+
 def montar_prompt(instrucao: str, entrada: str = "") -> str:
     entrada = (entrada or "").strip()
     if entrada:
@@ -129,8 +137,9 @@ def main() -> int:
         perguntas = [json.loads(l) for l in fp if l.strip()]
     print(f"[mtbench] {len(perguntas)} perguntas")
 
+    eos_ids = eos_ids_de(tok)
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
-    n = 0
+    n = truncados = 0
     with open(args.out, "w", encoding="utf-8") as out:
         for q in perguntas:
             instr = q["turns"][0]
@@ -146,19 +155,35 @@ def main() -> int:
                 gen_kwargs.update(do_sample=False)
             with __import__("torch").inference_mode():
                 out_ids = model.generate(**model_inputs, **gen_kwargs)
-            texto = tok.decode(out_ids[0][model_inputs["input_ids"].shape[1]:], skip_special_tokens=True)
+            gerado_ids = out_ids[0][model_inputs["input_ids"].shape[1]:]
+            # Bateu no teto de tokens sem emitir EOS -> resposta cortada no meio.
+            # Vocabularios diferentes (Manaca 64k vs baselines 32-49k) comprimem
+            # PT-BR em quantidades diferentes de tokens por palavra, entao um
+            # --max_new_tokens fixo NAO e um teto de tamanho igual pra todos.
+            truncado = (len(gerado_ids) >= args.max_new_tokens
+                        and (len(gerado_ids) == 0 or int(gerado_ids[-1]) not in eos_ids))
+            truncados += int(truncado)
+            texto = tok.decode(gerado_ids, skip_special_tokens=True)
             resposta = texto.strip()
             rec = {"id": q["id"], "category": cat, "question": instr,
                    "reference": q.get("reference"), "answer": resposta,
                    "model": label, "gen": {"temperature": temp, "top_p": args.top_p,
                                             "max_new_tokens": args.max_new_tokens,
-                                            "prompt_style": style_usado}}
+                                            "prompt_style": style_usado,
+                                            "n_tokens_gerados": int(len(gerado_ids)),
+                                            "truncado": truncado}}
             out.write(json.dumps(rec, ensure_ascii=False) + "\n")
             out.flush()
             n += 1
+            marca = " [TRUNCADO]" if truncado else ""
             print(f"  [{n:>2}/{len(perguntas)}] {q['id']:<14} (T={temp}) "
-                  f"-> {len(resposta)} chars")
+                  f"-> {len(resposta)} chars, {len(gerado_ids)} tokens{marca}")
     print(f"[mtbench] respostas salvas -> {args.out}")
+    if truncados:
+        print(f"[mtbench] AVISO: {truncados}/{n} respostas bateram no teto de "
+              f"--max_new_tokens={args.max_new_tokens} sem EOS (cortadas no meio). "
+              f"Considere subir --max_new_tokens pra este modelo antes de comparar "
+              f"com outros de tokenizador diferente.")
     return 0
 
 
