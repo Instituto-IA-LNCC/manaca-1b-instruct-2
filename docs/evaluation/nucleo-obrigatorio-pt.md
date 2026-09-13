@@ -390,3 +390,17 @@ e, se algum baseline for comparado par-a-par com o `v4` nos MESMOS itens,
   (versão de biblioteca diferente é, em princípio, um confundidor a menos
   que se verifique que não afeta a geração dos outros modelos — não afeta,
   já que cada imagem só é usada pelo modelo pra qual foi construída).
+- **Lacuna de reprodutibilidade encontrada e fechada (2026-09-13)**: os dados
+  de treino de fato usados no `v4`/sweep nunca tinham sido commitados —
+  `dpo/dpo_seeds/safety_prompts_v2.jsonl` (465 seeds de recusa) não estava em
+  nenhum commit do histórico, e `sft_safety/benign_help_v3.jsonl` (280
+  exemplos de ajuda) ficava atrás do `.gitignore` de `sft_safety/` sem nunca
+  ter sido forçado com `git add -f` (diferente dos 6 arquivos do sweep, que
+  foram). O repo tinha os scripts geradores e as sondas de avaliação, mas não
+  o dado gerado de fato — sem isso, o mix exato de treino do `v4` não era
+  reprodutível a partir do repo público. Confirmado contagem (465/280, batem
+  com a documentação já escrita) e schema (`safety_prompts_v2.jsonl` é só
+  `id`/`categoria`/`prompt`, sem completion) antes de commitar. Achado durante
+  uma checagem de `git status --short` na netuno que sobrou pendente de
+  algumas rodadas atrás — vale revisitar esse tipo de checagem periodicamente,
+  não só quando um arquivo específico é lembrado.
