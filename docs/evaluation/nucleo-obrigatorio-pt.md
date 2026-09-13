@@ -103,25 +103,24 @@ seriam comparáveis com os do Manacá com o rigor que o resto do checklist exige
 
 ## 4. Confirmado na prática: truncamento é real, não hipotético
 
-Primeira rodada de MT-Bench-PT (768 tokens) nos 3 baselines já existentes,
-com a instrumentação de §2:
+Rodada de MT-Bench-PT (768 tokens) nos 4 baselines, com a instrumentação de §2:
 
-| Modelo | Truncadas | % |
-|---|---:|---:|
-| TeenyTinyLlama-460m-Chat | 1/54 | 1,9% |
-| Tucano-1b1-Instruct | 3/54 | 5,6% |
-| Tucano-2b4-Instruct | 4/54 | 7,4% |
+| Modelo | Vocab | Truncadas | % |
+|---|---:|---:|---:|
+| TeenyTinyLlama-460m-Chat | 32.000 | 1/54 | 1,9% |
+| Tucano-1b1-Instruct | 32.000 | 3/54 | 5,6% |
+| Tucano-2b4-Instruct | 32.000 | 4/54 | 7,4% |
+| Tucano2-qwen-1.5B-Instruct | 49.152 | 6/54 | 11,1% |
 
-Confirma o mecanismo do §2: nenhum é catastrófico neste `max_new_tokens=768`,
-mas todos os três baselines truncam em alguma taxa, e o padrão sobe com o
-tamanho do modelo (mais parâmetros → respostas mais longas → mais chance de
-bater no teto), não com o vocabulário — então o efeito medido aqui é uma
-mistura de "resposta naturalmente mais longa" e "tokenizador menos eficiente";
-não dá pra separar as duas causas só com essa contagem. Ainda assim, o Manacá
-precisa da mesma checagem (rodar `grep` no `instruct2-full.jsonl` já
-regenerado) antes de qualquer tabela final — se ele truncar 0/54 e os
-baselines não, a diferença de tokenizador passa a ser candidata real, não só
-teórica.
+Confirma o mecanismo do §2 (nenhum é catastrófico neste `max_new_tokens=768`,
+mas todos truncam em alguma taxa), mas **complica a hipótese simples**: o
+Tucano2-qwen tem o vocabulário maior entre os quatro baselines e ainda assim
+trunca mais — o efeito de "modelo mais capaz escreve respostas mais longas"
+(é o de melhor nota geral, de longe) domina sobre o efeito do tokenizador
+aqui. Confirma que os dois fatores estão misturados nesta contagem, como já
+esperado; não dá pra atribuir o truncamento só ao vocabulário. Ainda assim, o
+`safe-v4` do Manacá precisa da mesma checagem (`grep -c '"truncado": true'`)
+antes de qualquer tabela final de comparação.
 
 ## 5. Achado: o JUIZ recusa nota em `safety_1`/`safety_2`, pra todo mundo
 
@@ -232,6 +231,7 @@ for L in ttl-460m-chat tucano-1b1-instruct tucano-2b4-instruct tucano2-qwen-1b5-
 done
 
 python3 bench/mtbench_pt/report.py \
+  bench/mtbench_pt/judged/safe-v4.jsonl \
   bench/mtbench_pt/judged/instruct2-full.jsonl \
   bench/mtbench_pt/judged/ttl-460m-chat.jsonl \
   bench/mtbench_pt/judged/tucano-1b1-instruct.jsonl \
@@ -239,6 +239,14 @@ python3 bench/mtbench_pt/report.py \
   bench/mtbench_pt/judged/tucano2-qwen-1b5-instruct.jsonl \
   --out bench/mtbench_pt/mtbench-pt-nucleo
 ```
+
+**`safe-v4` primeiro, não `instruct2-full`**: o `instruct2-full` é o checkpoint
+**antes** do safety-SFT (segurança baixa por definição — é o gap que o
+safety-SFT existe pra fechar). A comparação que importa pro núcleo
+obrigatório é o `v4` aprovado contra os baselines; `instruct2-full` entra só
+como segunda coluna pra mostrar visualmente o antes/depois do próprio Manacá
+(erro corrigido nesta rodada — a primeira versão deste doc tinha só
+`instruct2-full`).
 
 Mesmo juiz (`claude-opus-5`, Anthropic) já usado para julgar o `v4`/`instruct2-full`
 — item 2 do checklist (segundo juiz de outra família) continua bloqueado por
@@ -262,12 +270,22 @@ QUESTIONS=$Q ANS_DIR=$A EVAL_IMAGE=manaca-lmeval-qwen3:latest \
   ./scripts/eval/run_mtbench_pt.sh
 
 python3 bench/ifeval_pt/score.py \
+  bench/ifeval_pt/answers/safe-v4.jsonl \
   bench/ifeval_pt/answers/instruct2-full.jsonl \
   bench/ifeval_pt/answers/ttl-460m-chat.jsonl \
   bench/ifeval_pt/answers/tucano-1b1-instruct.jsonl \
   bench/ifeval_pt/answers/tucano-2b4-instruct.jsonl \
   bench/ifeval_pt/answers/tucano2-qwen-1b5-instruct.jsonl \
   --out bench/ifeval_pt/ifeval-pt-nucleo
+```
+
+Mesmo motivo do MT-Bench-PT acima: `safe-v4` é a referência do Manacá, não
+`instruct2-full`. Se `bench/ifeval_pt/answers/safe-v4.jsonl` ainda não
+existir (o IFEval-PT usa um conjunto de perguntas diferente do MT-Bench-PT,
+então precisa de uma geração própria), rodar antes:
+```bash
+QUESTIONS=$Q ANS_DIR=$A MODEL=/data/.../manaca-1b-instruct-2-safe-v4-merged \
+  LABEL=safe-v4 ./scripts/eval/run_mtbench_pt.sh   # ajuste o caminho do checkpoint
 ```
 
 ### 7.4 Segurança held-out (sondas expandidas, N=218) e over-refusal (N=184)
