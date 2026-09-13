@@ -37,12 +37,31 @@ sys.path.insert(0, os.path.join(REPO, "dpo"))
 from gen_dpo_pairs import montar_prompt, eh_recusa, carregar_modelo  # noqa: E402
 
 
-def gerar_greedy(tok, model, device, instr, max_new_tokens):
-    import torch
+def construir_entrada(tok, instr, prompt_style, device):
+    """Mesma logica de bench/mtbench_pt/gen_answers.py: 'chat' usa o
+    chat_template do proprio modelo, 'alpaca' usa o template do SFT/DPO do
+    Manaca, 'auto' escolhe chat_template se existir. Necessario pra comparar
+    baselines externos (Tucano, TeenyTinyLlama, Tucano2) sem forcar neles um
+    formato de prompt que nunca viram no treino."""
+    tem_ct = getattr(tok, "chat_template", None)
+    usar_chat = prompt_style == "chat" or (prompt_style == "auto" and tem_ct)
+    if usar_chat and not tem_ct:
+        raise SystemExit("[ERRO] --prompt_style chat, mas o tokenizador nao tem chat_template.")
+    if usar_chat:
+        ids = tok.apply_chat_template(
+            [{"role": "user", "content": instr}],
+            add_generation_prompt=True, return_tensors="pt").to(device)
+        return {"input_ids": ids}
     enc = tok(montar_prompt(instr), return_tensors="pt").to(device)
     mi = {"input_ids": enc["input_ids"]}
     if "attention_mask" in enc:
         mi["attention_mask"] = enc["attention_mask"]
+    return mi
+
+
+def gerar_greedy(tok, model, device, instr, max_new_tokens, prompt_style):
+    import torch
+    mi = construir_entrada(tok, instr, prompt_style, device)
     with torch.inference_mode():
         out = model.generate(**mi, do_sample=False, num_beams=1,
                              max_new_tokens=max_new_tokens,
@@ -61,6 +80,9 @@ def main() -> int:
     ap.add_argument("--max_new_tokens", type=int, default=512)
     ap.add_argument("--attn", default="sdpa")
     ap.add_argument("--dtype", default="bfloat16")
+    ap.add_argument("--prompt_style", default="auto", choices=["auto", "chat", "alpaca"],
+                    help="auto: chat_template do modelo se existir, senao Alpaca-PT do SFT "
+                         "(mesma semantica de bench/mtbench_pt/gen_answers.py)")
     args = ap.parse_args()
 
     with open(args.prompts, encoding="utf-8") as fp:
@@ -75,7 +97,7 @@ def main() -> int:
     total = recusas = 0
     with open(out_path, "w", encoding="utf-8") as out:
         for p in prompts:
-            resp = gerar_greedy(tok, model, device, p["prompt"], args.max_new_tokens)
+            resp = gerar_greedy(tok, model, device, p["prompt"], args.max_new_tokens, args.prompt_style)
             rec = eh_recusa(resp)
             tp = p.get("tipo", "benigno")
             por_tipo.setdefault(tp, [0, 0])
