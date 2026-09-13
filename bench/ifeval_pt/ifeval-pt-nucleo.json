@@ -1,0 +1,798 @@
+{
+  "modelos": {
+    "safe-v4": {
+      "prompt_strict": [
+        22.22222222222222,
+        6.928995160692483
+      ],
+      "prompt_loose": [
+        22.22222222222222,
+        6.928995160692483
+      ],
+      "instr_strict": [
+        34.0,
+        6.69925368977769
+      ],
+      "instr_loose": [
+        34.0,
+        6.69925368977769
+      ],
+      "n_prompts": 36,
+      "n_inst": 50
+    },
+    "instruct2-full": {
+      "prompt_strict": [
+        27.77777777777778,
+        7.465053470646805
+      ],
+      "prompt_loose": [
+        27.77777777777778,
+        7.465053470646805
+      ],
+      "instr_strict": [
+        40.0,
+        6.928203230275509
+      ],
+      "instr_loose": [
+        40.0,
+        6.928203230275509
+      ],
+      "n_prompts": 36,
+      "n_inst": 50
+    },
+    "ttl-460m-chat": {
+      "prompt_strict": [
+        8.333333333333332,
+        4.606423319938055
+      ],
+      "prompt_loose": [
+        8.333333333333332,
+        4.606423319938055
+      ],
+      "instr_strict": [
+        18.0,
+        5.43323108288245
+      ],
+      "instr_loose": [
+        18.0,
+        5.43323108288245
+      ],
+      "n_prompts": 36,
+      "n_inst": 50
+    },
+    "tucano-1b1-instruct": {
+      "prompt_strict": [
+        11.11111111111111,
+        5.237828008789241
+      ],
+      "prompt_loose": [
+        13.88888888888889,
+        5.7638424064762654
+      ],
+      "instr_strict": [
+        22.0,
+        5.858327406350724
+      ],
+      "instr_loose": [
+        26.0,
+        6.203224967708329
+      ],
+      "n_prompts": 36,
+      "n_inst": 50
+    },
+    "tucano-2b4-instruct": {
+      "prompt_strict": [
+        13.88888888888889,
+        5.7638424064762654
+      ],
+      "prompt_loose": [
+        13.88888888888889,
+        5.7638424064762654
+      ],
+      "instr_strict": [
+        26.0,
+        6.203224967708329
+      ],
+      "instr_loose": [
+        26.0,
+        6.203224967708329
+      ],
+      "n_prompts": 36,
+      "n_inst": 50
+    },
+    "tucano2-qwen-1b5-instruct": {
+      "prompt_strict": [
+        41.66666666666667,
+        8.216777476527245
+      ],
+      "prompt_loose": [
+        44.44444444444444,
+        8.28173324999922
+      ],
+      "instr_strict": [
+        57.99999999999999,
+        6.979971346646059
+      ],
+      "instr_loose": [
+        60.0,
+        6.928203230275509
+      ],
+      "n_prompts": 36,
+      "n_inst": 50
+    }
+  },
+  "por_tipo": {
+    "safe-v4": {
+      "comecar_com": [
+        0.0,
+        0.0,
+        3
+      ],
+      "evitar_palavra": [
+        50.0,
+        50.0,
+        2
+      ],
+      "incluir_palavra": [
+        42.857142857142854,
+        42.857142857142854,
+        7
+      ],
+      "incluir_todas": [
+        0.0,
+        0.0,
+        1
+      ],
+      "json_valido": [
+        50.0,
+        50.0,
+        2
+      ],
+      "max_frases": [
+        100.0,
+        100.0,
+        2
+      ],
+      "max_palavras": [
+        33.333333333333336,
+        33.333333333333336,
+        3
+      ],
+      "min_maiusculas": [
+        0.0,
+        0.0,
+        1
+      ],
+      "min_marcadores": [
+        0.0,
+        0.0,
+        2
+      ],
+      "min_palavras": [
+        75.0,
+        75.0,
+        4
+      ],
+      "min_placeholders": [
+        100.0,
+        100.0,
+        1
+      ],
+      "num_frases": [
+        0.0,
+        0.0,
+        1
+      ],
+      "num_itens_numerados": [
+        0.0,
+        0.0,
+        2
+      ],
+      "num_marcadores": [
+        0.0,
+        0.0,
+        2
+      ],
+      "num_paragrafos": [
+        0.0,
+        0.0,
+        3
+      ],
+      "palavra_repetida": [
+        0.0,
+        0.0,
+        2
+      ],
+      "pos_escrito": [
+        50.0,
+        50.0,
+        2
+      ],
+      "sem_virgula": [
+        100.0,
+        100.0,
+        2
+      ],
+      "terminar_com": [
+        0.0,
+        0.0,
+        3
+      ],
+      "titulo_colchetes": [
+        0.0,
+        0.0,
+        1
+      ],
+      "tudo_maiusculo": [
+        0.0,
+        0.0,
+        2
+      ],
+      "tudo_minusculo": [
+        100.0,
+        100.0,
+        2
+      ]
+    },
+    "instruct2-full": {
+      "comecar_com": [
+        0.0,
+        0.0,
+        3
+      ],
+      "evitar_palavra": [
+        100.0,
+        100.0,
+        2
+      ],
+      "incluir_palavra": [
+        42.857142857142854,
+        42.857142857142854,
+        7
+      ],
+      "incluir_todas": [
+        0.0,
+        0.0,
+        1
+      ],
+      "json_valido": [
+        0.0,
+        0.0,
+        2
+      ],
+      "max_frases": [
+        100.0,
+        100.0,
+        2
+      ],
+      "max_palavras": [
+        100.0,
+        100.0,
+        3
+      ],
+      "min_maiusculas": [
+        0.0,
+        0.0,
+        1
+      ],
+      "min_marcadores": [
+        0.0,
+        0.0,
+        2
+      ],
+      "min_palavras": [
+        100.0,
+        100.0,
+        4
+      ],
+      "min_placeholders": [
+        100.0,
+        100.0,
+        1
+      ],
+      "num_frases": [
+        100.0,
+        100.0,
+        1
+      ],
+      "num_itens_numerados": [
+        0.0,
+        0.0,
+        2
+      ],
+      "num_marcadores": [
+        0.0,
+        0.0,
+        2
+      ],
+      "num_paragrafos": [
+        0.0,
+        0.0,
+        3
+      ],
+      "palavra_repetida": [
+        50.0,
+        50.0,
+        2
+      ],
+      "pos_escrito": [
+        0.0,
+        0.0,
+        2
+      ],
+      "sem_virgula": [
+        50.0,
+        50.0,
+        2
+      ],
+      "terminar_com": [
+        0.0,
+        0.0,
+        3
+      ],
+      "titulo_colchetes": [
+        0.0,
+        0.0,
+        1
+      ],
+      "tudo_maiusculo": [
+        0.0,
+        0.0,
+        2
+      ],
+      "tudo_minusculo": [
+        100.0,
+        100.0,
+        2
+      ]
+    },
+    "ttl-460m-chat": {
+      "comecar_com": [
+        0.0,
+        0.0,
+        3
+      ],
+      "evitar_palavra": [
+        100.0,
+        100.0,
+        2
+      ],
+      "incluir_palavra": [
+        28.571428571428573,
+        28.571428571428573,
+        7
+      ],
+      "incluir_todas": [
+        100.0,
+        100.0,
+        1
+      ],
+      "json_valido": [
+        0.0,
+        0.0,
+        2
+      ],
+      "max_frases": [
+        100.0,
+        100.0,
+        2
+      ],
+      "max_palavras": [
+        0.0,
+        0.0,
+        3
+      ],
+      "min_maiusculas": [
+        0.0,
+        0.0,
+        1
+      ],
+      "min_marcadores": [
+        0.0,
+        0.0,
+        2
+      ],
+      "min_palavras": [
+        50.0,
+        50.0,
+        4
+      ],
+      "min_placeholders": [
+        0.0,
+        0.0,
+        1
+      ],
+      "num_frases": [
+        0.0,
+        0.0,
+        1
+      ],
+      "num_itens_numerados": [
+        0.0,
+        0.0,
+        2
+      ],
+      "num_marcadores": [
+        0.0,
+        0.0,
+        2
+      ],
+      "num_paragrafos": [
+        0.0,
+        0.0,
+        3
+      ],
+      "palavra_repetida": [
+        0.0,
+        0.0,
+        2
+      ],
+      "pos_escrito": [
+        0.0,
+        0.0,
+        2
+      ],
+      "sem_virgula": [
+        0.0,
+        0.0,
+        2
+      ],
+      "terminar_com": [
+        0.0,
+        0.0,
+        3
+      ],
+      "titulo_colchetes": [
+        0.0,
+        0.0,
+        1
+      ],
+      "tudo_maiusculo": [
+        0.0,
+        0.0,
+        2
+      ],
+      "tudo_minusculo": [
+        0.0,
+        0.0,
+        2
+      ]
+    },
+    "tucano-1b1-instruct": {
+      "comecar_com": [
+        0.0,
+        0.0,
+        3
+      ],
+      "evitar_palavra": [
+        100.0,
+        50.0,
+        2
+      ],
+      "incluir_palavra": [
+        42.857142857142854,
+        42.857142857142854,
+        7
+      ],
+      "incluir_todas": [
+        100.0,
+        100.0,
+        1
+      ],
+      "json_valido": [
+        50.0,
+        50.0,
+        2
+      ],
+      "max_frases": [
+        50.0,
+        0.0,
+        2
+      ],
+      "max_palavras": [
+        0.0,
+        0.0,
+        3
+      ],
+      "min_maiusculas": [
+        0.0,
+        0.0,
+        1
+      ],
+      "min_marcadores": [
+        0.0,
+        0.0,
+        2
+      ],
+      "min_palavras": [
+        100.0,
+        100.0,
+        4
+      ],
+      "min_placeholders": [
+        100.0,
+        100.0,
+        1
+      ],
+      "num_frases": [
+        0.0,
+        0.0,
+        1
+      ],
+      "num_itens_numerados": [
+        0.0,
+        0.0,
+        2
+      ],
+      "num_marcadores": [
+        0.0,
+        0.0,
+        2
+      ],
+      "num_paragrafos": [
+        0.0,
+        0.0,
+        3
+      ],
+      "palavra_repetida": [
+        0.0,
+        0.0,
+        2
+      ],
+      "pos_escrito": [
+        0.0,
+        0.0,
+        2
+      ],
+      "sem_virgula": [
+        0.0,
+        0.0,
+        2
+      ],
+      "terminar_com": [
+        0.0,
+        0.0,
+        3
+      ],
+      "titulo_colchetes": [
+        0.0,
+        0.0,
+        1
+      ],
+      "tudo_maiusculo": [
+        0.0,
+        0.0,
+        2
+      ],
+      "tudo_minusculo": [
+        0.0,
+        0.0,
+        2
+      ]
+    },
+    "tucano-2b4-instruct": {
+      "comecar_com": [
+        0.0,
+        0.0,
+        3
+      ],
+      "evitar_palavra": [
+        50.0,
+        50.0,
+        2
+      ],
+      "incluir_palavra": [
+        57.142857142857146,
+        57.142857142857146,
+        7
+      ],
+      "incluir_todas": [
+        100.0,
+        100.0,
+        1
+      ],
+      "json_valido": [
+        0.0,
+        0.0,
+        2
+      ],
+      "max_frases": [
+        50.0,
+        50.0,
+        2
+      ],
+      "max_palavras": [
+        0.0,
+        0.0,
+        3
+      ],
+      "min_maiusculas": [
+        0.0,
+        0.0,
+        1
+      ],
+      "min_marcadores": [
+        50.0,
+        50.0,
+        2
+      ],
+      "min_palavras": [
+        100.0,
+        100.0,
+        4
+      ],
+      "min_placeholders": [
+        100.0,
+        100.0,
+        1
+      ],
+      "num_frases": [
+        0.0,
+        0.0,
+        1
+      ],
+      "num_itens_numerados": [
+        0.0,
+        0.0,
+        2
+      ],
+      "num_marcadores": [
+        0.0,
+        0.0,
+        2
+      ],
+      "num_paragrafos": [
+        0.0,
+        0.0,
+        3
+      ],
+      "palavra_repetida": [
+        0.0,
+        0.0,
+        2
+      ],
+      "pos_escrito": [
+        0.0,
+        0.0,
+        2
+      ],
+      "sem_virgula": [
+        0.0,
+        0.0,
+        2
+      ],
+      "terminar_com": [
+        0.0,
+        0.0,
+        3
+      ],
+      "titulo_colchetes": [
+        0.0,
+        0.0,
+        1
+      ],
+      "tudo_maiusculo": [
+        0.0,
+        0.0,
+        2
+      ],
+      "tudo_minusculo": [
+        0.0,
+        0.0,
+        2
+      ]
+    },
+    "tucano2-qwen-1b5-instruct": {
+      "comecar_com": [
+        33.333333333333336,
+        33.333333333333336,
+        3
+      ],
+      "evitar_palavra": [
+        100.0,
+        100.0,
+        2
+      ],
+      "incluir_palavra": [
+        57.142857142857146,
+        57.142857142857146,
+        7
+      ],
+      "incluir_todas": [
+        100.0,
+        100.0,
+        1
+      ],
+      "json_valido": [
+        100.0,
+        100.0,
+        2
+      ],
+      "max_frases": [
+        50.0,
+        50.0,
+        2
+      ],
+      "max_palavras": [
+        0.0,
+        0.0,
+        3
+      ],
+      "min_maiusculas": [
+        100.0,
+        100.0,
+        1
+      ],
+      "min_marcadores": [
+        50.0,
+        50.0,
+        2
+      ],
+      "min_palavras": [
+        100.0,
+        100.0,
+        4
+      ],
+      "min_placeholders": [
+        100.0,
+        100.0,
+        1
+      ],
+      "num_frases": [
+        100.0,
+        100.0,
+        1
+      ],
+      "num_itens_numerados": [
+        100.0,
+        50.0,
+        2
+      ],
+      "num_marcadores": [
+        100.0,
+        100.0,
+        2
+      ],
+      "num_paragrafos": [
+        33.333333333333336,
+        33.333333333333336,
+        3
+      ],
+      "palavra_repetida": [
+        0.0,
+        0.0,
+        2
+      ],
+      "pos_escrito": [
+        50.0,
+        50.0,
+        2
+      ],
+      "sem_virgula": [
+        50.0,
+        50.0,
+        2
+      ],
+      "terminar_com": [
+        33.333333333333336,
+        33.333333333333336,
+        3
+      ],
+      "titulo_colchetes": [
+        0.0,
+        0.0,
+        1
+      ],
+      "tudo_maiusculo": [
+        50.0,
+        50.0,
+        2
+      ],
+      "tudo_minusculo": [
+        100.0,
+        100.0,
+        2
+      ]
+    }
+  }
+}
