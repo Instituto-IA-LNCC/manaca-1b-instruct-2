@@ -1,0 +1,7 @@
+[safety-sft] recusas: 1539 (de 465 prompts x ate 4 variantes)
+[safety-sft] ajudas (resposta pronta/gold, ex.: ajudar_em_crise): 50
+/usr/local/lib/python3.12/dist-packages/requests/__init__.py:113: RequestsDependencyWarning: urllib3 (2.0.7) or chardet (6.0.0.post1)/charset_normalizer (3.4.0) doesn't match a supported version!
+  warnings.warn(
+[safety-sft] ajudas (benign-help on-policy): 230
+[safety-sft] gerais: 2729 (amostra de 294223)
+[safety-sft] total=4548 (recusa=1539 ajuda=280 geral=2729) -> sft_safety/safety_sft_sweep_p60.jsonl
