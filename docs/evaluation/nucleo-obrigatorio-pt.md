@@ -498,6 +498,108 @@ Amostra pequena o bastante (6/218) pra ler tudo à mão antes de commitar
   trocado). Taxa real de conformidade nociva do `v4`: **1/218 (0,46%)**, não
   6/218 como o heurístico bruto sugere.
 
+### 7.5 ENEM/BLUEX/OAB (Bloco 2, exames de múltipla escolha)
+
+**Contexto**: essa bateria (junto com classificação `assin2_rte`/`faquad_nli`/
+`hatebr`/`hatespeech`) já tinha sido rodada neste projeto — mas contra os
+checkpoints do projeto **anterior** (`manaca-instruct-v1`/`-v2`/`-safe`=`safe4`,
+ver `docs/evaluation/instruct-eval-pt.md`), nunca contra o `v4` atual. Harness
+já pronto: `scripts/eval/run_lm_eval_pt.sh` + YAMLs em
+`scripts/eval/lm_eval_tasks/{enem,oab,bluex}_pt.yaml` (tarefas próprias, dataset
+`eduagarcia/*` direto do HF, sem depender do fork `lm-evaluation-harness-pt`).
+
+**Pré-requisito documentado no script mas nunca implementado**: o comentário do
+`run_lm_eval_pt.sh` pede pra rodar `scripts/eval/fix_hf_tokenizer.py` antes,
+alegando que o tokenizador HF do Manacá pode não reproduzir o `nmt_nfkc_cf`
+corretamente. Esse script **nunca existiu no histórico do git** (`git log --all`
+vazio). Verificado que não é bloqueio real: cada checkpoint já salva seu próprio
+`tokenizer_config.json`/`tokenizer.json` (conversão automática do SentencePiece
+ao salvar), e os números do v1/v2/safe4 já saíram plausíveis (~20-25%, nível do
+acaso) sem esse ajuste — rodado sem ele aqui também, sem sinal de problema.
+
+```bash
+tmux new -s ptleaderboard
+cd $HOME/manaca-1b-instruct-2
+
+# v4 e instruct2-full (Manaca, local) -- imagem padrao
+TASKS="enem_pt:3 bluex_pt:3 oab_pt:3" \
+MANACA_HF=/data/brunolsm/manaca-checkpoints/manaca-1b-instruct-2-safe-v4-merged \
+MANACA_LABEL=v4 HUB_MODELS="" \
+OUT_DIR=$HOME/manaca-lmeval-out-ptexams \
+./scripts/eval/run_lm_eval_pt.sh
+
+TASKS="enem_pt:3 bluex_pt:3 oab_pt:3" \
+MANACA_HF=/data/brunolsm/manaca-checkpoints/manaca-1b-instruct-2-full \
+MANACA_LABEL=instruct2-full HUB_MODELS="" \
+OUT_DIR=$HOME/manaca-lmeval-out-ptexams \
+./scripts/eval/run_lm_eval_pt.sh
+
+# 3 baselines Llama -- imagem padrao. NAO usar MANACA_LABEL="" pra desligar o
+# Manaca (bug real, ver abaixo) -- usar ONLY pra restringir a rodada.
+TASKS="enem_pt:3 bluex_pt:3 oab_pt:3" \
+HUB_MODELS="ttl-460m-chat|nicholasKluge/TeenyTinyLlama-460m-Chat tucano-1b1-instruct|TucanoBR/Tucano-1b1-Instruct tucano-2b4-instruct|TucanoBR/Tucano-2b4-Instruct" \
+ONLY="ttl-460m-chat tucano-1b1-instruct tucano-2b4-instruct" \
+OUT_DIR=$HOME/manaca-lmeval-out-ptexams \
+./scripts/eval/run_lm_eval_pt.sh
+
+# Tucano2-qwen -- imagem separada (qwen3)
+TASKS="enem_pt:3 bluex_pt:3 oab_pt:3" \
+HUB_MODELS="tucano2-qwen-1b5-instruct|Polygl0t/Tucano2-qwen-1.5B-Instruct" \
+ONLY="tucano2-qwen-1b5-instruct" \
+EVAL_IMAGE=manaca-lmeval-qwen3:latest \
+OUT_DIR=$HOME/manaca-lmeval-out-ptexams \
+./scripts/eval/run_lm_eval_pt.sh
+
+python3 scripts/eval/merge_ptbench.py --lm-eval-dir $HOME/manaca-lmeval-out-ptexams \
+  --out docs/evaluation/enem-oab-bluex-nucleo
+```
+
+**Bug encontrado ao rodar (corrigido no comando acima)**: `MANACA_LABEL=""`
+não desliga a avaliação do Manacá — `run_lm_eval_pt.sh` usa
+`MANACA_LABEL="${MANACA_LABEL:-manaca}"`, e o bash trata string vazia como
+"não definido", caindo no default `"manaca"`. O `selecionado()` do script
+sempre retorna verdadeiro quando `ONLY` não está definido, então o Manacá
+rodou de qualquer forma, usando o `MANACA_HF` default
+(`$HOME/work/manaca-1b-hf`) — um checkpoint de 29/08, de antes do `v4`
+existir, de identidade não confirmada. Gerou uma linha `manaca` espúria na
+tabela (removida manualmente do `.md`/`.json` antes de qualquer análise ou
+commit). Correto é usar `ONLY="<labels>"` pra restringir a rodada aos
+baselines, não tentar zerar `MANACA_LABEL`. Os arquivos de saída do lm-eval
+ficaram *root-owned* dentro do diretório do Manaca (o script não usa
+`--user $(id -u):$(id -g)` como os outros) — não deu pra apagar sem `sudo`;
+contornado filtrando o resultado no `.json`/`.md` em vez de apagar o diretório.
+
+#### Resultado (rodado em 2026-09-14)
+
+| Modelo | ENEM | BLUEX | OAB |
+|---|---:|---:|---:|
+| `instruct2-full` (Manacá, pré-safety) | 19,4% | 23,8% | 23,4% |
+| **`v4` (Manacá, aprovado)** | 20,1% | 25,2% | 23,3% |
+| TeenyTinyLlama-460m-Chat | 19,4% | 24,0% | 24,6% |
+| Tucano-1b1-Instruct | 20,1% | 24,7% | 26,3% |
+| Tucano-2b4-Instruct | 20,8% | 20,8% | 24,0% |
+| Tucano2-qwen-1.5B-Instruct | **65,8%** | **55,1%** | **43,4%** |
+
+3-shot, acurácia ± erro padrão (tabela completa com IC em
+`docs/evaluation/enem-oab-bluex-nucleo.md`).
+
+- **`v4` confirma o padrão já documentado pra v1/v2/safe4** (`instruct-eval-pt.md`):
+  todos os modelos PT-BR nativos dessa escala (0,4-2,4B) ficam na **faixa do
+  acaso** (~19-26%, 4-5 alternativas) nesses exames — o safety-SFT não muda
+  isso pra melhor nem pra pior. Consistente com "base pequena, não erro", não
+  um novo achado, uma confirmação com o checkpoint certo.
+- **Tucano2-qwen dispara muito acima de todo mundo** — mesmo padrão já visto
+  em matemática/código no MT-Bench-PT/IFEval-PT, aqui ainda mais extremo (3x o
+  nível do acaso). Efeito do continual-pretrain sobre Qwen3.
+- **Discrepância de magnitude vs o self-reported do Tucano2-qwen**: o model
+  card dele relata 53,6%/40,3%/40,7% (ENEM/BLUEX/OAB, mesmo 3-shot) — nossa
+  reprodução deu mais alto nos três, principalmente ENEM (65,8 vs 53,6). Mesma
+  direção (dispara acima do acaso), magnitude diferente — provavelmente
+  diferença de harness (nosso YAML próprio vs o fork
+  `eduagarcia/lm-evaluation-harness-pt` que eles citam como fonte), não erro
+  de execução. Registrar como reprodução própria com metodologia diferente do
+  self-reported, não como contradição.
+
 ## 8. Antes de commitar
 
 - Auditar por amostra as respostas de segurança held-out dos baselines
