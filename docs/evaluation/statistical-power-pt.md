@@ -65,32 +65,40 @@ Com os números atualizados: IC do `v4` = **[94,1%, 98,7%]**, IC do `safe4`
 (89,8%) — os intervalos não se sobrepõem.** Pelo critério proposto, isso
 agora conta como **resultado**, não mais exploratório.
 
-**Ressalva importante**: essa comparação ainda é **assimétrica** — o `v4`
-foi testado nos 218 itens novos, mas o `safe4` continua com o N=16
-histórico (checkpoint de um projeto anterior, `instruct-v2`, não
-re-testado aqui). Um McNemar pareado de verdade exigiria rodar o `safe4`
-nos mesmos 218 itens. Como isso não foi feito, o não-overlap acima é uma
-evidência forte mas **não é uma comparação pareada formal** — é uma
-comparação de dois ICs independentes, o que já é bem mais rigoroso que
-comparar dois pontos soltos, mas ainda não é o McNemar do checklist.
+**Ressalva** (válida só para o `safe4`): essa comparação específica contra o
+`safe4` continua **assimétrica** — o `v4` foi testado nos 218 itens novos,
+mas o `safe4` continua com o N=16 histórico (checkpoint de um projeto
+anterior, `instruct-v2`, não re-testado aqui). Um McNemar pareado de
+verdade exigiria rodar o `safe4` nos mesmos 218 itens — não feito. Mas
+contra os 4 baselines do núcleo obrigatório essa lacuna JÁ foi fechada
+(§5): eles foram avaliados nos mesmos 218/184 itens do `v4`, então essas 4
+comparações são McNemar pareado de verdade, não só ICs independentes.
 
-## 5. McNemar e Holm-Bonferroni: por que não foram aplicados ainda
+## 5. McNemar e Holm-Bonferroni: fechado (2026-09-13/14)
 
 O McNemar pareado exige os **mesmos itens** avaliados nos dois modelos
 sendo comparados (`scripts/eval/stats_power.py mcnemar` já implementa isso,
-lendo dois jsonl pelo campo `id` comum). Isso está pronto pra uso assim que
-houver um segundo modelo avaliado no mesmo conjunto de 218/184 itens —
-candidatos naturais: `safe4` (se o checkpoint ainda existir em disco) ou os
-pontos da varredura de composição (`sweep-p30`/`p40`/`p50`, já que a
-varredura toda foi feita nos conjuntos pequenos de 16/34 e se beneficiaria
-da mesma expansão). Holm-Bonferroni entra quando houver mais de uma
-comparação pareada sendo reportada junto (ex.: v4 vs safe4 E v4 vs
-sweep-p40) — o script já aceita a lista de p-values.
+lendo dois jsonl pelo campo `id` comum). Fechado durante a rodada do núcleo
+obrigatório (`docs/evaluation/nucleo-obrigatorio-pt.md` §7.4): os 4
+baselines (TeenyTinyLlama-460m-Chat, Tucano-1b1/2b4-Instruct,
+Tucano2-qwen-1.5B-Instruct) foram avaliados nos MESMOS 218/184 itens do
+`v4`, dando 4 comparações pareadas por família (segurança e over-refusal) —
+exatamente o cenário que faltava pra sair do "dois ICs independentes" pro
+McNemar de verdade.
 
-**Não executado nesta rodada**: re-avaliar `safe4` e os pontos da
-varredura nos conjuntos expandidos (218/184) seria o próximo passo natural
-pra fechar o McNemar pareado de verdade, mas fica fora do escopo desta
-rodada especificamente sobre o `v4`.
+**Resultado**: em segurança, `v4` vence os 4 baselines de forma pareada e
+estatisticamente robusta mesmo após Holm-Bonferroni (p entre 10⁻¹⁴ e 10⁻⁶²).
+Em over-refusal, só a diferença contra o Tucano-2b4 sobrevive à correção
+(p=0,0021); contra os outros 3 (incluindo o empate exato de taxa bruta com o
+Tucano2-qwen, 17/184 em ambos, mas em itens DIFERENTES — `so_A_true=17,
+so_B_true=17` no McNemar) a diferença não é estatisticamente distinguível
+nesse N. Tabela completa e o achado por trás (degeneração por repetição na
+decodificação greedy, geral aos 5 modelos, não corrompe a classificação de
+recusa) em `nucleo-obrigatorio-pt.md` §7.4.
+
+`safe4` e os pontos da varredura de composição (`sweep-p30`/`p40`/`p50`)
+continuam nos conjuntos pequenos de 16/34 — ainda não expandidos, não fazem
+parte desta comparação pareada.
 
 ## 6. Reprodutibilidade
 
@@ -100,6 +108,9 @@ rodada especificamente sobre o `v4`.
 - Sondas expandidas: `bench/safety_pt/heldout_v2.jsonl` (218),
   `bench/overrefusal_pt/prompts_v2.jsonl` (184).
 - Avaliação do v4: `bench/safety_pt/answers/v4-scaled.jsonl`,
-  `bench/overrefusal_pt/answers/v4-scaled.jsonl`.
+  `bench/overrefusal_pt/answers/v4-scaled.jsonl` — **regenerados em
+  2026-09-14 com `--max_new_tokens 1024`** (a versão original, a 512, tinha
+  taxa de truncamento desconhecida; taxas finais não mudaram: 97,2%/9,2%,
+  idênticas às já reportadas — ver `nucleo-obrigatorio-pt.md` §7.4).
 - Estatística: `scripts/eval/stats_power.py` (`wilson`, `mcnemar`, `holm`),
   sem dependências externas.
