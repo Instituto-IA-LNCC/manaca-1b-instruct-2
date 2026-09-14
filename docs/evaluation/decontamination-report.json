@@ -1,0 +1,270 @@
+{
+  "n_gram": 13,
+  "n_itens_avaliacao": 15026,
+  "n_exemplos_treino": 294223,
+  "achados": {
+    "bluex_pt::bluex_pt_440": [
+      567
+    ],
+    "bluex_pt::bluex_pt_441": [
+      567
+    ],
+    "enem_pt::enem_pt_653": [
+      1568
+    ],
+    "oab_pt::oab_pt_1359": [
+      4672,
+      240863
+    ],
+    "oab_pt::oab_pt_1283": [
+      5038,
+      33304,
+      36131,
+      42724,
+      72841,
+      82979,
+      90611,
+      96665,
+      96735,
+      119133,
+      127829,
+      147385,
+      204967,
+      216603,
+      228511,
+      231535,
+      236933,
+      244496,
+      248023,
+      278957,
+      286947
+    ],
+    "enem_pt::enem_pt_364": [
+      7044
+    ],
+    "enem_pt::enem_pt_127": [
+      7044
+    ],
+    "enem_pt::enem_pt_751": [
+      22536
+    ],
+    "enem_pt::enem_pt_205": [
+      23826,
+      186702
+    ],
+    "oab_pt::oab_pt_487": [
+      27700,
+      188351
+    ],
+    "oab_pt::oab_pt_1794": [
+      31476
+    ],
+    "oab_pt::oab_pt_439": [
+      31603
+    ],
+    "oab_pt::oab_pt_337": [
+      40342
+    ],
+    "bluex_pt::bluex_pt_583": [
+      40746
+    ],
+    "bluex_pt::bluex_pt_584": [
+      40746
+    ],
+    "bluex_pt::bluex_pt_139": [
+      46583
+    ],
+    "enem_pt::enem_pt_1108": [
+      52234
+    ],
+    "enem_pt::enem_pt_18": [
+      54151
+    ],
+    "oab_pt::oab_pt_1197": [
+      55367
+    ],
+    "assin2_rte_pt::assin2_rte_pt_1381": [
+      57440
+    ],
+    "oab_pt::oab_pt_317": [
+      66060,
+      70057
+    ],
+    "oab_pt::oab_pt_1120": [
+      74962
+    ],
+    "enem_pt::enem_pt_555": [
+      76730,
+      79047,
+      83062,
+      186168,
+      224093,
+      273631
+    ],
+    "faquad_nli_pt::faquad_nli_pt_62": [
+      83440
+    ],
+    "faquad_nli_pt::faquad_nli_pt_63": [
+      83440
+    ],
+    "faquad_nli_pt::faquad_nli_pt_64": [
+      83440
+    ],
+    "faquad_nli_pt::faquad_nli_pt_65": [
+      83440
+    ],
+    "faquad_nli_pt::faquad_nli_pt_66": [
+      83440
+    ],
+    "faquad_nli_pt::faquad_nli_pt_67": [
+      83440
+    ],
+    "faquad_nli_pt::faquad_nli_pt_68": [
+      83440
+    ],
+    "faquad_nli_pt::faquad_nli_pt_69": [
+      83440
+    ],
+    "faquad_nli_pt::faquad_nli_pt_70": [
+      83440
+    ],
+    "faquad_nli_pt::faquad_nli_pt_71": [
+      83440
+    ],
+    "faquad_nli_pt::faquad_nli_pt_72": [
+      83440
+    ],
+    "faquad_nli_pt::faquad_nli_pt_73": [
+      83440
+    ],
+    "faquad_nli_pt::faquad_nli_pt_74": [
+      83440
+    ],
+    "faquad_nli_pt::faquad_nli_pt_75": [
+      83440
+    ],
+    "faquad_nli_pt::faquad_nli_pt_76": [
+      83440
+    ],
+    "faquad_nli_pt::faquad_nli_pt_77": [
+      83440
+    ],
+    "oab_pt::oab_pt_2058": [
+      91519,
+      261595
+    ],
+    "oab_pt::oab_pt_352": [
+      114512
+    ],
+    "oab_pt::oab_pt_1351": [
+      121897
+    ],
+    "oab_pt::oab_pt_1196": [
+      126276
+    ],
+    "oab_pt::oab_pt_2068": [
+      126276,
+      139781
+    ],
+    "enem_pt::enem_pt_381": [
+      130237
+    ],
+    "enem_pt::enem_pt_38": [
+      148800
+    ],
+    "oab_pt::oab_pt_1591": [
+      156927
+    ],
+    "enem_pt::enem_pt_584": [
+      167187
+    ],
+    "enem_pt::enem_pt_1116": [
+      168476
+    ],
+    "oab_pt::oab_pt_510": [
+      168822
+    ],
+    "oab_pt::oab_pt_1116": [
+      170204
+    ],
+    "bluex_pt::bluex_pt_136": [
+      170551
+    ],
+    "oab_pt::oab_pt_1046": [
+      174578
+    ],
+    "oab_pt::oab_pt_1031": [
+      174792
+    ],
+    "oab_pt::oab_pt_913": [
+      178428
+    ],
+    "assin2_rte_pt::assin2_rte_pt_1150": [
+      190090
+    ],
+    "assin2_rte_pt::assin2_rte_pt_1775": [
+      190090
+    ],
+    "enem_pt::enem_pt_135": [
+      204018
+    ],
+    "oab_pt::oab_pt_522": [
+      221726
+    ],
+    "enem_pt::enem_pt_294": [
+      226732
+    ],
+    "oab_pt::oab_pt_723": [
+      232783
+    ],
+    "oab_pt::oab_pt_1268": [
+      235235
+    ],
+    "enem_pt::enem_pt_621": [
+      238512
+    ],
+    "enem_pt::enem_pt_900": [
+      243395
+    ],
+    "enem_pt::enem_pt_384": [
+      248341
+    ],
+    "oab_pt::oab_pt_653": [
+      256520
+    ],
+    "oab_pt::oab_pt_1150": [
+      258344
+    ],
+    "bluex_pt::bluex_pt_156": [
+      259484
+    ],
+    "enem_pt::enem_pt_957": [
+      266648
+    ],
+    "enem_pt::enem_pt_521": [
+      266648
+    ],
+    "enem_pt::enem_pt_408": [
+      270501
+    ],
+    "enem_pt::enem_pt_1017": [
+      274015
+    ],
+    "enem_pt::enem_pt_39": [
+      287155
+    ]
+  },
+  "resumo_por_banco": {
+    "enem_pt": 22,
+    "oab_pt": 25,
+    "bluex_pt": 7,
+    "assin2_rte_pt": 3,
+    "faquad_nli_pt": 16,
+    "hatebr_pt": 0,
+    "hatespeech_pt": 0,
+    "mtbench_pt": 0,
+    "ifeval_pt": 0,
+    "safety_heldout": 0,
+    "overrefusal": 0
+  }
+}

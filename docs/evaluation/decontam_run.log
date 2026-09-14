@@ -1,0 +1,50 @@
+[decontam] imagem=manaca-lmeval:latest  treino=/prj/prjgvdc/brunolsm/manaca-1b-instruct-2/data/sft_instruct2/manaca_sft.jsonl  cache=/prj/prjgvdc/brunolsm/hf_cache_decontam
+[decontam] carregando benchmarks de avaliacao...
+/usr/local/lib/python3.12/dist-packages/requests/__init__.py:113: RequestsDependencyWarning: urllib3 (2.0.7) or chardet (6.0.0.post1)/charset_normalizer (3.4.0) doesn't match a supported version!
+  warnings.warn(
+[decontam] enem_pt: 1432 itens carregados de eduagarcia/enem_challenge
+[decontam] oab_pt: 2210 itens carregados de eduagarcia/oab_exams
+[decontam] bluex_pt: 724 itens carregados de eduagarcia-temp/BLUEX_without_images
+[decontam] assin2_rte_pt: 2448 itens carregados de assin2
+[decontam] faquad_nli_pt: 650 itens carregados de ruanchaves/faquad-nli
+/usr/local/lib/python3.12/dist-packages/datasets/load.py:1296: FutureWarning: The repository for ruanchaves/hatebr contains custom code which must be executed to correctly load the dataset. You can inspect the repository content at https://hf.co/datasets/ruanchaves/hatebr
+You can avoid this message in future by passing the argument `trust_remote_code=True`.
+Passing `trust_remote_code=True` will be mandatory to load this dataset from the next major release of `datasets`.
+  warnings.warn(
+[decontam] hatebr_pt: 1400 itens carregados de ruanchaves/hatebr
+/usr/local/lib/python3.12/dist-packages/datasets/load.py:1296: FutureWarning: The repository for hate_speech_portuguese contains custom code which must be executed to correctly load the dataset. You can inspect the repository content at https://hf.co/datasets/hate_speech_portuguese
+You can avoid this message in future by passing the argument `trust_remote_code=True`.
+Passing `trust_remote_code=True` will be mandatory to load this dataset from the next major release of `datasets`.
+  warnings.warn(
+[decontam] hatespeech_pt: 5670 itens carregados de hate_speech_portuguese
+[decontam] mtbench_pt: 54 itens carregados de bench/mtbench_pt/questions.jsonl
+[decontam] ifeval_pt: 36 itens carregados de bench/ifeval_pt/prompts.jsonl
+[decontam] safety_heldout: 218 itens carregados de bench/safety_pt/heldout_v2.jsonl
+[decontam] overrefusal: 184 itens carregados de bench/overrefusal_pt/prompts_v2.jsonl
+[decontam] 15026 itens de avaliacao, 706269 n-gramas (13-gram) unicos indexados
+[decontam] varrendo corpus de treino: /train_dir/manaca_sft.jsonl
+[decontam]   ... 50000 exemplos de treino varridos
+[decontam]   ... 100000 exemplos de treino varridos
+[decontam]   ... 150000 exemplos de treino varridos
+[decontam]   ... 200000 exemplos de treino varridos
+[decontam]   ... 250000 exemplos de treino varridos
+[decontam] 294223 exemplos de treino varridos no total
+[decontam] 73 itens de avaliacao com overlap de 13-gram no treino
+
+Resumo por benchmark (itens com overlap de 13-gram / total):
+  enem_pt          22/1432
+  oab_pt           25/2210
+  bluex_pt         7/724
+  assin2_rte_pt    3/2448
+  faquad_nli_pt    16/650
+  hatebr_pt        0/1400
+  hatespeech_pt    0/5670
+  mtbench_pt       0/54
+  ifeval_pt        0/36
+  safety_heldout   0/218
+  overrefusal      0/184
+
+[decontam] relatorio completo salvo em docs/evaluation/decontamination-report.json
+[decontam] AVISO: overlap encontrado -- audite manualmente antes de tirar conclusao
+[decontam] (overlap de 13-gram pode ser falso positivo em texto de boilerplate curto,
+[decontam]  ex.: cabecalhos de formulario ou frases muito comuns -- ler o texto real)
