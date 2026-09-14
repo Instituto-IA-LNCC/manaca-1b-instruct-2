@@ -4,7 +4,7 @@
 > (pós-treinada)** do
 > [**Manacá-1B base**](https://github.com/Instituto-IA-LNCC/manaca-1b-base): o
 > mesmo decoder-only de **~1,72 bilhão de parâmetros**, agora com um corpus de
-> SFT maior e mais diverso (~294 mil exemplos), **duas** tentativas de DPO
+> SFT maior e mais diverso (~291 mil exemplos), **duas** tentativas de DPO
 > registradas como resultado negativo, e um alinhamento de segurança
 > (safety-SFT) refinado em 3 iterações (`v2`→`v3`→`v4`) até validado
 > estatisticamente contra 4 baselines externos de PT-BR — **com todo o
@@ -75,7 +75,7 @@
 [**Manacá-1B base**](https://github.com/Instituto-IA-LNCC/manaca-1b-base),
 publicada como **release de pesquisa experimental**: o mesmo decoder-only de
 **~1,72 bilhão de parâmetros** treinado do zero para o português do Brasil,
-agora com um corpus de SFT bem maior (~294 mil exemplos, vs. os 141 mil da v1)
+agora com um corpus de SFT bem maior (~291 mil exemplos — 291.223, confirmado no log de treino — vs. os 141 mil da v1)
 e um alinhamento de segurança validado com o rigor estatístico que faltava na
 1ª geração. Este repositório existe para tornar **cientificamente
 reprodutível e auditável todo o caminho até o instruct seguro** — incluindo o
@@ -176,9 +176,10 @@ completa: [`docs/evaluation/composition-sweep-pt.md`](docs/evaluation/compositio
 ### O método de pós-treino
 
 1. **SFT (fine-tuning supervisionado)** sobre o Manacá-1B base, no template
-   Alpaca-PT, corpus rebalanceado de ~294 mil exemplos (GigaVerbo-v2 SFT,
-   Tucano-SFT, Quati, ExtraGLUE, personas_br, e instrução sintética gerada
-   via Claude Batches API e via vLLM local) → `manaca-1b-instruct-2-full`.
+   Alpaca-PT, corpus rebalanceado de 291.223 exemplos, confirmado no log de
+   treino (base v1/v2 + GigaVerbo-v2 SFT, ExtraGLUE, Quati, personas_br, e
+   instrução sintética gerada via Claude Batches API e via vLLM local) →
+   `manaca-1b-instruct-2-full`.
 2. **DPO — duas tentativas, ambas resultado negativo.**
    - **On-policy (fiel ao `llm-jp-dpo`).** Pares gerados pelo próprio modelo
      (recusa boa vs. a obediência nociva do modelo), β=0,1. Curva de
@@ -209,17 +210,26 @@ licenças, contagens reais, `sha256` por tarefa) e comandos:
 [`sft/prepare_data.py`](sft/prepare_data.py),
 [`corpus/README.md`](corpus/README.md) e [`synth/README.md`](synth/README.md).
 
-**Fontes principais do instruct-2** (~294 mil exemplos após dedup/filtro):
+**Fontes principais do instruct-2** (291.223 exemplos, confirmado no log de treino, após dedup/filtro):
 
-| Fonte | O que é | Como entrou |
-|---|---|---|
-| GigaVerbo-v2 SFT | Instrução PT-BR pronta (Tucano 2) | direto |
-| Tucano-SFT | Instrução PT-BR pronta (Tucano 1) | direto |
-| Quati | Instrução PT-BR pronta | direto |
-| ExtraGLUE | Tarefas de NLP convertidas em instrução | direto |
-| personas_br | Nemotron-Personas-Brazil | via Claude e via vLLM local |
-| Sintética grounded | LegalPT, ClassiCC-PT, MADLAD-400, FineWeb-2, HPLT 2.0 | via Claude Batches API e Qwen2.5-32B-Instruct-AWQ (vLLM local) |
-| manacá-jaster | ASSIN2, SICK-BR, FaQuAD, ENEM, HAREM, LeNER-Br, TweetSentBR, HateBR, Pirá, Mac-Morpho | conversão de tarefa de NLP em instrução |
+| Fonte | O que é | Exemplos | Como entrou |
+|---|---|--:|---|
+| Base v1/v2 (Alpaca-PT, Aya, OASST1, OPUS-100, XLSum) | Corpus herdado da 1ª geração | 103.843 | direto (baixado ao vivo do HF) |
+| GigaVerbo-v2 SFT | Instrução PT-BR pronta (Tucano 2) | 239.624\* | direto |
+| ExtraGLUE (mnli/qnli/stsb/mrpc) | Tarefas de NLP convertidas em instrução | 121.928\* | direto (`sft/jaster/build_jaster.py`) |
+| Quati | Instrução PT-BR pronta (relevância) | 4.856\* | direto |
+| personas_br | Nemotron-Personas-Brazil | 5.213\* | via Claude (2 lotes) e via vLLM local |
+| Sintética grounded | LegalPT, ClassiCC-PT, MADLAD-400, FineWeb-2, HPLT 2.0 | 23.166\* | via Claude Batches API e Qwen2.5-32B-Instruct-AWQ (vLLM local) |
+
+\* Contagem pré-dedup (`docs/data/README-instruct2.md`); o `--dedup` do
+combine final descarta duplicatas, por isso a soma não bate exatamente com
+os 291.223 do log de treino. **Nem toda fonte documentada no repositório
+entrou no corpus final** — `sft/tucano_sft/` e o `manacá-jaster`
+(ASSIN2/FaQuAD/ENEM/HateBR, usado só na 1ª geração) foram avaliados/estão
+documentados mas **não** fazem parte destes 291.223 exemplos; conferido
+contra a tabela de contagens reais antes de listar aqui, exatamente para
+não afirmar sobreposição entre treino e os benchmarks de avaliação que
+usam esses mesmos datasets nomeados (ASSIN2/FaQuAD/HateBR/ENEM).
 
 Carolina e Portuguese-PD foram avaliados e **abandonados** (licença/qualidade
 — ver tabela de status no card de dados). Mistura inclui fontes
@@ -235,7 +245,7 @@ SentencePiece 64k `nmt_nfkc_cf`). O pós-treino é um ajuste por cima desses pes
 |------|-------|
 | Modelo base | Manacá-1B (do zero, PT-BR) |
 | Template de conversa | Alpaca-PT (`### Instrução:` / `### Resposta:`) |
-| Pós-treino | SFT (full FT, ~294k exemplos) + safety-SFT (LoRA, 3 iterações) |
+| Pós-treino | SFT (full FT, 291.223 exemplos) + safety-SFT (LoRA, 3 iterações) |
 | Alinhamento | recusa de pedidos nocivos + ajuda ao benigno, validado contra 4 baselines externos |
 | Precisão | bfloat16 |
 | Status | release de pesquisa experimental (v0.2) |
@@ -262,13 +272,17 @@ Já disponível neste repositório (o que funcionou e valeu, sem tentativas falh
   LLM local (Qwen2.5-32B-Instruct-AWQ em vLLM na GPU do Netuno, sem custo de
   API, [`scripts/docker/README-vllm.md`](scripts/docker/README-vllm.md) ·
   [`synth/generate_instructions_local.py`](synth/generate_instructions_local.py)).
-- **Fontes de instrução já prontas** — GigaVerbo-v2 SFT, Tucano-SFT, Quati,
-  ExtraGLUE e personas_br (Nemotron-Personas-Brazil, via Claude e via LLM
-  local), todas de licença aberta:
+- **Fontes de instrução já prontas (usadas no corpus final)** — GigaVerbo-v2
+  SFT, Quati, ExtraGLUE e personas_br (Nemotron-Personas-Brazil, via Claude e
+  via LLM local), todas de licença aberta:
   [`sft/gigaverbo_v2_sft/README.md`](sft/gigaverbo_v2_sft/README.md) ·
-  [`sft/tucano_sft/README.md`](sft/tucano_sft/README.md) ·
   [`sft/quati/README.md`](sft/quati/README.md) ·
   [`sft/personas_br/README.md`](sft/personas_br/README.md).
+- **Tucano-SFT — avaliada, não incluída no corpus final**: documentada em
+  [`sft/tucano_sft/README.md`](sft/tucano_sft/README.md) (rationale e aviso
+  de proveniência), mas não aparece nas contagens reais do
+  [`docs/data/README-instruct2.md`](docs/data/README-instruct2.md) — não faz
+  parte dos 291.223 exemplos de treino.
 - **Ficha completa de contagens/status do instruct-2** (só o que foi de fato
   gerado, com `wc -l` real, fontes usadas vs. abandonadas e por quê):
   [`docs/data/README-instruct2.md`](docs/data/README-instruct2.md).
@@ -370,7 +384,7 @@ GitHub: https://github.com/brunoleomenezes/manaca-1b-instruct-2 · License: CC B
 [**Manacá-1B base**](https://github.com/Instituto-IA-LNCC/manaca-1b-base),
 released as an **experimental research artifact**: the same decoder-only model
 of **~1.72 billion parameters**, trained from scratch for Brazilian Portuguese,
-now with a much larger SFT corpus (~294k examples, vs. 141k in v1) and a
+now with a much larger SFT corpus (~291k examples — 291,223, confirmed in the training log — vs. 141k in v1) and a
 safety alignment validated with the statistical rigor the first generation
 lacked. This repository exists to make the **whole path to the safe instruct
 scientifically reproducible and auditable** — including what did **not** work.
@@ -469,9 +483,10 @@ error; the sweep confirms this by method, not by luck. Full methodology:
 ### Post-training method
 
 1. **SFT (supervised fine-tuning)** on Manacá-1B base, Alpaca-PT template,
-   rebalanced corpus of ~294k examples (GigaVerbo-v2 SFT, Tucano-SFT, Quati,
-   ExtraGLUE, personas_br, and synthetic instruction generated via Claude
-   Batches API and local vLLM) → `manaca-1b-instruct-2-full`.
+   rebalanced corpus of 291,223 examples, confirmed in the training log
+   (base v1/v2 + GigaVerbo-v2 SFT, ExtraGLUE, Quati, personas_br, and
+   synthetic instruction generated via Claude Batches API and local vLLM) →
+   `manaca-1b-instruct-2-full`.
 2. **DPO — two attempts, both negative results.**
    - **On-policy (faithful to `llm-jp-dpo`).** Pairs generated by the model
      itself (a good refusal vs. the model's own harmful compliance), β=0.1.
@@ -502,17 +517,26 @@ actual counts, per-task `sha256`) and commands:
 [`sft/prepare_data.py`](sft/prepare_data.py),
 [`corpus/README.md`](corpus/README.md) and [`synth/README.md`](synth/README.md).
 
-**Main instruct-2 sources** (~294k examples after dedup/filtering):
+**Main instruct-2 sources** (291,223 examples, confirmed in the training log, after dedup/filtering):
 
-| Source | What it is | How it was used |
-|---|---|---|
-| GigaVerbo-v2 SFT | Ready-made PT-BR instructions (Tucano 2) | direct |
-| Tucano-SFT | Ready-made PT-BR instructions (Tucano 1) | direct |
-| Quati | Ready-made PT-BR instructions | direct |
-| ExtraGLUE | NLP tasks converted to instructions | direct |
-| personas_br | Nemotron-Personas-Brazil | via Claude and via local vLLM |
-| Synthetic grounded | LegalPT, ClassiCC-PT, MADLAD-400, FineWeb-2, HPLT 2.0 | via Claude Batches API and Qwen2.5-32B-Instruct-AWQ (local vLLM) |
-| manacá-jaster | ASSIN2, SICK-BR, FaQuAD, ENEM, HAREM, LeNER-Br, TweetSentBR, HateBR, Pirá, Mac-Morpho | NLP task converted to instruction |
+| Source | What it is | Examples | How it was used |
+|---|---|--:|---|
+| Base v1/v2 (Alpaca-PT, Aya, OASST1, OPUS-100, XLSum) | Corpus inherited from the 1st generation | 103,843 | direct (downloaded live from HF) |
+| GigaVerbo-v2 SFT | Ready-made PT-BR instructions (Tucano 2) | 239,624\* | direct |
+| ExtraGLUE (mnli/qnli/stsb/mrpc) | NLP tasks converted to instructions | 121,928\* | direct (`sft/jaster/build_jaster.py`) |
+| Quati | Ready-made PT-BR instructions (relevance) | 4,856\* | direct |
+| personas_br | Nemotron-Personas-Brazil | 5,213\* | via Claude (2 batches) and via local vLLM |
+| Synthetic grounded | LegalPT, ClassiCC-PT, MADLAD-400, FineWeb-2, HPLT 2.0 | 23,166\* | via Claude Batches API and Qwen2.5-32B-Instruct-AWQ (local vLLM) |
+
+\* Pre-dedup count (`docs/data/README-instruct2.md`); the final combine's
+`--dedup` drops duplicates, so the sum doesn't exactly match the 291,223
+from the training log. **Not every source documented in the repo made it
+into the final corpus** — `sft/tucano_sft/` and `manacá-jaster`
+(ASSIN2/FaQuAD/ENEM/HateBR, used only in the 1st generation) were
+evaluated/are documented but are **not** part of these 291,223 examples;
+checked against the real-counts table before listing here, specifically to
+avoid claiming overlap between training and the evaluation benchmarks that
+use those same named datasets (ASSIN2/FaQuAD/HateBR/ENEM).
 
 Carolina and Portuguese-PD were evaluated and **abandoned** (license/quality
 — see status table in the data card). The mix includes **non-commercial**
@@ -528,7 +552,7 @@ It fully inherits the architecture of the [Manacá-1B base](https://github.com/I
 |------|-------|
 | Base model | Manacá-1B (from scratch, PT-BR) |
 | Chat template | Alpaca-PT (`### Instrução:` / `### Resposta:`) |
-| Post-training | SFT (full FT, ~294k examples) + safety-SFT (LoRA, 3 iterations) |
+| Post-training | SFT (full FT, 291,223 examples) + safety-SFT (LoRA, 3 iterations) |
 | Alignment | refuse harmful requests + help the benign, validated against 4 external baselines |
 | Precision | bfloat16 |
 | Status | experimental research release (v0.2) |
@@ -555,13 +579,17 @@ Already in this repository (what worked and mattered, no failed attempts):
   a local LLM (Qwen2.5-32B-Instruct-AWQ on vLLM on the Netuno GPU, no API
   cost, [`scripts/docker/README-vllm.md`](scripts/docker/README-vllm.md) ·
   [`synth/generate_instructions_local.py`](synth/generate_instructions_local.py)).
-- **Ready-made instruction sources** — GigaVerbo-v2 SFT, Tucano-SFT, Quati,
-  ExtraGLUE and personas_br (Nemotron-Personas-Brazil, via Claude and via
-  local LLM), all openly licensed:
+- **Ready-made instruction sources (used in the final corpus)** —
+  GigaVerbo-v2 SFT, Quati, ExtraGLUE and personas_br (Nemotron-Personas-Brazil,
+  via Claude and via local LLM), all openly licensed:
   [`sft/gigaverbo_v2_sft/README.md`](sft/gigaverbo_v2_sft/README.md) ·
-  [`sft/tucano_sft/README.md`](sft/tucano_sft/README.md) ·
   [`sft/quati/README.md`](sft/quati/README.md) ·
   [`sft/personas_br/README.md`](sft/personas_br/README.md).
+- **Tucano-SFT — evaluated, not included in the final corpus**: documented
+  in [`sft/tucano_sft/README.md`](sft/tucano_sft/README.md) (rationale and
+  provenance notice), but does not appear in the real counts in
+  [`docs/data/README-instruct2.md`](docs/data/README-instruct2.md) — not
+  part of the 291,223 training examples.
 - **Full instruct-2 counts/status card** (only what was actually generated,
   with real `wc -l`, sources used vs. abandoned and why):
   [`docs/data/README-instruct2.md`](docs/data/README-instruct2.md).
