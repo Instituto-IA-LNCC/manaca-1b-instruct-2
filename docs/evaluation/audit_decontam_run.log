@@ -1,0 +1,782 @@
+[audit] carregando benchmarks (mesma fonte do decontaminate.py)...
+/usr/local/lib/python3.12/dist-packages/requests/__init__.py:113: RequestsDependencyWarning: urllib3 (2.0.7) or chardet (6.0.0.post1)/charset_normalizer (3.4.0) doesn't match a supported version!
+  warnings.warn(
+[decontam] enem_pt: 1432 itens carregados de eduagarcia/enem_challenge
+[decontam] oab_pt: 2210 itens carregados de eduagarcia/oab_exams
+[decontam] bluex_pt: 724 itens carregados de eduagarcia-temp/BLUEX_without_images
+[decontam] assin2_rte_pt: 2448 itens carregados de assin2
+[decontam] faquad_nli_pt: 650 itens carregados de ruanchaves/faquad-nli
+/usr/local/lib/python3.12/dist-packages/datasets/load.py:1296: FutureWarning: The repository for ruanchaves/hatebr contains custom code which must be executed to correctly load the dataset. You can inspect the repository content at https://hf.co/datasets/ruanchaves/hatebr
+You can avoid this message in future by passing the argument `trust_remote_code=True`.
+Passing `trust_remote_code=True` will be mandatory to load this dataset from the next major release of `datasets`.
+  warnings.warn(
+[decontam] hatebr_pt: 1400 itens carregados de ruanchaves/hatebr
+/usr/local/lib/python3.12/dist-packages/datasets/load.py:1296: FutureWarning: The repository for hate_speech_portuguese contains custom code which must be executed to correctly load the dataset. You can inspect the repository content at https://hf.co/datasets/hate_speech_portuguese
+You can avoid this message in future by passing the argument `trust_remote_code=True`.
+Passing `trust_remote_code=True` will be mandatory to load this dataset from the next major release of `datasets`.
+  warnings.warn(
+[decontam] hatespeech_pt: 5670 itens carregados de hate_speech_portuguese
+[decontam] mtbench_pt: 54 itens carregados de bench/mtbench_pt/questions.jsonl
+[decontam] ifeval_pt: 36 itens carregados de bench/ifeval_pt/prompts.jsonl
+[decontam] safety_heldout: 218 itens carregados de bench/safety_pt/heldout_v2.jsonl
+[decontam] overrefusal: 184 itens carregados de bench/overrefusal_pt/prompts_v2.jsonl
+[audit] lendo 83 linhas de treino do arquivo...
+[audit] 73 achados a auditar
+================================================================================
+
+--- bluex_pt::bluex_pt_440 (linhas de treino: [567]) ---
+[BENCHMARK] A crise levaria o último governo da ditadura, chefiado pelo
+general João Figueiredo (1979-85), a tomar medidas
+drásticas. O objetivo inicial era deter a depreciação da
+moeda nacional, incentivar as exportações e fazer frente
+ao aumento do deficit em conta corrente. Assim, a moeda
+foi desvalorizada em 30% no final de 1979. A medida
+acentuou a desaceleração econômica, o descontrole
+inflacionário e o desarranjo nas contas públicas. Em 1980,
+a inflação batia a simbólica marca de 100% ao ano e em
+198
+  [TREINO linha 567] Dada a consulta de busca e a passagem abaixo, a passagem é relevante para a consulta? Responda apenas Sim ou Não. Consulta: Por que os anos de 80 são considerados a década perdida no Brasil
+
+Passagem: d) A chamada década perdida no Brasil foi marcada por grave crise econômica, pela transição para o regime democrático, pela gradual normalização das instituições políticas próprias da democracia, pelo fortalecimento dos movimentos sociais e civis e pela efervescência cultural. PRÓXIMA QUESTÃO: - UN
+  [N-GRAMA COLIDIDO] brasil foi marcada por grave crise econômica pela transição para o regime democrático | gradual normalização das instituições políticas próprias da democracia pelo fortalecimento dos movimentos sociais | da democracia pelo fortalecimento dos movimentos sociais e civis e pela efervescência cultural
+--------------------------------------------------------------------------------
+
+--- bluex_pt::bluex_pt_441 (linhas de treino: [567]) ---
+[BENCHMARK] Antes de Copérnico, Kepler e Galileu, os cosmólogos
+elaboravam sistemas que representavam os corpos
+celestes por meio de esferas encaixadas umas nas outras,
+propostas e desenvolvidas por Eudoxo e Aristóteles, de
+modo a distinguir os mundos celeste e terrestre. É nesse
+contexto, caracterizado pela tese de que o cosmo é
+composto de dois mundos distintos (céu e Terra), e pelo
+axioma platônico, que deve ser entendido o conteúdo da
+carta de Kepler (1604). Ele apresenta uma etapa do
+processo de rompim
+  [TREINO linha 567] Dada a consulta de busca e a passagem abaixo, a passagem é relevante para a consulta? Responda apenas Sim ou Não. Consulta: Por que os anos de 80 são considerados a década perdida no Brasil
+
+Passagem: d) A chamada década perdida no Brasil foi marcada por grave crise econômica, pela transição para o regime democrático, pela gradual normalização das instituições políticas próprias da democracia, pelo fortalecimento dos movimentos sociais e civis e pela efervescência cultural. PRÓXIMA QUESTÃO: - UN
+  [N-GRAMA COLIDIDO] sistemas que representavam os corpos celestes por meio de esferas encaixadas umas nas | kepler e galileu os cosmólogos elaboravam sistemas que representavam os corpos celestes por | que representavam os corpos celestes por meio de esferas encaixadas umas nas outras
+--------------------------------------------------------------------------------
+
+--- enem_pt::enem_pt_653 (linhas de treino: [1568]) ---
+[BENCHMARK] O correr da vida embrulha tudo. A vida é assim: esquenta e esfria, aperta e daí afrouxa, sossega e depois desinquieta. O que ela quer da gente é coragem. ROSA, J. G. Grande sertão: veredas. Rio de Janeiro: Nova Fronteira, 1986. 
+No romance Grande sertão: veredas, o protagonista Riobaldo narra sua trajetória de jagunço. A leitura do trecho permite identificar que o desabafo de Riobaldo se aproxima de um(a)  diário, por trazer lembranças pessoais.  fábula, por apresentar uma lição de moral.  notíc
+  [TREINO linha 1568] <context>
+A poesia de um grande nome da literatura brasileira Versículo do Dia Veja passagens da Bíblia que vão te fazer pensar e refletir Este mundo é muito misturado Guimarães Rosa Que isso foi o que sempre me invocou, o senhor sabe: eu careço de que o bom seja bom e o ruim ruim, que dum lado esteja o preto e do outro o branco, que o feio fique bem apartado do bonito e a alegria longe da tristeza! Quero os todos pastos demarcados... Como é que posso com este mundo? Este mundo é muito misturado
+  [N-GRAMA COLIDIDO] aperta e daí afrouxa sossega e depois desinquieta o que ela quer da | tudo a vida é assim esquenta e esfria aperta e daí afrouxa sossega | esquenta e esfria aperta e daí afrouxa sossega e depois desinquieta o que
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_1359 (linhas de treino: [4672, 240863]) ---
+[BENCHMARK] Determinado contribuinte verificou a existência de débitos vencidos de Imposto sobre a Propriedade Predial e Territorial Urbana (IPTU) e da taxa de coleta de lixo com o Município M.  Os dois tributos são relativos ao ano-calendário de 2012 e se referem ao imóvel onde reside. O contribuinte pagou ao Município M montante insuficiente para a quitação de ambos os tributos.
+Diante de tais débitos, a autoridade administrativa municipal que recebeu o pagamento determinará, primeiramente, a imputação do
+  [TREINO linha 4672] Segundo o contexto fornecido, qual foi o documento publicado no DODF de 30/03/2021 que trata especificamente sobre a prorrogação do prazo para adesão ao programa REFISDF 2020?
+
+<context>
+DODF de 30/03/2021. Dispõe sobre os procedimentos para o pagamento do Imposto sobre a Propriedade Predial e Territorial Urbana - IPTU e da Taxa de Limpeza Pública - TLP, referentes ao exercício de 2021, conforme disposto na portaria nº 68, de 12 de março de 2021. Portaria Conjunta nº 5/2021 SEEC/PGDF , DODF de 3
+  [N-GRAMA COLIDIDO] imposto sobre a propriedade predial e territorial urbana iptu e da taxa de
+  [TREINO linha 240863] <context>
+Homologa o Convênio ICMS 15/21, de 26 de fevereiro de 2021, que autoriza os Estados e o Distrito Federal a concederem isenção do ICMS nas importações e operações com vacinas e insumos destinados à sua fabricação para o enfrentamento à pandemia causada pelo novo agente do coronavírus – SARS-CoV-2. Decreto Legislativo nº 2312/2021 , DODF de 22/04/2021. Homologa os incisos que especifica, do Convênio ICMS 28/21, de 12 de março de 2021, que prorroga disposições de convênios que concedem be
+  [N-GRAMA COLIDIDO] imposto sobre a propriedade predial e territorial urbana iptu e da taxa de
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_1283 (linhas de treino: [5038, 33304, 36131, 42724, 72841, 82979, 90611, 96665, 96735, 119133, 127829, 147385, 204967, 216603, 228511, 231535, 236933, 244496, 248023, 278957, 286947]) ---
+[BENCHMARK] Em dezembro de 2006, foi publicada a Lei Complementar nº 123, que instituiu o Estatuto Nacional da Microempresa e da Empresa de Pequeno Porte, e criou novo regime de tributação simplificada, abrangendo, além dos impostos e contribuições federais, o Imposto sobre Operações Relativas à Circulação de Mercadorias e sobre Prestações de Serviços de Transporte Interestadual e Intermunicipal e de Comunicação (ICMS), bem como o Imposto sobre Serviços de Qualquer Natureza (ISS).
+Sobre a hipótese, assinale
+  [TREINO linha 5038] <context>
+Portaria nº 348/2021 , DODF de 28/12/2021. Altera a Portaria nº 191, de 11 de setembro de 2013, que dispõe sobre o Manifesto Eletrônico de Documentos Fiscais - MDF-e, modelo 58, de que trata o inciso XXXI do art. 79 do Decreto nº 18.955, de 22 de dezembro de 1997, e dá outras providências. Portaria nº 339/2021 , DODF de 28/12/2021. Altera a Portaria nº 386, de 27 de setembro de 1999, que dispõe sobre regime de substituição tributária nas operações que destinem mercadorias a revendedore
+  [N-GRAMA COLIDIDO] mercadorias e sobre prestações de serviços de transporte interestadual e intermunicipal e de | à circulação de mercadorias e sobre prestações de serviços de transporte interestadual e | operações relativas à circulação de mercadorias e sobre prestações de serviços de transporte
+  [TREINO linha 33304] Segundo o contexto fornecido, qual foi a data de publicação no Diário Oficial do Distrito Federal (DODF) dos documentos relacionados às mudanças na lei referentes ao imposto sobre propriedade de veículos automotores e aos ajustes nas regras de credenciamento para o recebimento de comunicações eletrônicas?
+
+<context>
+Altera a Lei nº 7.431, de 17 de dezembro de 1985, que institui no Distrito Federal o Imposto sobre a Propriedade de Veículos Automotores e dá outras providências. Decreto nº 40337/20
+  [N-GRAMA COLIDIDO] mercadorias e sobre prestações de serviços de transporte interestadual e intermunicipal e de | à circulação de mercadorias e sobre prestações de serviços de transporte interestadual e | operações relativas à circulação de mercadorias e sobre prestações de serviços de transporte
+  [TREINO linha 36131] Qual foi a data de publicação no Diário Oficial do Distrito Federal (DODF) da lei ordinária do DF nº 6578/2020?
+
+<context>
+DODF de 27/05/2020. Dispõe sobre as diretrizes orçamentárias para o exercício financeiro de 2020 e dá outras providências. Ordem de Serviço nº 8/2020 COFIT , DODF de 26/05/2020. Altera a Ordem de Serviço COFIT nº 02/2019. Lei Ordinária do DF nº 6596/2020 , DODF de 26/05/2020. Altera a Lei nº 6.352, de 7 de agosto de 2019, que dispõe sobre as diretrizes orçamentárias para o e
+  [N-GRAMA COLIDIDO] mercadorias e sobre prestações de serviços de transporte interestadual e intermunicipal e de | à circulação de mercadorias e sobre prestações de serviços de transporte interestadual e | operações relativas à circulação de mercadorias e sobre prestações de serviços de transporte
+  [TREINO linha 42724] <context>
+Altera a Instrução Normativa SUREC/SEF/SEEC nº 16, de 14 de outubro de 2019, que disciplina a restituição parcial e a complementação do valor do imposto sobre Operações Relativas à Circulação de Mercadorias e sobre Prestações de Serviços de Transporte Interestadual e Intermunicipal e de Comunicação - ICMS, pago no regime de substituição tributária para frente sempre que a base de cálculo efetiva da operação for diversa da presumida. Lei Ordinária do DF nº 6826/2021 , DODF de 13/04/2021
+  [N-GRAMA COLIDIDO] mercadorias e sobre prestações de serviços de transporte interestadual e intermunicipal e de | à circulação de mercadorias e sobre prestações de serviços de transporte interestadual e | operações relativas à circulação de mercadorias e sobre prestações de serviços de transporte
+  [TREINO linha 72841] <context>
+Altera o Decreto nº 34.063, de 19 de dezembro de 2012, que fixa critérios para atribuir a contribuinte a condição de substituto tributário em operações com os produtos constantes no Caderno I do Anexo IV do Decreto nº 18.955, de 22 de dezembro de 1997. Decreto nº 40857/2020 , DODF de 05/06/2020. Introduz alterações no Decreto nº 18.955, de 22 de dezembro de 1997, que regulamenta o Imposto sobre Operações Relativas à Circulação de Mercadorias e sobre Prestações de Serviços de Transporte
+  [N-GRAMA COLIDIDO] mercadorias e sobre prestações de serviços de transporte interestadual e intermunicipal e de | à circulação de mercadorias e sobre prestações de serviços de transporte interestadual e | operações relativas à circulação de mercadorias e sobre prestações de serviços de transporte
+  [TREINO linha 82979] Qual foi a data de publicação no Diário Oficial do Distrito Federal (DODF) da Portaria nº 195/2019, que alterou os Anexos I e II da Portaria nº 155 de 2019?
+
+<context>
+Altera os Anexos I e II à Portaria nº 155, de 26 de abril de 2019, que fixa preço de venda final a consumidor para fins de base de cálculo de substituição tributária do ICMS nas operações com os produtos constantes do item 3 do Caderno I do Anexo IV ao Decreto nº 18.955 - RICMS, de 22 de dezembro de 1997. Portaria nº 195/2019 , DO
+  [N-GRAMA COLIDIDO] mercadorias e sobre prestações de serviços de transporte interestadual e intermunicipal e de | à circulação de mercadorias e sobre prestações de serviços de transporte interestadual e | operações relativas à circulação de mercadorias e sobre prestações de serviços de transporte
+  [TREINO linha 90611] Qual foi a data de publicação no Diário Oficial do Distrito Federal (DODF) da Portaria nº 109/2022, que trata dos procedimentos para a apuração mensal do ICMS pelo regime especial definido no artigo 320-A do Decreto nº 18.955?
+
+<context>
+Estabelece critérios para fruição do benefício fiscal previsto no item 57 do Caderno II do Anexo I do Decreto nº 18.955, de 22 de dezembro de 1997. Portaria nº 102/2022 , DODF de 31/03/2022. Dispõe sobre os procedimentos a serem adotados pelos contribuintes que 
+  [N-GRAMA COLIDIDO] mercadorias e sobre prestações de serviços de transporte interestadual e intermunicipal e de | à circulação de mercadorias e sobre prestações de serviços de transporte interestadual e | operações relativas à circulação de mercadorias e sobre prestações de serviços de transporte
+  [TREINO linha 96665] Qual foi a data de publicação no Diário Oficial do Distrito Federal (DODF) daquele decreto que alterou o Decreto nº 41.463, de 12 de novembro de 2020, que regulamentava o Programa de Incentivo à Regularização Fiscal do Distrito Federal – REFIS-DF 2020?
+
+<context>
+Altera o Decreto nº 33.239, de 4 de outubro de 2011, que regulamenta a Lei Complementar nº 833, de 27 de maio de 2011, que dispõe sobre o parcelamento dos créditos de natureza tributária e não tributária de titularidade do Distrito Fede
+  [N-GRAMA COLIDIDO] mercadorias e sobre prestações de serviços de transporte interestadual e intermunicipal e de | à circulação de mercadorias e sobre prestações de serviços de transporte interestadual e | operações relativas à circulação de mercadorias e sobre prestações de serviços de transporte
+  [TREINO linha 96735] Qual foi a data de publicação no Diário Oficial do Distrito Federal (DODF) referente ao lançamento do imposto sobre serviços (ISS), conforme mencionado nos documentos oficiais do ano de 2022?
+
+<context>
+Altera o Decreto nº 18.955, de 22 de dezembro de 1997, que regulamenta o Imposto sobre Operações Relativas à Circulação de Mercadorias e sobre Prestações de Serviços de Transporte Interestadual e Intermunicipal e de Comunicação – ICMS, para implementar na legislação distrital o Ajuste SINIEF 9, d
+  [N-GRAMA COLIDIDO] mercadorias e sobre prestações de serviços de transporte interestadual e intermunicipal e de | à circulação de mercadorias e sobre prestações de serviços de transporte interestadual e | operações relativas à circulação de mercadorias e sobre prestações de serviços de transporte
+  [TREINO linha 119133] Qual decreto alterou o prazo referente ao artigo 74, inciso VII, do Decreto nº 18.955, de 22 de dezembro de 1997, conforme mencionado no DODF de 09/10/2020?
+
+<context>
+DODF de 09/10/2020. Altera, para os casos que especifica, o prazo de que trata o inciso VII do artigo 74, do Decreto nº 18.955, de 22 de dezembro de 1997, que regulamenta o Imposto sobre Operações Relativas à Circulação de Mercadorias e sobre Prestações de Serviços de Transporte Interestadual e Intermunicipal e de Comunicação - IC
+  [N-GRAMA COLIDIDO] mercadorias e sobre prestações de serviços de transporte interestadual e intermunicipal e de | à circulação de mercadorias e sobre prestações de serviços de transporte interestadual e | operações relativas à circulação de mercadorias e sobre prestações de serviços de transporte
+  [TREINO linha 127829] <context>
+Altera a Portaria nº 147, de 26 de maio de 2021, que fixa preço de venda final a consumidor para fins de base de cálculo de substituição tributária do ICMS nas operações com os produtos constantes do item 3 do Caderno I do Anexo IV do Decreto nº 18.955, de 22 de dezembro de 1997, que regulamenta o Imposto sobre Operações Relativas à Circulação de Mercadorias e sobre Prestações de Serviços de Transporte Interestadual e Intermunicipal e de Comunicação - ICMS. Portaria nº 346/2021 , DODF 
+  [N-GRAMA COLIDIDO] mercadorias e sobre prestações de serviços de transporte interestadual e intermunicipal e de | à circulação de mercadorias e sobre prestações de serviços de transporte interestadual e | operações relativas à circulação de mercadorias e sobre prestações de serviços de transporte
+  [TREINO linha 147385] Quais foram os números dos decretos publicados no Diário Oficial do Distrito Federal (DODF) em 27 de dezembro de 2018, que alteraram o Decreto nº 18.955 de 22 de dezembro de 1997?
+
+<context>
+Estabelece critérios para a convalidação do benefício econômico, nos termos do Programa de Apoio ao Empreendimento Produtivo do Distrito Federal - Pró-DF II, mediante assinatura de contrato de concessão de direito real de uso com opção de compra junto à Agência de Desenvolvimento do Distrito Federal - Terrac
+  [N-GRAMA COLIDIDO] mercadorias e sobre prestações de serviços de transporte interestadual e intermunicipal e de | à circulação de mercadorias e sobre prestações de serviços de transporte interestadual e | operações relativas à circulação de mercadorias e sobre prestações de serviços de transporte
+  [TREINO linha 204967] <context>
+Altera o Decreto nº 18.955, de 22 de dezembro de 1997, que regulamenta o Imposto sobre Operações Relativas à Circulação de Mercadorias e sobre Prestações de Serviços de Transporte Interestadual e Intermunicipal e de Comunicação - ICMS. Decreto nº 39383/2018 , DODF de 17/10/2018. Altera o Decreto nº 18.955, de 22 de dezembro de 1997, que regulamenta o Imposto sobre Operações Relativas à Circulação de Mercadorias e sobre Prestações de Serviços de Transporte Interestadual e Intermunicipal
+  [N-GRAMA COLIDIDO] mercadorias e sobre prestações de serviços de transporte interestadual e intermunicipal e de | à circulação de mercadorias e sobre prestações de serviços de transporte interestadual e | operações relativas à circulação de mercadorias e sobre prestações de serviços de transporte
+  [TREINO linha 216603] Qual foi o documento legal mais recentemente revogado ou alterado conforme mencionado no Diário Oficial do Distrito Federal (DODF) entre os dias 5 e 14 de setembro de 2018?
+
+<context>
+DODF de 14/09/2018. Revoga o Decreto nº 39.334, de 12 de setembro de 2018 e repristina o §7º do art. 10 do Decreto nº 29.018, de 02 de maio de 2008. Decreto nº 39334/2018 , DODF de 13/09/2018. Revoga o §7º do art. 10 do Decreto nº 29.018/2008, que dispõe sobre o horário de funcionamento dos órgãos da administração 
+  [N-GRAMA COLIDIDO] mercadorias e sobre prestações de serviços de transporte interestadual e intermunicipal e de | à circulação de mercadorias e sobre prestações de serviços de transporte interestadual e | operações relativas à circulação de mercadorias e sobre prestações de serviços de transporte
+  [TREINO linha 228511] Qual foi o documento legal publicado no Diário Oficial do Distrito Federal (DODF) em 06/04/2021, que autorizou os cartórios de ofícios de notas e outras instituições específicas a emitirem o Documento de Arrecadação (DAR) para pagamentos relacionados ao ITBI e ITCD?
+
+<context>
+Autoriza cartórios de ofício de notas e instituições que especifica a emitir Documento de Arrecadação – DAR para pagamento do Imposto sobre a Transmissão Inter Vivos de Bens Imóveis por Natureza ou Acessão Física e de Dire
+  [N-GRAMA COLIDIDO] mercadorias e sobre prestações de serviços de transporte interestadual e intermunicipal e de | à circulação de mercadorias e sobre prestações de serviços de transporte interestadual e | operações relativas à circulação de mercadorias e sobre prestações de serviços de transporte
+  [TREINO linha 231535] Qual foi a data de publicação no Diário Oficial do Distrito Federal (DODF) da Portaria nº 59/2022, que regula a Lei nº 5.005 de 21 de dezembro de 2012?
+
+<context>
+Altera a Portaria nº 147, de 26 de maio de 2021, que fixa preço de venda final a consumidor para fins de base de cálculo do ICMS devido por substituição tributária nas operações com os produtos constantes do item 3 do Caderno I do Anexo IV ao Decreto nº 18.955, de 22 de dezembro de 1997, que regulamenta o Imposto sobre Operações Relati
+  [N-GRAMA COLIDIDO] mercadorias e sobre prestações de serviços de transporte interestadual e intermunicipal e de | à circulação de mercadorias e sobre prestações de serviços de transporte interestadual e | operações relativas à circulação de mercadorias e sobre prestações de serviços de transporte
+  [TREINO linha 236933] <context>
+Inclusão do frete na base de cálculo do ICMS e do ICMS-ST - ONCLICK As rotinas tributárias das empresas têm particularidades que devem ser observadas em cada situação. Uma das mais importante é a composição da base de cálculo do Imposto sobre operações relativas à Circulação de Mercadorias e sobre Prestações de Serviços (ICMS) e sua versão de substituição tributária (ICMS-ST). Nesse processo, é importante compreender a legitimidade da inclusão ou não do frete na base de cálculo do ICMS
+  [N-GRAMA COLIDIDO] imposto sobre operações relativas à circulação de mercadorias e sobre prestações de serviços
+  [TREINO linha 244496] <context>
+Disciplina a restituição parcial e a complementação do valor do Imposto sobre Operações Relativas à Circulação de Mercadorias e sobre Prestações de Serviços de Transporte Interestadual e Intermunicipal e de Comunicação - ICMS, pago no regime de substituição tributária para frente sempre que a base de cálculo efetiva da operação for diversa da presumida. Ordem de Serviço nº 2/2019 COTRI , DODF de 14/10/2019. Altera o artigo 1º da Ordem de Serviço COTRI nº 01, de 11 de janeiro de 2018 e 
+  [N-GRAMA COLIDIDO] mercadorias e sobre prestações de serviços de transporte interestadual e intermunicipal e de | à circulação de mercadorias e sobre prestações de serviços de transporte interestadual e | operações relativas à circulação de mercadorias e sobre prestações de serviços de transporte
+  [TREINO linha 248023] Qual foi a data de publicação no Diário Oficial do Distrito Federal (DODF) das portarias mencionadas que alteram disposições relativas ao ICMS?
+
+<context>
+que regulamenta o Imposto sobre Operações Relativas à Circulação de Mercadorias e sobre Prestações de Serviços de Transporte Interestadual e Intermunicipal e de Comunicação - ICMS. Portaria nº 91/2022 , DODF de 28/03/2022. Altera a Portaria nº 191, de 11 de setembro de 2013, que dispõe sobre o Manifesto Eletrônico de Documentos Fiscais - MDF-e
+  [N-GRAMA COLIDIDO] mercadorias e sobre prestações de serviços de transporte interestadual e intermunicipal e de | à circulação de mercadorias e sobre prestações de serviços de transporte interestadual e | operações relativas à circulação de mercadorias e sobre prestações de serviços de transporte
+  [TREINO linha 278957] Quais foram os números dos decretos publicados no DODF de 07/01/2022 que alteraram o Decreto nº 18.955, de 22 de dezembro de 1997?
+
+<context>
+DODF de 07/01/2022. Altera o Decreto nº 18.955, de 22 de dezembro de 1997, que regulamenta o Imposto sobre Operações Relativas à Circulação de Mercadorias e sobre Prestações de Serviços de Transporte Interestadual e Intermunicipal e de Comunicação - ICMS. Decreto nº 42908/2022 , DODF de 07/01/2022. Altera o Decreto nº 18.955, de 22 de dezembro de 1997, que
+  [N-GRAMA COLIDIDO] mercadorias e sobre prestações de serviços de transporte interestadual e intermunicipal e de | à circulação de mercadorias e sobre prestações de serviços de transporte interestadual e | operações relativas à circulação de mercadorias e sobre prestações de serviços de transporte
+  [TREINO linha 286947] Qual foi a data publicação no Diário Oficial do Distrito Federal (DODF) tanto do Decreto nº 39483/2018 quanto do Edital nº 3/2018 GEPES/CCALT/SUREC?
+
+<context>
+Decreto nº 39483/2018 , DODF de 28/11/2018. Altera o Decreto nº 18.955, de 22 de dezembro de 1997, que regulamenta o Imposto sobre Operações Relativas à Circulação de Mercadorias e sobre Prestações de Serviços de Transporte Interestadual e Intermunicipal e de Comunicação - ICMS. Edital nº 3/2018 GEPES/CCALT/SUREC , DODF de 28/11/2018. TOR
+  [N-GRAMA COLIDIDO] mercadorias e sobre prestações de serviços de transporte interestadual e intermunicipal e de | à circulação de mercadorias e sobre prestações de serviços de transporte interestadual e | operações relativas à circulação de mercadorias e sobre prestações de serviços de transporte
+--------------------------------------------------------------------------------
+
+--- enem_pt::enem_pt_364 (linhas de treino: [7044]) ---
+[BENCHMARK] A soma do tempo gasto por todos os navios de carga na espera para atracar no porto de Santos é igual a 11 anos — isso, contando somente o intervalo de janeiro a outubro de 2011. O problema não foi registrado somente neste ano. Desde 2006 a perda de tempo supera uma década. Folha de S. Paulo, 25 dez. 2011 (adaptado). 
+A situação descrita gera consequências em cadeia, tanto para a produção quanto para o transporte. No que se refere à territorialização da produção no Brasil contemporâneo, uma dessa
+  [TREINO linha 7044] Dada a consulta de busca e a passagem abaixo, a passagem é relevante para a consulta? Responda apenas Sim ou Não. Consulta: Qual foi a importância da usina de Volta Redonda RJ para a industrialização brasileira?
+
+Passagem: b) dispersão dos serviços financeiros em função da busca de novos pontos de importação. c) redução da exportação de gêneros agrícolas em função da dificuldade para o escoamento. d) priorização do comércio com países vizinhos em função da existência de fronteiras terrestres. e)
+  [N-GRAMA COLIDIDO] indústria de alta tecnologia em função da concentração de investimentos na infraestrutura de | da indústria de alta tecnologia em função da concentração de investimentos na infraestrutura | priorização do comércio com países vizinhos em função da existência de fronteiras terrestres
+--------------------------------------------------------------------------------
+
+--- enem_pt::enem_pt_127 (linhas de treino: [7044]) ---
+[BENCHMARK] No dia 28 de fevereiro de 1985, era inaugurada a Estrada de Ferro Carajás, pertencente e diretamente operada pela Companhia Vale do Rio Doce (CVRD), na região Norte do país, ligando o interior ao principal porto da região, em São Luís. Por seus, aproximadamente, 900 quilômetros de linha, passam, hoje, 5 353 vagões e 100 locomotivas. Disponível em: http://www.transportes.gov.br.Acesso em: 27 jul. 2010 (adaptado). 
+A ferrovia em questão é de extrema importância para a logística do setor primário d
+  [TREINO linha 7044] Dada a consulta de busca e a passagem abaixo, a passagem é relevante para a consulta? Responda apenas Sim ou Não. Consulta: Qual foi a importância da usina de Volta Redonda RJ para a industrialização brasileira?
+
+Passagem: b) dispersão dos serviços financeiros em função da busca de novos pontos de importação. c) redução da exportação de gêneros agrícolas em função da dificuldade para o escoamento. d) priorização do comércio com países vizinhos em função da existência de fronteiras terrestres. e)
+  [N-GRAMA COLIDIDO] gov br acesso em 27 jul 2010 adaptado a ferrovia em questão é | diretamente operada pela companhia vale do rio doce cvrd na região norte do | ferrovia em questão é de extrema importância para a logística do setor primário
+--------------------------------------------------------------------------------
+
+--- enem_pt::enem_pt_751 (linhas de treino: [22536]) ---
+[BENCHMARK] Perder a tramontana A expressão ideal para falar de desorientados e outras palavras de perder a cabeça É perder o norte, desorientar-se. Ao pé da letra, “perder a tramontana” significa deixar de ver a estrela polar, em italiano stella tramontana, situada do outro lado dos montes, que guiava os marinheiros antigos em suas viagens desbravadoras. Deixar de ver a tramontana era sinônimo de desorientação. Sim, porque, para eles, valia mais o céu estrelado que a terra. O Sul era região desconhecida, i
+  [TREINO linha 22536] Resolva o seguinte exercício de Português:
+
+(Enem 2015)
+
+Perder a tramontana
+
+A expressão ideal para falar de desorientados e outras palavras de perder a cabeça
+
+É perder o norte, desorientar-se. Ao pé da letra, “perder a tramontana” significa deixar de ver a estrela polar, em italiano stella tramontana, situada do outro lado dos montes, que guiava os marinheiros antigos em suas viagens desbravadoras.
+
+Deixar de ver a tramontana era sinônimo de desorientação. Sim, porque, para eles, valia mais o
+  [N-GRAMA COLIDIDO] perde a tramontana cotrim m língua portuguesa n 15 jan 2007 nesse texto | a estrela polar em italiano stella tramontana situada do outro lado dos montes | e entra em parafuso além de perder as estribeiras perde a tramontana cotrim
+--------------------------------------------------------------------------------
+
+--- enem_pt::enem_pt_205 (linhas de treino: [23826, 186702]) ---
+[BENCHMARK] O presidente Lula assinou, em 29 de setembro de 2008, decreto sobre o Novo Acordo Ortográfico da Língua Portuguesa. As novas regras afetam principalmente o uso dos acentos agudo e circunflexo, do trema e do hífen. Longe de um consenso, muita polêmica tem-se levantado em Macau e nos oito países de língua portuguesa: Brasil, Angola, Cabo Verde, Guiné-Bissau, Moçambique, Portugal, São Tomé e Príncipe e Timor Leste. 
+Comparando as diferentes opiniões sobre a validade de se estabelecer o acordo para 
+  [TREINO linha 23826] Escreva um resumo em português que capture o essencial do conteúdo abaixo.
+
+O secretário-geral adjunto do Fórum Macau Rodrigo Brum disse hoje à agência Lusa que o investimento chinês nos países lusófonos “terá aumentado mais de 100 vezes” desde 2003, ano em que Pequim criou aquele organismo.  “Só em termos de investimento desde a criação do Fórum [Macau], o volume de investimento chinês nestes oito países terá aumentado mais de cem vezes”, indicou o responsável, à margem da inauguração da Feira 
+  [N-GRAMA COLIDIDO] cabo verde guiné bissau moçambique portugal são tomé e príncipe e timor leste
+  [TREINO linha 186702] Resuma o texto a seguir em poucas frases. Diferente da primeira visita que fez ao continente, em novembro do ano passado, desta vez Lula viaja com uma comitiva menor, de cinco ministros e dois deputados, e leva menos promessas na bagagem. Dos 31 acordos de cooperação assinados naquela ocasião com os cinco países visitados, dois terços ainda não foram colocados em prática, segundo avaliação do Ministério das Relações Exteriores. Viajam com o presidente o ministro das Relações Exteriores, Celso Am
+  [N-GRAMA COLIDIDO] cabo verde guiné bissau moçambique portugal são tomé e príncipe e timor leste | angola cabo verde guiné bissau moçambique portugal são tomé e príncipe e timor | brasil angola cabo verde guiné bissau moçambique portugal são tomé e príncipe e
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_487 (linhas de treino: [27700, 188351]) ---
+[BENCHMARK] Joana D'Arc, beneficiária de pensão por morte deixada por ex-fiscal de rendas, falecido em 5/1/1999, ajuizou ação ordinária em face da União, alegando que determinado aumento remuneratório genérico concedido aos fiscais de renda em atividade não lhe teria sido repassado. Assim, isso teria violado a regra constitucional da paridade remuneratória entre ativos, inativos e pensionistas. Acerca de tal alegação, é correto afirmar que é manifestamente procedente, pois, embora a regra da paridade remune
+  [TREINO linha 27700] Explique de forma simples o que é essa decisão judicial e por que o recurso foi negado. Contexto: DECISÃO: Trata-se de agravo cujo objeto é decisão que negou seguimento a recurso extraordinário interposto contra acórdão da 1ª Turma Recursal do Tribunal Regional Federal da 4ª Região, que negou provimento ao pedido de pagamento de auxílio pré-escolar à ora recorrente nos mesmos moldes devidos aos servidores dos Tribunais Superiores. O recurso extraordinário busca fundamento no art. 102, III, a, da
+  [N-GRAMA COLIDIDO] poder judiciário que não tem função legislativa aumentar vencimentos de servidores públicos sob | não cabe ao poder judiciário que não tem função legislativa aumentar vencimentos de | cabe ao poder judiciário que não tem função legislativa aumentar vencimentos de servidores
+  [TREINO linha 188351] Explique de forma simples por que o pedido foi julgado improcedente. Contexto: SENTENÇA Vistos, etc... 01.Relatório dispensado. Incidência do artigo 38 da Lei no 9.099/95, aplicado subsidiariamente ao procedimento do juizado especial federal. I. FUNDAMENTAÇÃO 02.Não há necessidade de maiores digressões quanto à pretensão deduzida. É que, de há muito, o Supremo Tribunal Federal uniformizou seu posicionamento, expresso na súmula no 339, de que não cabe ao Poder Judiciário, que não tem função legis
+  [N-GRAMA COLIDIDO] não tem função legislativa aumentar vencimentos de servidores públicos sob fundamento de isonomia | que não tem função legislativa aumentar vencimentos de servidores públicos sob fundamento de | poder judiciário que não tem função legislativa aumentar vencimentos de servidores públicos sob
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_1794 (linhas de treino: [31476]) ---
+[BENCHMARK] Fábio, juiz de direito, foi vítima de um delito de calúnia, pois Jonas afirmou que ele teria praticado um crime de corrupção passiva. Diante disso, ingressou com queixa-crime contra o autor do fato. Jonas, então, opôs exceção da verdade.
+Nesta situação, será competente para julgar a exceção da verdade o Superior Tribunal de Justiça. o Tribunal de Justiça ao qual Fabio esteja vinculado. a Turma Recursal do Tribunal de Justiça ao qual Fabio esteja vinculado. o mesmo magistrado competente para julg
+  [TREINO linha 31476] Explique de forma simples quem é competente para julgar a exceção da verdade neste caso envolvendo Fábio e Jonas. Contexto: Fábio, juiz de direito, foi vítima de um delito de calúnia, pois Jonas afirmou que ele teria praticado um crime de corrupção passiva. Diante disso, ingressou com queixa-crime contra o autor do fato. Jonas, então, opôs exceção da verdade.
+Nesta situação, será competente para julgar a exceção da verdade
+Você configurou para não ver comentários antes de resolver uma questão. N
+  [N-GRAMA COLIDIDO] jonas então opôs exceção da verdade nesta situação será competente para julgar a | autor do fato jonas então opôs exceção da verdade nesta situação será competente | então opôs exceção da verdade nesta situação será competente para julgar a exceção
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_439 (linhas de treino: [31603]) ---
+[BENCHMARK] Joaquim, conduzindo seu veículo automotor (que se encontrava sem as placas de identificação) em velocidade superior à máxima permitida para a via – 50km/h –, pratica o crime de lesões corporais culposas em virtude da sua não observância ao dever objetivo de cuidado no trânsito. Com base na situação acima e à luz do Código de Trânsito Brasileiro, assinale a alternativa correta. Por se tratar a lesão corporal culposa praticada na direção de veículo automotor de uma infração de menor potencial ofen
+  [TREINO linha 31603] Segundo o contexto fornecido, qual artigo estabelece que ao condutor de veículos envolvidos em acidente de trânsito onde haja vítimas não será imposta prisão em flagrante, desde que ele forneça ajuda imediata?
+
+<context>
+V - quando a sua profissão ou atividade exigir cuidados especiais com o transporte de passageiros ou de carga; Ver tópico (3376 documentos) VI - utilizando veículo em que tenham sido adulterados equipamentos ou características que afetem a sua segurança ou o seu funcionamento de
+  [N-GRAMA COLIDIDO] ou proibição de se obter a permissão ou a habilitação para dirigir veículo | proibição de se obter a permissão ou a habilitação para dirigir veículo automotor | suspensão ou proibição de se obter a permissão ou a habilitação para dirigir
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_337 (linhas de treino: [40342]) ---
+[BENCHMARK] Suponha que tenha sido publicada no Diário Oficial da União, do dia 26 de abril de 2011 (terça-feira), uma lei federal, com o seguinte teor:
+“Lei GTI, de 25 de abril de 2011.
+Define o alcance dos direitos da personalidade previstos no Código Civil.
+O Presidente da República
+Faço saber que o Congresso Nacional decreta e eu sanciono a seguinte Lei:
+Art. 1º: Os direitos da personalidade previstos no Código Civil aplicáveis aos nascituros são estendidos aos embriões laboratoriais (in vitro), ainda n
+  [TREINO linha 40342] Resuma o conteúdo apresentado abaixo com clareza e precisão, em português.
+
+Lei 14.151/2021 (publicada em 13 de maio de 2021) afasta a gestante em período pandêmico  Foi publicada no DOU (Diário Oficial da União) na data de hoje (13/05/21) a Lei 14.151/2021. Trata-se de uma nova lei que determina o afastamento da empregada gestante durante o período de pandemia. No entanto, o afastamento diz respeito sobre as atividades presenciais.  Afastamento de suas atividades de trabalho presencial durante 
+  [N-GRAMA COLIDIDO] república faço saber que o congresso nacional decreta e eu sanciono a seguinte | saber que o congresso nacional decreta e eu sanciono a seguinte lei art | presidente da república faço saber que o congresso nacional decreta e eu sanciono
+--------------------------------------------------------------------------------
+
+--- bluex_pt::bluex_pt_583 (linhas de treino: [40746]) ---
+[BENCHMARK] Lâmpadas  de  luz  ultravioleta  (UV)  são  indicadas  para 
+higienização  e  esterilização  de  objetos  e  ambientes  em 
+razão do seu potencial germicida.
+Considere uma lâmpada UV de potência  P 100  W  que 
+funcione  por  Δt = 15  minutos   durante  o  processo  de 
+esterilização de um objeto. A energia elétrica consumida 
+pela lâmpada nesse processo é igual a  0,0066 kWh. 0,015 kWh. 0,025 kWh. 1,5 kWh.
+  [TREINO linha 40746] Dada a consulta de busca e a passagem abaixo, a passagem é relevante para a consulta? Responda apenas Sim ou Não. Consulta: Quantas placas são formadas pelos materiais condutores?
+
+Passagem: (Enem 2018) Muitos smartphones e tablets não precisam mais de teclas, uma vez que todos os comandos podem ser dados ao se pressionar a própria tela. Inicialmente essa tecnologia foi proporcionada por meio das telas resistivas, formadas basicamente por duas camadas de material condutor transparente que não se
+  [N-GRAMA COLIDIDO] potencial germicida considere uma lâmpada uv de potência p 100 w que funcione | 15 minutos durante o processo de esterilização de um objeto a energia elétrica | minutos durante o processo de esterilização de um objeto a energia elétrica consumida
+--------------------------------------------------------------------------------
+
+--- bluex_pt::bluex_pt_584 (linhas de treino: [40746]) ---
+[BENCHMARK] Lâmpadas  de  luz  ultravioleta  (UV)  são  indicadas  para 
+higienização  e  esterilização  de  objetos  e  ambientes  em 
+razão do seu potencial germicida.
+Em outro processo de esterilização, uma lâmpada UV de 
+potência  P = 60 W   funciona  sob  uma  diferença  de 
+potencial elétrico U = 100 V. A potência elétrica pode ser 
+expressa  também  em  kVA,  sendo 
+1 kVA = 1000 V x 1 A =1000 W. A  corrente  elétrica  i   do 
+circuito que alimenta a lâmpada é igual a  0,36 A. 0,60 A. 1,6 A. 3,6 A.
+  [TREINO linha 40746] Dada a consulta de busca e a passagem abaixo, a passagem é relevante para a consulta? Responda apenas Sim ou Não. Consulta: Quantas placas são formadas pelos materiais condutores?
+
+Passagem: (Enem 2018) Muitos smartphones e tablets não precisam mais de teclas, uma vez que todos os comandos podem ser dados ao se pressionar a própria tela. Inicialmente essa tecnologia foi proporcionada por meio das telas resistivas, formadas basicamente por duas camadas de material condutor transparente que não se
+  [N-GRAMA COLIDIDO] para higienização e esterilização de objetos e ambientes em razão do seu potencial | de luz ultravioleta uv são indicadas para higienização e esterilização de objetos e | higienização e esterilização de objetos e ambientes em razão do seu potencial germicida
+--------------------------------------------------------------------------------
+
+--- bluex_pt::bluex_pt_139 (linhas de treino: [46583]) ---
+[BENCHMARK] Depois de 20 anos na escola 
+Não é difícil aprender 
+Todas as manhas do seu jogo sujo 
+Não é assim que tem que ser 
+ 
+Vamos fazer nosso dever de casa 
+E aí então vocês vão ver  
+Suas crianças derrubando reis 
+Fazer comédia no cinema com as suas leis 
+ 
+Somos os filhos da revolução 
+Somos burgueses sem religião 
+Somos o futuro da nação 
+Geração Coca‐Cola. 
+Dado Villa‐Lobos e Renato Russo, Geração Coca‐Cola, 1984. 
+Esses versos remetem  ao  período  da  Campanha  das  Diretas  Já  e 
+apresentam es
+  [TREINO linha 46583] Dada a consulta de busca e a passagem abaixo, a passagem é relevante para a consulta? Responda apenas Sim ou Não. Consulta: Quais as etapas de distribuição da coca-cola?
+
+Passagem:  Mão-de-obra; Matéria prima Mercado consumidor; Estão distribuídas Infra-estrutura de desigualmente no mundo. Isto transporte; se deve às condições ou Rede de comunicação; fatores favoráveis que nem Incentivos fiscais; todos os lugares apresentam. Disponibilidade de água. 8. São empresas que produzem e distribu
+  [N-GRAMA COLIDIDO] somos os filhos da revolução somos burgueses sem religião somos o futuro da | revolução somos burgueses sem religião somos o futuro da nação geração coca cola | filhos da revolução somos burgueses sem religião somos o futuro da nação geração
+--------------------------------------------------------------------------------
+
+--- enem_pt::enem_pt_1108 (linhas de treino: [52234]) ---
+[BENCHMARK] Procuramos demonstrar que o desenvolvimento pode ser visto como um processo de expansão das liberdades reais que as pessoas desfrutam. O enfoque nas liberdades humanas contrasta com visões mais restritas de desenvolvimento, como as que identificam desenvolvimento com crescimento do Produto Nacional Bruto, ou industrialização. O crescimento do PNB pode ser muito importante como um meio de expandir as liberdades. Mas as liberdades dependem também de outros determinantes, como os serviços de educaç
+  [TREINO linha 52234] Qual é a visão do texto sobre o desenvolvimento e as liberdades humanas? Contexto: políticos | sociologado\npor sociologado em Questões ENEM Tags:2017, cidadania, cidadão, civis, desenvolvimento, direitos, enem, humano, liberdade, políticos, questão, questões, sociais, vestibular\n(Enem 2017) Procuramos demonstrar que o desenvolvimento pode ser visto como um processo de expansão das liberdades reais que as pessoas desfrutam. O enfoque nas liberdades humanas contrasta com visões mais restritas de
+  [N-GRAMA COLIDIDO] nacional bruto ou industrialização o crescimento do pnb pode ser muito importante como | humanas contrasta com visões mais restritas de desenvolvimento como as que identificam desenvolvimento | como um processo de expansão das liberdades reais que as pessoas desfrutam o
+--------------------------------------------------------------------------------
+
+--- enem_pt::enem_pt_18 (linhas de treino: [54151]) ---
+[BENCHMARK] O Sol representa uma fonte limpa e inesgotável de energia para o nosso planeta. Essa energia pode ser captada por aquecedores solares, armazenada e convertida posteriormente em trabalho útil. Considere determinada região cuja insolação — potência solar incidente na superfície da Terra — seja de 800 watts/m². Uma usina termossolar utiliza concentradores solares parabólicos que chegam a dezenas de quilômetros de extensão. Nesses coletores solares parabólicos, a luz refletida pela superfície parabó
+  [TREINO linha 54151] Explique de forma simples como a energia solar é capturada e utilizada. Contexto: O Sol representa uma fonte limpa e inesgotável de energia para o nosso planeta. Essa energia pode ser captada por aquecedores solares, armazenada e convertida posteriormente em trabalho útil. Considere determinada região cuja insolação — potência solar incidente na superfície da Terra — seja de 800 watts/m². A energia do Sol, que é limpa e renovável, pode ser captada usando aquecedores solares. Esses aquecedores pe
+  [N-GRAMA COLIDIDO] sol representa uma fonte limpa e inesgotável de energia para o nosso planeta | convertida posteriormente em trabalho útil considere determinada região cuja insolação potência solar incidente | de energia para o nosso planeta essa energia pode ser captada por aquecedores
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_1197 (linhas de treino: [55367]) ---
+[BENCHMARK] A história recente da república brasileira conta com capítulos autoritários e violentos. Para restituir o direito à memória e cessar a violência do silêncio e da desinformação, o Estado brasileiro aprovou a Lei n. 12.528/11 que instituiu, no âmbito da Casa Civil da Presidência da República, a Comissão Nacional da Verdade, como forma de realizar, no Brasil, a Justiça de Transição.
+Assinale a opção que apresenta o objetivo dessa Comissão. Investigar as atividades praticadas por grupos de oposição 
+  [TREINO linha 55367] <context>
+Puc/RJ (2013). A Comissão da Verdade, sancionada pela Presidente Dilma Roussef em 18 de novembro - Brainly.com.br adonisvas9851 12.09.2018 Geografia Ensino médio (secundário) respondido • verificado por especialistas Puc/RJ (2013). A Comissão da Verdade, sancionada pela Presidente Dilma Roussef em 18 de novembro de 2011, teve como objetivo principal apurar violações aos direitos hu-manos praticados entre 1946 e 1988, “a fim de efetivar o direito à memória e à verdade histórica e promov
+  [N-GRAMA COLIDIDO] 1988 a fim de efetivar o direito à memória e à verdade histórica | entre 1946 e 1988 a fim de efetivar o direito à memória e | e 1988 a fim de efetivar o direito à memória e à verdade
+--------------------------------------------------------------------------------
+
+--- assin2_rte_pt::assin2_rte_pt_1381 (linhas de treino: [57440]) ---
+[BENCHMARK] Homens jovens estão dançando na frente de algumas pessoas Dois homens estão fazendo um esquete engraçado com um boxeador na frente de uma multidão de pessoas
+  [TREINO linha 57440] Avalie a similaridade semântica entre as duas frases numa escala de 1 a 5. Frase 1: Os dois homens fizeram um esquete engraçado com um boxeador na frente de uma multidão de pessoas.
+Frase 2: Os rapazes estão dançando na frente das pessoas. 1.5
+  [N-GRAMA COLIDIDO] um esquete engraçado com um boxeador na frente de uma multidão de pessoas
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_317 (linhas de treino: [66060, 70057]) ---
+[BENCHMARK] A respeito da garantia constitucional do acesso ao Poder Judiciário, assinale a alternativa correta. O Poder Judiciário admitirá ações relativas à disciplina e às competições desportivas paralelamente às ações movidas nas instâncias da justiça desportiva. De acordo com posição consolidada do Supremo Tribunal Federal, não ofende a garantia de acesso ao Poder Judiciário a exigência de depósito prévio como requisito de admissibilidade de ação judicial na qual se pretenda discutir a exigibilidade de
+  [TREINO linha 66060] De acordo com o texto, por que o requerente argumenta que merece o benefício da justiça gratuita?
+
+<context>
+Versão ebook Art. 1. 196 Assim considerando que o prazo prescricional iniciou em data em que nasce o direito ao titular ou seja tem-se configurada a prescrição do objeto devendo ser sumariamente extinta a presente pretensão. . DA JUSTIÇA GRATUITA Ao entender equivocadamente que a renda declarada é incompatível com benefício pretendido pode-se concluir que o Respeitável magistrado criou no
+  [N-GRAMA COLIDIDO] aos poderes públicos em defesa de direitos ou contra ilegalidade ou abuso de | o direito de petição aos poderes públicos em defesa de direitos ou contra | direito de petição aos poderes públicos em defesa de direitos ou contra ilegalidade
+  [TREINO linha 70057] Dada a consulta de busca e a passagem abaixo, a passagem é relevante para a consulta? Responda apenas Sim ou Não. Consulta: Por que a legislação de um país é tão importante?
+
+Passagem: "Não existe causa que não seja urgente ou que não seja importante para as partes. Se existe uma ação proposta é porque um litígio foi instaurado e não se chegaram a um acordo. Assim, ainda que o processo seja prioritário, existem outros tão urgentes quanto esses e que também necessitam da especial atenção do magis
+  [N-GRAMA COLIDIDO] judicial e administrativo são assegurados a razoável duração do processo e os meios | todos no âmbito judicial e administrativo são assegurados a razoável duração do processo | no âmbito judicial e administrativo são assegurados a razoável duração do processo e
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_1120 (linhas de treino: [74962]) ---
+[BENCHMARK] Segundo o entendimento do STF, a taxa cobrada exclusivamente em razão dos serviços públicos de coleta, remoção e tratamento ou destinação de lixo ou resíduos provenientes de imóveis, é constitucional, por não violar o conceito constitucional de taxa. inconstitucional, por violar o conceito constitucional de taxa. constitucional, por não violar o conceito constitucional de taxa, mas ilegal por violar a definição de taxa contida no Código Tributário Nacional. inconstitucional, por violar o conceit
+  [TREINO linha 74962] Explique de forma simples o que está acontecendo nesta decisão judicial. Contexto: DECISÃO: As matérias veiculadas na presente sede recursal – discussão em torno da cobrança da taxa incidente, exclusivamente, sobre os serviços públicos de coleta, remoção e tratamento ou destinação de lixo ou resíduos sólidos e da constitucionalidade, ou não, do critério de progressividade das alíquotas do Imposto sobre a Propriedade Predial e Territorial Urbana (IPTU) instituído por legislação municipal editada 
+  [N-GRAMA COLIDIDO] serviços públicos de coleta remoção e tratamento ou destinação de lixo ou resíduos
+--------------------------------------------------------------------------------
+
+--- enem_pt::enem_pt_555 (linhas de treino: [76730, 79047, 83062, 186168, 224093, 273631]) ---
+[BENCHMARK] Art. 2º Considera-se criança, para os efeitos desta Lei, a pessoa até doze anos de idade incompletos, e adolescente aquela entre doze e dezoito anos de idade. [...] Art. 3º A criança e o adolescente gozam de todos os direitos fundamentais inerentes à pessoa humana, sem prejuízo da proteção integral de que trata esta Lei, assegurando-se-lhes, por lei ou por outros meios, todas as oportunidades e facilidades, a fim de lhes facultar o desenvolvimento físico, mental, moral, espiritual e social, em c
+  [TREINO linha 76730] Segundo o texto fornecido, qual lei federal garante a isenção de IPTU aos idosos e a partir de que ano essa lei foi implementada?
+
+<context>
+Isenção de IPTU: você sabia que idosos têm esse direito? Artigos e dicas para viver a melhor idade Descubra como conseguir a isenção de IPTU para idosos Depois dos 60 anos de idade, é direito nosso ter alguns benefícios. Entre os mais conhecidos, estão a prioridade no atendimento em estabelecimentos, a gratuidade do transporte coletivo, vagas exclusivas em 
+  [N-GRAMA COLIDIDO] todos os direitos fundamentais inerentes à pessoa humana sem prejuízo da proteção integral | fundamentais inerentes à pessoa humana sem prejuízo da proteção integral de que trata | inerentes à pessoa humana sem prejuízo da proteção integral de que trata esta
+  [TREINO linha 79047] <context>
+Os direitos da criança foram protegidos de forma especial pela Constituição Federal de 1988, que estabelece em seu artigo 227 ser “dever da família, da sociedade e do Estado assegurar à criança, ao adolescente e ao jovem, com absoluta prioridade, o direito à vida, à saúde, à alimentação, à educação, ao lazer, à profissionalização, à cultura, à dignidade, ao respeito, à liberdade e à convivência familiar e comunitária, além de colocá-los a salvo de toda forma de negligência, discriminaç
+  [N-GRAMA COLIDIDO] profissionalização à cultura à dignidade ao respeito à liberdade e à convivência familiar | à profissionalização à cultura à dignidade ao respeito à liberdade e à convivência | lazer à profissionalização à cultura à dignidade ao respeito à liberdade e à
+  [TREINO linha 83062] <context>
+Art. 4º É dever da família, da comunidade, da sociedade em geral e do poder público assegurar, com absoluta prioridade, a efetivação dos direitos referentes à vida, à saúde, à alimentação, à educação, ao esporte, ao lazer, à profissionalização, à cultura, à dignidade, ao respeito, à liberdade e à convivência familiar e comunitária. Art. 5º Nenhuma criança ou adolescente será objeto de qualquer forma de negligência, discriminação, exploração, violência, crueldade e opressão, punido na f
+  [N-GRAMA COLIDIDO] esporte ao lazer à profissionalização à cultura à dignidade ao respeito à liberdade | alimentação à educação ao esporte ao lazer à profissionalização à cultura à dignidade | geral e do poder público assegurar com absoluta prioridade a efetivação dos direitos
+  [TREINO linha 186168] <context>
+Art. 6º – Na interpretação desta Lei levar-se-ão em conta os fins sociais a que ela se dirige, as exigências do bem comum, os direitos e deveres individuais e coletivos, e a condição peculiar da criança e do adolescente como pessoa em desenvolvimento. De outro norte, absoluta e “prioritariamente” a criança e o adolescente têm direito à saúde, à alimentação, à educação, ao lazer, à profissionalização, à cultura, à dignidade, ao respeito, à liberdade e à convivência familiar e comunitári
+  [N-GRAMA COLIDIDO] profissionalização à cultura à dignidade ao respeito à liberdade e à convivência familiar | à profissionalização à cultura à dignidade ao respeito à liberdade e à convivência | lazer à profissionalização à cultura à dignidade ao respeito à liberdade e à
+  [TREINO linha 224093] <context>
+Art. 227. É dever da família, da sociedade e do Estado assegurar à criança, ao adolescente e ao jovem, com absoluta prioridade, o direito à vida, à saúde, à alimentação, à educação, ao lazer, à profissionalização, à cultura, à dignidade, ao respeito, à liberdade e à convivência familiar e comunitária, além de colocá-los a salvo de toda forma de negligência, discriminação, exploração, violência, crueldade e opressão [2]. Por conta das disposições constitucionais, a Lei 8.069 /90 trouxe 
+  [N-GRAMA COLIDIDO] profissionalização à cultura à dignidade ao respeito à liberdade e à convivência familiar | à profissionalização à cultura à dignidade ao respeito à liberdade e à convivência | lazer à profissionalização à cultura à dignidade ao respeito à liberdade e à
+  [TREINO linha 273631] <context>
+Princípio do Melhor Interesse da Criança Princípios Constituição Federal de 1988 Princípio do Melhor Interesse da Criança Princípio do Melhor Interesse do Menor Estatuto da Criança e do Adolescente Direito Constitucional Princípio do Melhor Interesse da Criança COMENTAR Publicado por Daniele Freitas há 7 anos Extrai-se o Princípio do Melhor Interesse da Criança do artigo 227, caput, da Constituição Federal: Art. 227. É dever da família, da sociedade e do Estado assegurar à criança, ao 
+  [N-GRAMA COLIDIDO] lei assegurando se lhes por lei ou por outros meios todas as oportunidades | se lhes por lei ou por outros meios todas as oportunidades e facilidades | por lei ou por outros meios todas as oportunidades e facilidades a fim
+--------------------------------------------------------------------------------
+
+--- faquad_nli_pt::faquad_nli_pt_62 (linhas de treino: [83440]) ---
+[BENCHMARK] O que permite com que profissionais que não possuem educação superior compram o papel de analista de sistemas? O profissional geralmente possui conhecimento adquirido em faculdades de Sistemas de informação, Sistemas para Internet, Ciência da computação, Análise de sistemas, Engenharia da Computação, Engenharia de Software, Processamento de dados, Informática, Licenciatura em Computação ou outros cursos similares, mas a ausência de restrições para o exercício do cargo permite a profissionais cap
+  [TREINO linha 83440] <context>
+O profissional geralmente possui conhecimento adquirido em faculdades de Sistemas de informação, Ciência da computação, Análise de sistemas, Engenharia da Computação, Processamento de dados, Informática, Licenciatura em Computação e ou outros cursos similares, mas a ausência de restrições para o exercício do cargo permite que profissionais capacitados de outras áreas ou mesmo que não possuem educação superior cumprir este papel nas empresas. Como é uma ênfase, o foco e o núcleo de trab
+  [N-GRAMA COLIDIDO] ou outros cursos similares mas a ausência de restrições para o exercício do | cursos similares mas a ausência de restrições para o exercício do cargo permite | outros cursos similares mas a ausência de restrições para o exercício do cargo
+--------------------------------------------------------------------------------
+
+--- faquad_nli_pt::faquad_nli_pt_63 (linhas de treino: [83440]) ---
+[BENCHMARK] Para o que o analista de sistemas deve servir? O profissional geralmente possui conhecimento adquirido em faculdades de Sistemas de informação, Sistemas para Internet, Ciência da computação, Análise de sistemas, Engenharia da Computação, Engenharia de Software, Processamento de dados, Informática, Licenciatura em Computação ou outros cursos similares, mas a ausência de restrições para o exercício do cargo permite a profissionais capacitados de outras áreas ou mesmo que não possuem educação super
+  [TREINO linha 83440] <context>
+O profissional geralmente possui conhecimento adquirido em faculdades de Sistemas de informação, Ciência da computação, Análise de sistemas, Engenharia da Computação, Processamento de dados, Informática, Licenciatura em Computação e ou outros cursos similares, mas a ausência de restrições para o exercício do cargo permite que profissionais capacitados de outras áreas ou mesmo que não possuem educação superior cumprir este papel nas empresas. Como é uma ênfase, o foco e o núcleo de trab
+  [N-GRAMA COLIDIDO] ou outros cursos similares mas a ausência de restrições para o exercício do | cursos similares mas a ausência de restrições para o exercício do cargo permite | outros cursos similares mas a ausência de restrições para o exercício do cargo
+--------------------------------------------------------------------------------
+
+--- faquad_nli_pt::faquad_nli_pt_64 (linhas de treino: [83440]) ---
+[BENCHMARK] Por que o analista de sistemas deve traduzir a necessidade do usuário? O profissional geralmente possui conhecimento adquirido em faculdades de Sistemas de informação, Sistemas para Internet, Ciência da computação, Análise de sistemas, Engenharia da Computação, Engenharia de Software, Processamento de dados, Informática, Licenciatura em Computação ou outros cursos similares, mas a ausência de restrições para o exercício do cargo permite a profissionais capacitados de outras áreas ou mesmo que nã
+  [TREINO linha 83440] <context>
+O profissional geralmente possui conhecimento adquirido em faculdades de Sistemas de informação, Ciência da computação, Análise de sistemas, Engenharia da Computação, Processamento de dados, Informática, Licenciatura em Computação e ou outros cursos similares, mas a ausência de restrições para o exercício do cargo permite que profissionais capacitados de outras áreas ou mesmo que não possuem educação superior cumprir este papel nas empresas. Como é uma ênfase, o foco e o núcleo de trab
+  [N-GRAMA COLIDIDO] ou outros cursos similares mas a ausência de restrições para o exercício do | cursos similares mas a ausência de restrições para o exercício do cargo permite | outros cursos similares mas a ausência de restrições para o exercício do cargo
+--------------------------------------------------------------------------------
+
+--- faquad_nli_pt::faquad_nli_pt_65 (linhas de treino: [83440]) ---
+[BENCHMARK] Quem desenvolve o programa traduzido da necessidade do usuário pelo analista de sistemas? O profissional geralmente possui conhecimento adquirido em faculdades de Sistemas de informação, Sistemas para Internet, Ciência da computação, Análise de sistemas, Engenharia da Computação, Engenharia de Software, Processamento de dados, Informática, Licenciatura em Computação ou outros cursos similares, mas a ausência de restrições para o exercício do cargo permite a profissionais capacitados de outras ár
+  [TREINO linha 83440] <context>
+O profissional geralmente possui conhecimento adquirido em faculdades de Sistemas de informação, Ciência da computação, Análise de sistemas, Engenharia da Computação, Processamento de dados, Informática, Licenciatura em Computação e ou outros cursos similares, mas a ausência de restrições para o exercício do cargo permite que profissionais capacitados de outras áreas ou mesmo que não possuem educação superior cumprir este papel nas empresas. Como é uma ênfase, o foco e o núcleo de trab
+  [N-GRAMA COLIDIDO] ou outros cursos similares mas a ausência de restrições para o exercício do | cursos similares mas a ausência de restrições para o exercício do cargo permite | outros cursos similares mas a ausência de restrições para o exercício do cargo
+--------------------------------------------------------------------------------
+
+--- faquad_nli_pt::faquad_nli_pt_66 (linhas de treino: [83440]) ---
+[BENCHMARK] O que permite com que profissionais que não possuem educação superior compram o papel de analista de sistemas? Como é uma ênfase, o foco e o núcleo de trabalho está voltado para o processo de desenvolvimento de software, levando em conta a área tecnológica em que irá auxiliar.
+  [TREINO linha 83440] <context>
+O profissional geralmente possui conhecimento adquirido em faculdades de Sistemas de informação, Ciência da computação, Análise de sistemas, Engenharia da Computação, Processamento de dados, Informática, Licenciatura em Computação e ou outros cursos similares, mas a ausência de restrições para o exercício do cargo permite que profissionais capacitados de outras áreas ou mesmo que não possuem educação superior cumprir este papel nas empresas. Como é uma ênfase, o foco e o núcleo de trab
+  [N-GRAMA COLIDIDO] núcleo de trabalho está voltado para o processo de desenvolvimento de software levando | desenvolvimento de software levando em conta a área tecnológica em que irá auxiliar | uma ênfase o foco e o núcleo de trabalho está voltado para o
+--------------------------------------------------------------------------------
+
+--- faquad_nli_pt::faquad_nli_pt_67 (linhas de treino: [83440]) ---
+[BENCHMARK] Para o que o analista de sistemas deve servir? Como é uma ênfase, o foco e o núcleo de trabalho está voltado para o processo de desenvolvimento de software, levando em conta a área tecnológica em que irá auxiliar.
+  [TREINO linha 83440] <context>
+O profissional geralmente possui conhecimento adquirido em faculdades de Sistemas de informação, Ciência da computação, Análise de sistemas, Engenharia da Computação, Processamento de dados, Informática, Licenciatura em Computação e ou outros cursos similares, mas a ausência de restrições para o exercício do cargo permite que profissionais capacitados de outras áreas ou mesmo que não possuem educação superior cumprir este papel nas empresas. Como é uma ênfase, o foco e o núcleo de trab
+  [N-GRAMA COLIDIDO] núcleo de trabalho está voltado para o processo de desenvolvimento de software levando | desenvolvimento de software levando em conta a área tecnológica em que irá auxiliar | uma ênfase o foco e o núcleo de trabalho está voltado para o
+--------------------------------------------------------------------------------
+
+--- faquad_nli_pt::faquad_nli_pt_68 (linhas de treino: [83440]) ---
+[BENCHMARK] Por que o analista de sistemas deve traduzir a necessidade do usuário? Como é uma ênfase, o foco e o núcleo de trabalho está voltado para o processo de desenvolvimento de software, levando em conta a área tecnológica em que irá auxiliar.
+  [TREINO linha 83440] <context>
+O profissional geralmente possui conhecimento adquirido em faculdades de Sistemas de informação, Ciência da computação, Análise de sistemas, Engenharia da Computação, Processamento de dados, Informática, Licenciatura em Computação e ou outros cursos similares, mas a ausência de restrições para o exercício do cargo permite que profissionais capacitados de outras áreas ou mesmo que não possuem educação superior cumprir este papel nas empresas. Como é uma ênfase, o foco e o núcleo de trab
+  [N-GRAMA COLIDIDO] núcleo de trabalho está voltado para o processo de desenvolvimento de software levando | desenvolvimento de software levando em conta a área tecnológica em que irá auxiliar | uma ênfase o foco e o núcleo de trabalho está voltado para o
+--------------------------------------------------------------------------------
+
+--- faquad_nli_pt::faquad_nli_pt_69 (linhas de treino: [83440]) ---
+[BENCHMARK] Quem desenvolve o programa traduzido da necessidade do usuário pelo analista de sistemas? Como é uma ênfase, o foco e o núcleo de trabalho está voltado para o processo de desenvolvimento de software, levando em conta a área tecnológica em que irá auxiliar.
+  [TREINO linha 83440] <context>
+O profissional geralmente possui conhecimento adquirido em faculdades de Sistemas de informação, Ciência da computação, Análise de sistemas, Engenharia da Computação, Processamento de dados, Informática, Licenciatura em Computação e ou outros cursos similares, mas a ausência de restrições para o exercício do cargo permite que profissionais capacitados de outras áreas ou mesmo que não possuem educação superior cumprir este papel nas empresas. Como é uma ênfase, o foco e o núcleo de trab
+  [N-GRAMA COLIDIDO] núcleo de trabalho está voltado para o processo de desenvolvimento de software levando | desenvolvimento de software levando em conta a área tecnológica em que irá auxiliar | uma ênfase o foco e o núcleo de trabalho está voltado para o
+--------------------------------------------------------------------------------
+
+--- faquad_nli_pt::faquad_nli_pt_70 (linhas de treino: [83440]) ---
+[BENCHMARK] O que permite com que profissionais que não possuem educação superior compram o papel de analista de sistemas? O analista de sistemas deve servir como um tradutor entre as necessidades do usuário e o programa a ser desenvolvido pelo programador.
+  [TREINO linha 83440] <context>
+O profissional geralmente possui conhecimento adquirido em faculdades de Sistemas de informação, Ciência da computação, Análise de sistemas, Engenharia da Computação, Processamento de dados, Informática, Licenciatura em Computação e ou outros cursos similares, mas a ausência de restrições para o exercício do cargo permite que profissionais capacitados de outras áreas ou mesmo que não possuem educação superior cumprir este papel nas empresas. Como é uma ênfase, o foco e o núcleo de trab
+  [N-GRAMA COLIDIDO] como um tradutor entre as necessidades do usuário e o programa a ser | sistemas deve servir como um tradutor entre as necessidades do usuário e o | deve servir como um tradutor entre as necessidades do usuário e o programa
+--------------------------------------------------------------------------------
+
+--- faquad_nli_pt::faquad_nli_pt_71 (linhas de treino: [83440]) ---
+[BENCHMARK] Para o que o analista de sistemas deve servir? O analista de sistemas deve servir como um tradutor entre as necessidades do usuário e o programa a ser desenvolvido pelo programador.
+  [TREINO linha 83440] <context>
+O profissional geralmente possui conhecimento adquirido em faculdades de Sistemas de informação, Ciência da computação, Análise de sistemas, Engenharia da Computação, Processamento de dados, Informática, Licenciatura em Computação e ou outros cursos similares, mas a ausência de restrições para o exercício do cargo permite que profissionais capacitados de outras áreas ou mesmo que não possuem educação superior cumprir este papel nas empresas. Como é uma ênfase, o foco e o núcleo de trab
+  [N-GRAMA COLIDIDO] como um tradutor entre as necessidades do usuário e o programa a ser | sistemas deve servir como um tradutor entre as necessidades do usuário e o | deve servir como um tradutor entre as necessidades do usuário e o programa
+--------------------------------------------------------------------------------
+
+--- faquad_nli_pt::faquad_nli_pt_72 (linhas de treino: [83440]) ---
+[BENCHMARK] Por que o analista de sistemas deve traduzir a necessidade do usuário? O analista de sistemas deve servir como um tradutor entre as necessidades do usuário e o programa a ser desenvolvido pelo programador.
+  [TREINO linha 83440] <context>
+O profissional geralmente possui conhecimento adquirido em faculdades de Sistemas de informação, Ciência da computação, Análise de sistemas, Engenharia da Computação, Processamento de dados, Informática, Licenciatura em Computação e ou outros cursos similares, mas a ausência de restrições para o exercício do cargo permite que profissionais capacitados de outras áreas ou mesmo que não possuem educação superior cumprir este papel nas empresas. Como é uma ênfase, o foco e o núcleo de trab
+  [N-GRAMA COLIDIDO] como um tradutor entre as necessidades do usuário e o programa a ser | sistemas deve servir como um tradutor entre as necessidades do usuário e o | deve servir como um tradutor entre as necessidades do usuário e o programa
+--------------------------------------------------------------------------------
+
+--- faquad_nli_pt::faquad_nli_pt_73 (linhas de treino: [83440]) ---
+[BENCHMARK] Quem desenvolve o programa traduzido da necessidade do usuário pelo analista de sistemas? O analista de sistemas deve servir como um tradutor entre as necessidades do usuário e o programa a ser desenvolvido pelo programador.
+  [TREINO linha 83440] <context>
+O profissional geralmente possui conhecimento adquirido em faculdades de Sistemas de informação, Ciência da computação, Análise de sistemas, Engenharia da Computação, Processamento de dados, Informática, Licenciatura em Computação e ou outros cursos similares, mas a ausência de restrições para o exercício do cargo permite que profissionais capacitados de outras áreas ou mesmo que não possuem educação superior cumprir este papel nas empresas. Como é uma ênfase, o foco e o núcleo de trab
+  [N-GRAMA COLIDIDO] como um tradutor entre as necessidades do usuário e o programa a ser | sistemas deve servir como um tradutor entre as necessidades do usuário e o | deve servir como um tradutor entre as necessidades do usuário e o programa
+--------------------------------------------------------------------------------
+
+--- faquad_nli_pt::faquad_nli_pt_74 (linhas de treino: [83440]) ---
+[BENCHMARK] O que permite com que profissionais que não possuem educação superior compram o papel de analista de sistemas? Para isto, deve ter conhecimento abrangente da área de negócio na qual o sistema será desenvolvido, a fim de que possa implementar corretamente as regras de negócio.
+  [TREINO linha 83440] <context>
+O profissional geralmente possui conhecimento adquirido em faculdades de Sistemas de informação, Ciência da computação, Análise de sistemas, Engenharia da Computação, Processamento de dados, Informática, Licenciatura em Computação e ou outros cursos similares, mas a ausência de restrições para o exercício do cargo permite que profissionais capacitados de outras áreas ou mesmo que não possuem educação superior cumprir este papel nas empresas. Como é uma ênfase, o foco e o núcleo de trab
+  [N-GRAMA COLIDIDO] será desenvolvido a fim de que possa implementar corretamente as regras de negócio | de negócio na qual o sistema será desenvolvido a fim de que possa | o sistema será desenvolvido a fim de que possa implementar corretamente as regras
+--------------------------------------------------------------------------------
+
+--- faquad_nli_pt::faquad_nli_pt_75 (linhas de treino: [83440]) ---
+[BENCHMARK] Para o que o analista de sistemas deve servir? Para isto, deve ter conhecimento abrangente da área de negócio na qual o sistema será desenvolvido, a fim de que possa implementar corretamente as regras de negócio.
+  [TREINO linha 83440] <context>
+O profissional geralmente possui conhecimento adquirido em faculdades de Sistemas de informação, Ciência da computação, Análise de sistemas, Engenharia da Computação, Processamento de dados, Informática, Licenciatura em Computação e ou outros cursos similares, mas a ausência de restrições para o exercício do cargo permite que profissionais capacitados de outras áreas ou mesmo que não possuem educação superior cumprir este papel nas empresas. Como é uma ênfase, o foco e o núcleo de trab
+  [N-GRAMA COLIDIDO] será desenvolvido a fim de que possa implementar corretamente as regras de negócio | de negócio na qual o sistema será desenvolvido a fim de que possa | o sistema será desenvolvido a fim de que possa implementar corretamente as regras
+--------------------------------------------------------------------------------
+
+--- faquad_nli_pt::faquad_nli_pt_76 (linhas de treino: [83440]) ---
+[BENCHMARK] Por que o analista de sistemas deve traduzir a necessidade do usuário? Para isto, deve ter conhecimento abrangente da área de negócio na qual o sistema será desenvolvido, a fim de que possa implementar corretamente as regras de negócio.
+  [TREINO linha 83440] <context>
+O profissional geralmente possui conhecimento adquirido em faculdades de Sistemas de informação, Ciência da computação, Análise de sistemas, Engenharia da Computação, Processamento de dados, Informática, Licenciatura em Computação e ou outros cursos similares, mas a ausência de restrições para o exercício do cargo permite que profissionais capacitados de outras áreas ou mesmo que não possuem educação superior cumprir este papel nas empresas. Como é uma ênfase, o foco e o núcleo de trab
+  [N-GRAMA COLIDIDO] será desenvolvido a fim de que possa implementar corretamente as regras de negócio | de negócio na qual o sistema será desenvolvido a fim de que possa | o sistema será desenvolvido a fim de que possa implementar corretamente as regras
+--------------------------------------------------------------------------------
+
+--- faquad_nli_pt::faquad_nli_pt_77 (linhas de treino: [83440]) ---
+[BENCHMARK] Quem desenvolve o programa traduzido da necessidade do usuário pelo analista de sistemas? Para isto, deve ter conhecimento abrangente da área de negócio na qual o sistema será desenvolvido, a fim de que possa implementar corretamente as regras de negócio.
+  [TREINO linha 83440] <context>
+O profissional geralmente possui conhecimento adquirido em faculdades de Sistemas de informação, Ciência da computação, Análise de sistemas, Engenharia da Computação, Processamento de dados, Informática, Licenciatura em Computação e ou outros cursos similares, mas a ausência de restrições para o exercício do cargo permite que profissionais capacitados de outras áreas ou mesmo que não possuem educação superior cumprir este papel nas empresas. Como é uma ênfase, o foco e o núcleo de trab
+  [N-GRAMA COLIDIDO] será desenvolvido a fim de que possa implementar corretamente as regras de negócio | de negócio na qual o sistema será desenvolvido a fim de que possa | o sistema será desenvolvido a fim de que possa implementar corretamente as regras
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_2058 (linhas de treino: [91519, 261595]) ---
+[BENCHMARK] O povo maltratado em geral, e contrariamente ao que é justo, estará disposto em qualquer ocasião a livrar-se do peso que o esmaga.
+John Locke
+O Art. 1º, parágrafo único, da Constituição Federal de 1988 afirma que “todo o poder emana do povo, que o exerce por meio de representantes eleitos ou diretamente�?. Muitos autores associam tal disposição ao conceito de direito de resistência, um dos mais importantes da Filosofia do Direito, de John Locke.
+Assinale a opção que melhor expressa tal conceito,
+  [TREINO linha 91519] Dada a consulta de busca e a passagem abaixo, a passagem é relevante para a consulta? Responda apenas Sim ou Não. Consulta: Quando se realizou o plebiscito popular para definir o sistema político do Brasil?
+
+Passagem: Nos dizeres de Dirley da Cunha Jr, “o Estado Democrático de Direito, portanto, é o Estado Constitucional submetido à Constituição e aos valores humanos nela consagrados.” O princípio democrático é reforçado pelo parágrafo único do art. 1º da Constituição Federal. Segundo esse dispo
+  [N-GRAMA COLIDIDO] o poder emana do povo que o exerce por meio de representantes eleitos | poder emana do povo que o exerce por meio de representantes eleitos ou | emana do povo que o exerce por meio de representantes eleitos ou diretamente
+  [TREINO linha 261595] Dada a consulta de busca e a passagem abaixo, a passagem é relevante para a consulta? Responda apenas Sim ou Não. Consulta: Quando se realizou o plebiscito popular para definir o sistema político do Brasil?
+
+Passagem: Diferentes são as formas de participação e controle social em todos os ramos da administração pública e da política, dentre as quais podemos citar o direito de voto nas eleições, nos plebiscitos e referendos (CF, art. 14). Várias são as inovações no campo da democracia participativ
+  [N-GRAMA COLIDIDO] o poder emana do povo que o exerce por meio de representantes eleitos | poder emana do povo que o exerce por meio de representantes eleitos ou | emana do povo que o exerce por meio de representantes eleitos ou diretamente
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_352 (linhas de treino: [114512]) ---
+[BENCHMARK] O Imposto sobre Operações Relativas à Circulação de Mercadorias e sobre a Prestação de Serviços de Transporte Interestadual e Intermunicipal e de Comunicação tem seus princípios delineados na Constituição, que é complementada pela Lei Complementar 87/1996, com as alterações posteriores.
+A respeito desse imposto é correto afirmar que é autorizada a sua cobrança sobre bens importados do exterior por pessoa física que tenha intuito de comercializá-los, mas é vedada a sua incidência quando esses ben
+  [TREINO linha 114512] Explique de forma simples o que foi decidido no Recurso Extraordinário nº 582.461/SP. Contexto: DECISÃO RECURSO EXTRAORDINÁRIO – TAXA SELIC – DÉBITO TRIBUTÁRIO – PROVIMENTO. 1. O Tribunal, na sessão plenária de 18 de maio de 2011, apreciando o Recurso Extraordinário nº 582.461/SP, concluiu pela constitucionalidade da inclusão do valor do Imposto sobre Operações relativas à Circulação de Mercadorias e sobre a Prestação de Serviços de Transporte Interestadual, Intermunicipal e de Comunicação – ICM
+  [N-GRAMA COLIDIDO] operações relativas à circulação de mercadorias e sobre a prestação de serviços de | sobre operações relativas à circulação de mercadorias e sobre a prestação de serviços | à circulação de mercadorias e sobre a prestação de serviços de transporte interestadual
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_1351 (linhas de treino: [121897]) ---
+[BENCHMARK] O diretor de RH de uma multinacional da área de telecomunicações, em reunião corporativa, afirmou que o mundo globalizado vem produzindo grandes inovações, exigindo o reconhecimento de novas profissões desconhecidas até então. Feitas essas considerações, solicitou à diretoria que alterasse o quadro de cargos e funções da empresa, incluindo as seguintes profissões: gestor de mídias sociais, gerente de marketing digital e desenvolvedor de aplicativos móveis. O presidente da sociedade empresária, p
+  [TREINO linha 121897] <context>
+Normas constitucionais de eficácia contida: São normas que estão aptas a produzir todos os seus efeitos desde o momento da promulgação da Constituição, mas que podem ser restringidas por parte do Poder Público.Um exemplo clássico de norma de eficácia contida é o art. 5º, inciso XIII, da CF/88, segundo o qual “é livre o exercício de qualquer trabalho, ofício ou profissão, atendidas as qualificações profissionais que a lei estabelecer”. Características das normas constitucionais de eficá
+  [N-GRAMA COLIDIDO] o exercício de qualquer trabalho ofício ou profissão atendidas as qualificações profissionais que | de qualquer trabalho ofício ou profissão atendidas as qualificações profissionais que a lei | qualquer trabalho ofício ou profissão atendidas as qualificações profissionais que a lei estabelecer
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_1196 (linhas de treino: [126276]) ---
+[BENCHMARK] Em 2014, em pelo menos 24 Estados do Brasil, estavam cadastradas mais de 3.500 comunidades quilombolas. As comunidades quilombolas são grupos étnico-raciais, segundo critérios de autoatribuição, com trajetória histórica própria, dotados de relações territoriais específicas e com ancestralidade negra relacionada com a resistência à opressão histórica sofrida.
+O constituinte brasileiro reconheceu a identidade dos quilombolas e, especificamente, seu direito fundamental à expressão cultural e artíst
+  [TREINO linha 126276] <context>
+Etnia — De acordo com o artigo 2º do Decreto nº 4.887, de 20 de novembro de 2003, os quilombos são “grupos étnico-raciais segundo critérios de autoatribuição, com trajetória histórica própria, dotados de relações territoriais específicas, com presunção de ancestralidade negra relacionada com a resistência à opressão histórica sofrida”. As comunidades quilombolas no Brasil são múltiplas e variadas e se encontram distribuídas em todo o território nacional, tanto no campo quanto nas cidad
+  [N-GRAMA COLIDIDO] grupos étnico raciais segundo critérios de autoatribuição com trajetória histórica própria dotados de | raciais segundo critérios de autoatribuição com trajetória histórica própria dotados de relações territoriais | étnico raciais segundo critérios de autoatribuição com trajetória histórica própria dotados de relações
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_2068 (linhas de treino: [126276, 139781]) ---
+[BENCHMARK] Você, como advogada(o) que atua na defesa dos Direitos Humanos, foi chamada(o) para atuar em um caso em que há uma disputa pela terra entre produtores rurais e uma comunidade quilombola.
+Você sabe que, de acordo com o Decreto nº 4.887/03 do Governo Federal, “consideram-se remanescentes das comunidades dos quilombos, os grupos étnico-raciais, segundo critérios de auto-atribuição, com trajetória histórica própria, dotados de relações territoriais específicas, com presunção de ancestralidade negra 
+  [TREINO linha 126276] <context>
+Etnia — De acordo com o artigo 2º do Decreto nº 4.887, de 20 de novembro de 2003, os quilombos são “grupos étnico-raciais segundo critérios de autoatribuição, com trajetória histórica própria, dotados de relações territoriais específicas, com presunção de ancestralidade negra relacionada com a resistência à opressão histórica sofrida”. As comunidades quilombolas no Brasil são múltiplas e variadas e se encontram distribuídas em todo o território nacional, tanto no campo quanto nas cidad
+  [N-GRAMA COLIDIDO] histórica própria dotados de relações territoriais específicas com presunção de ancestralidade negra relacionada | própria dotados de relações territoriais específicas com presunção de ancestralidade negra relacionada com | territoriais específicas com presunção de ancestralidade negra relacionada com a resistência à opressão
+  [TREINO linha 139781] Explique de forma simples o que são os quilombos e como eles se formaram no Brasil. Contexto: Os quilombos estão localizados em pelo menos 24 estados brasileiros: Amazonas, Alagoas, Amapá, Bahia, Ceará, Espírito Santo, Goiás, Maranhão, Mato Grosso, Mato Grosso do Sul, Minas Gerais, Pará, Paraíba, Pernambuco, Paraná, Piauí, Rio de Janeiro, Rio Grande do Norte, Rio Grande do Sul, Rondônia, Santa Catarina, São Paulo, Sergipe e Tocantins. Os primeiros quilombos surgiram no período escravocrata, quan
+  [N-GRAMA COLIDIDO] histórica própria dotados de relações territoriais específicas com presunção de ancestralidade negra relacionada | própria dotados de relações territoriais específicas com presunção de ancestralidade negra relacionada com | territoriais específicas com presunção de ancestralidade negra relacionada com a resistência à opressão
+--------------------------------------------------------------------------------
+
+--- enem_pt::enem_pt_381 (linhas de treino: [130237]) ---
+[BENCHMARK] As plataformas ou crátons correspondem aos terrenos mais antigos e arrasados por muitas fases de erosão. Apresentam uma grande complexidade litológica, prevalecendo as rochas metamórficas muito antigas (Pré-Cambriano Médio e Inferior). Também ocorrem rochas intrusivas antigas e resíduos de rochas sedimentares. São três as áreas de plataforma de crátons no Brasil: a das Guianas, a Sul-Amazônica e a do São Francisco. ROSS, J. L. S. Geografia do Brasil. São Paulo: Edusp, 1998. 
+As regiões cratônica
+  [TREINO linha 130237] Dada a consulta de busca e a passagem abaixo, a passagem é relevante para a consulta? Responda apenas Sim ou Não. Consulta: Como podemos classificar o relevo brasileiro?
+
+Passagem: em sua extensão terrenos cristalinos ricos em reservas de petróleo e gás natural. e) Serem esculpidas pela ação do intemperismo físico, decorrente da variação de temperatura. 5. (UP) A respeito das estruturas e formas do relevo brasileiro, identifique as afirmativas a seguir como verdadeiras (V) ou falsas (F): (___) G
+  [N-GRAMA COLIDIDO] em sua extensão terrenos cristalinos ricos em reservas de petróleo e gás natural
+--------------------------------------------------------------------------------
+
+--- enem_pt::enem_pt_38 (linhas de treino: [148800]) ---
+[BENCHMARK] Segundo Aristóteles, “na cidade com o melhor conjunto de normas e naquela dotada de homens absolutamente justos, os cidadãos não devem viver uma vida de trabalho trivial ou de negócios — esses tipos de vida são desprezíveis e incompatíveis com as qualidades morais —, tampouco devem ser agricultores os aspirantes à cidadania, pois o lazer é indispensável ao desenvolvimento das qualidades morais e à prática das atividades políticas”. VAN ACKER, T. Grécia. A vida cotidiana na cidade-Estado. São Pau
+  [TREINO linha 148800] Dada a consulta de busca e a passagem abaixo, a passagem é relevante para a consulta? Responda apenas Sim ou Não. Consulta: No que se difere o civismo da cidadania?
+
+Passagem: são denominamos de forma independente. d) A Representativa é característica dos presidencialismos enquanto que a Participativa é característica das autocracias gregas. 7) (ENEM – 2009 adaptada) Segundo Aristóteles, “na cidade com o melhor conjunto de normas e na-quela dotada de homens absolutamente justos, os cidadãos não 
+  [N-GRAMA COLIDIDO] pois é condenável que os políticos de qualquer época fiquem entregues à ociosidade | tinha profundas conexões com a justiça razão pela qual o tempo livre dos | qual o tempo livre dos cidadãos deveria ser dedicado às atividades vinculadas aos
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_1591 (linhas de treino: [156927]) ---
+[BENCHMARK] Você, advogado, foi procurado por Maria. Esta relatou que era funcionária de uma sociedade empresária e seu empregador lhe disse que ela estava cotada para uma promoção, mas para tanto deveria entregar um laudo comprovando que não estava grávida. O empregador ainda afirmou que se soubesse, por meio de laudo médico, que ela havia feito algum procedimento que a impedisse de ter filhos, teria a certeza de que Maria estaria plenamente dedicada à sociedade empresária, o que seria muito favorável a su
+  [TREINO linha 156927] Qual convenção internacional foi citada no documento como tendo sido utilizada tanto pelo STF quanto pelo STJ em casos relacionados à proteção feminina em 2018?
+
+<context>
+Ou um Status de Emenda Constitucional, em que o tratado ocupa uma posição equivalente à Constituição Federal. Atualmente, apenas a Convenção Internacional sobre o Direito das Pessoas com Deficiência, de 2006, possui status constitucional no país. Exemplos de aplicação do Sistema Internacional de Proteção dos Direitos Humanos n
+  [N-GRAMA COLIDIDO] convenção sobre a eliminação de todas as formas de discriminação contra a mulher | da convenção sobre a eliminação de todas as formas de discriminação contra a
+--------------------------------------------------------------------------------
+
+--- enem_pt::enem_pt_584 (linhas de treino: [167187]) ---
+[BENCHMARK] Uma norma só deve pretender validez quando todos os que possam ser concernidos por ela cheguem (ou possam chegar), enquanto participantes de um discurso prático, a um acordo quanto à validade dessa norma. HABERMAS, J. Consciência moral e agir comunicativo. Rio de Janeiro: Tempo Brasileiro, 1989. 
+Segundo Habermas, a validez de uma norma deve ser estabelecida pelo(a)  liberdade humana, que consagra a vontade.  razão comunicativa, que requer um consenso.  conhecimento filosófico, que expressa a ve
+  [TREINO linha 167187] De acordo com Habermas, qual princípio garante a validez de uma norma social conforme mencionado na passagem do ENEM 2014?
+
+<context>
+Exercício Resolvido: A filosofia de Habermas | Descomplica Exercício Resolvido: A filosofia de Habermas Para resolver essa questão, leia um resumo sobre Habermas. 1. (ENEM 2014) “Uma norma só deve pretender validez quando todos os que possam ser concernidos por ela cheguem (ou possam chegar), enquanto participantes de um discurso prático, a um acordo quanto à vali
+  [N-GRAMA COLIDIDO] e agir comunicativo rio de janeiro tempo brasileiro 1989 segundo habermas a validez | participantes de um discurso prático a um acordo quanto à validade dessa norma | validade dessa norma habermas j consciência moral e agir comunicativo rio de janeiro
+--------------------------------------------------------------------------------
+
+--- enem_pt::enem_pt_1116 (linhas de treino: [168476]) ---
+[BENCHMARK] Art. 231. São reconhecidos aos índios sua organização social, costumes, línguas, crenças e tradições, e os direitos originários sobre as terras que tradicionalmente ocupam, competindo à União demarcá-las, proteger e fazer respeitar todos os seus bens. BRASIL. Constituição da República Federativa do Brasil de 1988. Disponível em: www.planalto.gov.br. Acesso em: 27 abr. 2017. 
+A persistência das reivindicações relativas à aplicação desse preceito normativo tem em vista a vinculação histórica funda
+  [TREINO linha 168476] Explique de forma simples o que o Artigo 231 da Constituição Brasileira garante aos indígenas. Contexto: Art. 231. São reconhecidos aos índios sua organização social, costumes, línguas, crenças e tradições, e os direitos originários sobre as terras que tradicionalmente ocupam, competindo à União demarcá-las, proteger e fazer respeitar todos os seus bens.
+BRASIL Constituição da República Federativa do Brasil de 1988 Disponível em www.planalto.gov.br Acesso em 27 abr 2017
+A persistência das reivin
+  [N-GRAMA COLIDIDO] e miscigenação racial sociedade e igualdade jurídica espaço e sobrevivência cultural progresso e | fazer respeitar todos os seus bens brasil constituição da república federativa do brasil | bens brasil constituição da república federativa do brasil de 1988 disponível em www
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_510 (linhas de treino: [168822]) ---
+[BENCHMARK] A respeito das debêntures, é correto afirmar que as debêntures da mesma série terão igual valor nominal e conferirão a seus titulares os mesmos direitos. o pagamento das debêntures sempre será estipulado em moeda nacional. a debênture não constitui valor mobiliário, sendo classificada tão somente como título de crédito. a companhia é obrigada a realizar a amortização das debêntures por meio de um único pagamento a seus titulares.
+  [TREINO linha 168822] <context>
+Art. 52. A companhia poderá emitir debêntures que conferirão aos seus titulares direito de crédito contra ela, nas condições constantes da escritura de emissão e, se houver, do certificado. (Redação dada pela Lei nº 10.303, de 2001) Ver tópico (2719 documentos) SEÇÃO I Direito dos Debenturistas Emissões e Séries Art. 53. A companhia poderá efetuar mais de uma emissão de debêntures, e cada emissão pode ser dividida em séries. Ver tópico (275 documentos) Parágrafo único. As debêntures da
+  [N-GRAMA COLIDIDO] debêntures da mesma série terão igual valor nominal e conferirão a seus titulares | série terão igual valor nominal e conferirão a seus titulares os mesmos direitos | mesma série terão igual valor nominal e conferirão a seus titulares os mesmos
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_1116 (linhas de treino: [170204]) ---
+[BENCHMARK] Considere a seguinte informação jurisprudencial: “Súmula Vinculante nº 25 do STF: É ilícita a prisão civil de depositário infiel, qualquer que seja a modalidade do depósito.” Os debates no STF que levaram à alteração de sua própria jurisprudência e à adoção da Súmula acima consagraram a prevalência do Pacto de São José da Costa Rica e de sua proibição de prisão civil (Artigo 7º, item 7, do Pacto).
+Assinale a opção que contém a tese majoritária que fundamentou a decisão do STF. A natureza supraco
+  [TREINO linha 170204] Explique de forma simples o que é a Súmula Vinculante nº 25 e o que ela significa. Contexto: DECISÃO: O Plenário do Supremo Tribunal Federal, após reconhecer, em processo anterior, a existência de repercussão geral da questão constitucional igualmente versada na presente causa, julgou o RE 562.051-RG/MT, Rel. Min. CEZAR PELUSO, nele proferindo decisão que torna acolhível a pretensão deduzida no recurso extraordinário a que se refere o presente agravo de instrumento. Em conseqüência do referido j
+  [N-GRAMA COLIDIDO] ilícita a prisão civil de depositário infiel qualquer que seja a modalidade do | a prisão civil de depositário infiel qualquer que seja a modalidade do depósito | é ilícita a prisão civil de depositário infiel qualquer que seja a modalidade
+--------------------------------------------------------------------------------
+
+--- bluex_pt::bluex_pt_136 (linhas de treino: [170551]) ---
+[BENCHMARK] A  chamada  "questão  trabalhista"  no  Brasil  foi  objeto  de 
+conflitos, debates e regulamentações entre os anos 1920 e 
+1946. Identifique uma das dimensões deste processo. O liberalismo oligárquico atribuiu ao Estado, por meio da 
+reforma de 1924, o papel de mediador entre o operariado 
+e o patronato. A Constituição de 1934 garantiu o direito à organização 
+sindical e abriu espaço para a proteção dos direitos dos 
+trabalhadores. O direito de greve e a regulamentação do salário mínimo 
+foram 
+  [TREINO linha 170551] Segundo o texto sobre a "questão trabalhista" no Brasil entre 1920-1946, qual das alternativas menciona uma conquista significativa estabelecida pela Consolidação das Leis do Trabalho em 1943?
+
+<context>
+FUVEST 2020: A chamada “questão trabalhista” no Brasil foi objeto de conflitos - INDAGAÇÃO FUVEST 2020: A chamada “questão trabalhista” no Brasil foi objeto de conflitos Redação 29/11/2019 FUVEST 2020 ( QUESTÃO 061 - V / 087 - K / 021 - Q / 027 - X / 005 - Z) FUVEST 2020: A chamada “questão trab
+  [N-GRAMA COLIDIDO] para a emergência de lideranças combativas ao obrigar todos os trabalhadores a se | foi objeto de conflitos debates e regulamentações entre os anos 1920 e 1946 | salário mínimo foram algumas das novidades previstas na consolidação das leis do trabalho
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_1046 (linhas de treino: [174578]) ---
+[BENCHMARK] João é parte em processo administrativo federal regulado pela Lei n. 9.784/1999, no qual foi proferida decisão que rejeitou sua pretensão. João pretende recorrer dessa decisão. Acerca do caso apresentado, e observando o disposto na lei citada, assinale a afirmativa correta. O recurso de João deverá ser dirigido diretamente à autoridade hierarquicamente superior à autoridade que proferiu a decisão. O prazo para interposição de recurso administrativo, salvo disposição legal específica, é de trinta
+  [TREINO linha 174578] <context>
+Parágrafo Único - Havendo justo receio de prejuízo de difícil ou incerta reparação decorrente da execução, a autoridade recorrida ou a imediatamente superior poderá, de ofício ou a pedido, dar efeito suspensivo ao recurso. Art. 62 Quando a norma legal não dispuser de outro modo, será competente para conhecer do recurso a autoridade imediatamente superior àquela que praticou o ato. Art. 63 Das decisões proferidas pelos dirigentes superiores das entidades da Administração Indireta, caber
+  [N-GRAMA COLIDIDO] a administração de rever de ofício o ato ilegal desde que não ocorrida
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_1031 (linhas de treino: [174792]) ---
+[BENCHMARK] Nos termos da Constituição Federal, assinale a alternativa que apresenta competência(s) do Superior Tribunal de Justiça. Processar e julgar, originariamente, os mandados de segurança contra ato do Comandante da Marinha. Julgar as ações contra o Conselho Nacional do Ministério Público. Julgar e processar, originariamente, litígio entre Estado estrangeiro ou organismo internacional e a União, os Estados, o Distrito Federal ou os Territórios. Julgar, mediante recurso, as causas decididas em única o
+  [TREINO linha 174792] Explique de forma simples por que o recurso extraordinário foi negado neste caso. Contexto: DECISÃO RECURSO EXTRAORDINÁRIO - INVIABILIDADE - ARTIGO 102, INCISO III, DA CARTA FEDERAL – AGRAVO DESPROVIDO. 1. Na espécie, não se tem recurso extraordinário contra provimento judicial que haja resultado no julgamento da causa. O acórdão proferido pelo Tribunal de Justiça do Estado de Minas Gerais implicou o acolhimento de pedido formulado em apelação, anulando a sentença e determinando o retorno do pro
+  [N-GRAMA COLIDIDO] recurso as causas decididas em única ou última instância quando a decisão recorrida
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_913 (linhas de treino: [178428]) ---
+[BENCHMARK] Paula ajuizou ação de reconhecimento de união estável. Ainda antes da citação do réu, a autora desistiu da ação proposta. Dois meses depois do trânsito em julgado da sentença que extinguiu o processo, sem resolução do mérito nos termos do Art. 267, inciso VIII, do CPC, Paula, arrependida, ingressou novamente com a ação.
+Com base na hipótese apresentada, assinale a afirmativa correta. O juiz deverá extinguir o processo sem resolução do mérito por existir coisa julgada, não podendo a autora ajuiza
+  [TREINO linha 178428] Explique de forma simples o que aconteceu neste caso de habeas corpus? Contexto: Trata-se de recurso ordinário em habeas corpus interposto por Emerson dos Santos Moreira contra acórdão denegatório proferido pelo Superior Tribunal de Justiça nos autos do HC 164.491/SP. O Recorrente alega a falta de fundamentação idônea da decisão que decretou e manteve a prisão preventiva, reputando ausentes os pressupostos autorizadores da custódia cautelar e valendo-se da gravidade abstrata do delito de formaçã
+  [N-GRAMA COLIDIDO] com as mesmas partes o mesmo pedido e a mesma causa de pedir | idênticas com as mesmas partes o mesmo pedido e a mesma causa de
+--------------------------------------------------------------------------------
+
+--- assin2_rte_pt::assin2_rte_pt_1150 (linhas de treino: [190090]) ---
+[BENCHMARK] Um pequenino porquinho-da-índia está roendo e comendo um pedaço de cenoura no chão Um porquinho-da-índia está devorando uma cenoura
+  [TREINO linha 190090] Avalie a similaridade semântica entre as duas frases numa escala de 1 a 5. Frase 1: Um pequeno porquinho-da-índia está roendo e comendo um pedaço de cenoura no chão.
+Frase 2: Um porquinho-da-índia come uma cenoura. 3.5
+  [N-GRAMA COLIDIDO] porquinho da índia está roendo e comendo um pedaço de cenoura no chão
+--------------------------------------------------------------------------------
+
+--- assin2_rte_pt::assin2_rte_pt_1775 (linhas de treino: [190090]) ---
+[BENCHMARK] Um porquinho-da-índia, que é pequenino, está roendo e comendo um pedaço de cenoura no chão Um pequenino porquinho-da-índia está roendo e comendo um pedaço de cenoura no chão
+  [TREINO linha 190090] Avalie a similaridade semântica entre as duas frases numa escala de 1 a 5. Frase 1: Um pequeno porquinho-da-índia está roendo e comendo um pedaço de cenoura no chão.
+Frase 2: Um porquinho-da-índia come uma cenoura. 3.5
+  [N-GRAMA COLIDIDO] porquinho da índia está roendo e comendo um pedaço de cenoura no chão
+--------------------------------------------------------------------------------
+
+--- enem_pt::enem_pt_135 (linhas de treino: [204018]) ---
+[BENCHMARK] Substitui-se então uma história crítica, profunda, por uma crônica de detalhes onde o patriotismo e a bravura dos nossos soldados encobrem a vilania dos motivos que levaram a Inglaterra a armar brasileiros e argentinos para a destruição da mais gloriosa república que já se viu na América Latina, a do Paraguai. CHIAVENATTO, J. J. Genocídio americano: A Guerra do Paraguai. São Paulo: Brasiliense, 1979 (adaptado). O imperialismo inglês, “destruindo o Paraguai, mantém o status quo na América Meridio
+  [TREINO linha 204018] Segundo o texto fornecido, qual afirmação está corretamente relacionada à expansão geográfica da lavoura cafeeira e aos grupos migratórios envolvidos?
+
+<context>
+c) o resultado das intervenções britânicas nos cenários de batalha. d) a dificuldade de elaborar explicações convincentes sobre os motivos dessa Guerra. e) o nível de crueldade das ações do exército brasileiro e argentino durante o conflito. 2. (IFSP) A partir da segunda metade do século XIX, o Brasil viu surgir gradativamente o declíni
+  [N-GRAMA COLIDIDO] o nível de crueldade das ações do exército brasileiro e argentino durante o | nível de crueldade das ações do exército brasileiro e argentino durante o conflito
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_522 (linhas de treino: [221726]) ---
+[BENCHMARK] No dia 18/10/2005, Eratóstenes praticou um crime de corrupção ativa em transação comercial internacional (Art. 337-B do CP), cuja pena é de 1 a 8 anos e multa. Devidamente investigado, Eratóstenes foi denunciado e, em 20/1/2006, a inicial acusatória foi recebida. O processo teve regular seguimento e, ao final, o magistrado sentenciou Eratóstenes, condenando-o à pena de 1 ano de reclusão e ao pagamento de dez dias-multa. A sentença foi publicada em 7/4/2007. O Ministério Público não interpôs recu
+  [TREINO linha 221726] <context>
+No caso concreto, o réu foi acusado de subtração de criança, crime do artigo 249 do Código Penal, ocorrido em dezembro de 1999. A denúncia foi recebida em abril de 2000. Como não foi encontrado para citação pessoal e não respondeu a citação por edital, o Juízo da 3ª Vara Criminal de Brasília determinou a suspensão do processo e do prazo prescricional. Em junho de 2008, o magistrado reconheceu a prescrição da pretensão punitiva em abstrato e, em consequência, declarou extinta a punibili
+  [N-GRAMA COLIDIDO] se o máximo da pena é igual a um ano ou sendo superior | o máximo da pena é igual a um ano ou sendo superior não
+--------------------------------------------------------------------------------
+
+--- enem_pt::enem_pt_294 (linhas de treino: [226732]) ---
+[BENCHMARK] Os vaga-lumes machos e fêmeas emitem sinais luminosos para se atraírem para o acasalamento. O macho reconhece a fêmea de sua espécie e, atraído por ela, vai ao seu encontro. Porém, existe um tipo de vaga-lume, o Photuris, cuja fêmea engana e atrai os machos de outro tipo, o Photinus, fingindo ser desse gênero. Quando o macho Photinus se aproxima da fêmea Photuris, muito maior que ele, é atacado e devorado por ela. BERTOLDI, O. G.; VASCONCELLOS, J. R. Ciência & sociedade: a aventura da vida, a av
+  [TREINO linha 226732] <context>
+BERTOLDI, O. G.; VASCONCELLOS, J. R. Ciência & sociedade: a aventura da vida, a aventura da tecnologia. São Paulo: Scipione, 2000 (adaptado). A relação descrita no texto, entre a fêmea do gênero Photuris e o macho do gênero Photinus, é um exemplo de Não pare agora... Tem mais depois da publicidade ;) a) comensalismo. b) inquilinismo. c) cooperação. d) predatismo. e) mutualismo. Resolução Observe que o tema aqui tratado refere-se às relações ecológicas, ou seja, à interação entre os ser
+  [N-GRAMA COLIDIDO] da vida a aventura da tecnologia são paulo scipione 2000 adaptado a relação | a aventura da vida a aventura da tecnologia são paulo scipione 2000 adaptado | aventura da vida a aventura da tecnologia são paulo scipione 2000 adaptado a
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_723 (linhas de treino: [232783]) ---
+[BENCHMARK] A respeito dos impostos, assinale a afirmativa correta. O Imposto de Transmissão Causa Mortis e Doação (ITCMD) de quaisquer bens e direitos terá suas alíquotas máximas fixadas pelos Estados competentes para a sua instituição. As alíquotas máximas e mínimas do Imposto sobre Serviços de Qualquer Natureza (ISS) deverão ser fixados por lei complementar nacional. O Imposto sobre Operações relativas à Circulação de Mercadorias e Prestação de Serviços de Transporte Interestadual e Intermunicipal e de C
+  [TREINO linha 232783] Preciso calcular o imposto sobre uma venda de R$ 500,00 no meu mercado. Como faço isso seguindo a legislação tributária municipal de Itaituba?  Para calcular o imposto sobre a venda de R$ 500,00 no seu mercado, você precisará conhecer a alíquota do Imposto Sobre Serviços (ISS) ou do Imposto Sobre Operações Relativas à Circulação de Mercadorias e Prestação de Serviços de Transporte Interestadual e Intermunicipal e de Comunicação (ICMS) aplicável em Itaituba. Essa alíquota pode variar dependendo d
+  [N-GRAMA COLIDIDO] sobre operações relativas à circulação de mercadorias e prestação de serviços de transporte | circulação de mercadorias e prestação de serviços de transporte interestadual e intermunicipal e | imposto sobre operações relativas à circulação de mercadorias e prestação de serviços de
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_1268 (linhas de treino: [235235]) ---
+[BENCHMARK] O senador “X” ausentou-se das atividades do Senado Federal para tratar de assunto de interesse particular por cento e cinquenta dias ininterruptos e, diante desse fato, enfrenta representação para a perda do seu mandato, por não ter comparecido à terça parte das sessões ordinárias da Casa, que foram realizadas no período em que esteve ausente.
+Nessa hipótese, assinale a afirmativa correta A perda do mandato do referido senador será decidida pelo Senado Federal, por maioria absoluta, mediante pro
+  [TREINO linha 235235] Resuma o texto a seguir em poucas frases. STF decidiu pela cassação dos deputados federais condenados no escândalo do mensalão A decisão dependia do voto do ministro Celso de Mello, que se ausentara da corte nos últimos dias por problemas de saúde. O placar da votação foi 5 a 4. Na semana passada, o presidente da Câmara, Marco Maia (PT-RS), disse que a casa poderia "não cumprir a medida tomada pelo STF e fazer o processo de cassação tramitar no Legislativo normalmente. "Isso não é desobedecer o
+  [N-GRAMA COLIDIDO] absoluta mediante provocação da respectiva mesa ou de partido político representado no congresso | provocação da respectiva mesa ou de partido político representado no congresso nacional assegurada | mediante provocação da respectiva mesa ou de partido político representado no congresso nacional
+--------------------------------------------------------------------------------
+
+--- enem_pt::enem_pt_621 (linhas de treino: [238512]) ---
+[BENCHMARK] Com o objetivo de substituir as sacolas de polietileno, alguns supermercados têm utilizado um novo tipo de plástico ecológico, que apresenta em sua composição amido de milho e uma resina polimérica termoplástica, obtida a partir de uma fonte petroquímica. ERENO, D. Plásticos de vegetais. Pesquisa Fapesp, n. 179, jan. 2011 (adaptado). 
+Nesses plásticos, a fragmentação da resina polimérica é facilitada porque os carboidratos presentes  dissolvem-se na água.  absorvem água com facilidade.  carameli
+  [TREINO linha 238512] Qual é a principal característica dos carboidratos presentes nos novos plásticos ecológicos mencionados no texto? Contexto: Com o objetivo de substituir as sacolas de polietileno, alguns supermercados têm utilizado um novo tipo de plástico ecológico, que apresenta em sua composição amido de milho e uma resina polimérica termoplástica, obtida a partir de uma fonte petroquímica.
+ERENO, D. Plásticos de vegetais. Pesquisa Fapesp, n° 179, jan 2011 (adaptado).
+Nesses plásticos, a fragmentação da resin
+  [N-GRAMA COLIDIDO] são digeridos por organismos decompositores decompõem se espontaneamente em contato com água e | ereno d plásticos de vegetais pesquisa fapesp n 179 jan 2011 adaptado nesses | por aquecimento e quebram são digeridos por organismos decompositores decompõem se espontaneamente em
+--------------------------------------------------------------------------------
+
+--- enem_pt::enem_pt_900 (linhas de treino: [243395]) ---
+[BENCHMARK] O nome do inseto pirilampo (vaga-lume) tem uma interessante certidão de nascimento. De repente, no fim do século XVII, os poetas de Lisboa repararam que não podiam cantar o inseto luminoso, apesar de ele ser um manancial de metáforas, pois possuía um nome “indecoroso” que não podia ser “usado em papéis sérios”: caga-lume. Foi então que o dicionarista Raphael Bluteau inventou a nova palavra, pirilampo, a partir do grego pyr, significando 'fogo', e lampas, 'candeia'. FERREIRA, M. B. Caminhos do po
+  [TREINO linha 243395] Explique de forma simples por que o nome do vaga-lume mudou de 'caga-lume' para 'pirilampo'. Contexto: O nome do inseto pirilampo (vaga-lume) tem uma interessante certidão de nascimento. De repente, no fim do século XVII, os poetas de Lisboa repararam que não podiam cantar o inseto luminoso, apesar de ele ser um manancial de metáforas, pois possuía um nome "indecoroso" que não podia ser "usado em papéis sérios": caga-lume. Foi então que o dicionarista Raphael Bluteau inventou a nova palavra, pir
+  [N-GRAMA COLIDIDO] vaga lume tem uma interessante certidão de nascimento de repente no fim do | não podiam cantar o inseto luminoso apesar de ele ser um manancial de | significando fogo e lampas candeia ferreira m b caminhos do português exposição comemorativa
+--------------------------------------------------------------------------------
+
+--- enem_pt::enem_pt_384 (linhas de treino: [248341]) ---
+[BENCHMARK] Em um engenho sois imitadores de Cristo crucificado porque padeceis em um modo muito semelhante o que o mesmo Senhor padeceu na sua cruz e em toda a sua paixão. A sua cruz foi composta de dois madeiros, e a vossa em um engenho é de três. Também ali não faltaram as canas, porque duas vezes entraram na Paixão: uma vez servindo para o cetro de escárnio, e outra vez para a esponja em que lhe deram o fel. A Paixão de Cristo parte foi de noite sem dormir, parte foi de dia sem descansar, e tais são as 
+  [TREINO linha 248341] Segundo o texto citado sobre Gregório de Matos, quais são as três principais facetas presentes na produção deste importante poeta barroco brasileiro?
+
+<context>
+Por mais que a fama a exalta, Numa cidade onde falta Verdade, honra, vergonha. Os versos transcritos expõem a feceta _________ da obra de Gregório de Matos, que é considerado o maior poeta barroco brasileiro. Outras facetas importantes, na produção do mesmo autor, são as da poesia _________ e da poesia _________. Assinale a alternativa c
+  [N-GRAMA COLIDIDO] a paixão de cristo parte foi de noite sem dormir parte foi de | tudo os ferros as prisões os açoites as chagas os nomes afrontosos de | compõe a vossa imitação que se for acompanhada de paciência também terá merecimento
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_653 (linhas de treino: [256520]) ---
+[BENCHMARK] Edgar, solteiro, maior e capaz, faleceu deixando bens, mas sem deixar testamento e contando com dois filhos maiores, capazes e também solteiros, Lúcio e Arthur.  Lúcio foi regularmente excluído da sucessão de Edgar, por tê-lo acusado caluniosamente em juízo, conforme apurado na esfera criminal. Sabendo-se que Lúcio possui um filho menor, chamado Miguel, assinale a alternativa correta. O quinhão de Lúcio será acrescido à parte da herança a ser recebida por seu irmão, Arthur, tendo em vista que Lú
+  [TREINO linha 256520] <context>
+rendimentos que dos bens da herança houver percebido, mas tem direito a ser indenizado das despesas com a conservação deles. Art. 1.818. Aquele que incorreu em atos que determinem a exclusão da herança será admitido a suceder, se o ofendido o tiver expressamente reabilitado em testamento, ou em outro ato autêntico. Parágrafo único. Não havendo reabilitação expressa, o indigno, contemplado em testamento do ofendido, quando o testador, ao testar, já conhecia a causa da indignidade, pode 
+  [N-GRAMA COLIDIDO] de um curador até a sua entrega ao sucessor devidamente habilitado ou à | guarda e administração de um curador até a sua entrega ao sucessor devidamente | curador até a sua entrega ao sucessor devidamente habilitado ou à declaração de
+--------------------------------------------------------------------------------
+
+--- oab_pt::oab_pt_1150 (linhas de treino: [258344]) ---
+[BENCHMARK] A atividade recursal do Supremo Tribunal Federal e do Superior Tribunal de Justiça encontra-se tradicionalmente associada aos recursos extraordinário e especial, respectivamente. Contudo, tal múnus também é desempenhado por meio do julgamento do denominado recurso ordinário constitucional.
+Acerca dessa espécie recursal, assinale a afirmativa correta. Exigir-se-á a comprovação do requisito do pré-questionamento para a admissão do recurso ordinário constitucional perante os Tribunais Superiores. A
+  [TREINO linha 258344] Explique em termos simples o que significa essa decisão judicial sobre o agravo desprovido. Contexto: DECISÃO RECURSO – MANDADO DE SEGURANÇA – DECISÃO DENEGATÓRIA – ORDINÁRIO – EXTRAORDINÁRIO - AGRAVO DESPROVIDO. 1. O Juízo primeiro de admissibilidade registrou o não-cabimento do recurso extraordinário contra decisão proferida em única instância pelo Tribunal, denegatória de mandado de segurança (folha 99). No agravo de folha 2 a 9, defende-se o cabimento do extraordinário pelas alíneas “a” e “b
+  [N-GRAMA COLIDIDO] pelos tribunais regionais federais ou pelos tribunais dos estados do distrito federal e
+--------------------------------------------------------------------------------
+
+--- bluex_pt::bluex_pt_156 (linhas de treino: [259484]) ---
+[BENCHMARK] Um aplicativo de videoconferências estabelece, para cada reunião, 
+um código de 10 letras, usando um alfabeto completo de 26 letras. 
+A quantidade de códigos distintos possíveis está entre 10 bilhões e 100 bilhões. 100 bilhões e 1 trilhão. 1 trilhão e 10 trilhões. 10 trilhões e 100 trilhões. 100 trilhões e 1 quadrilhão.
+  [TREINO linha 259484] Segundo o problema da Fuvest 2021 mencionado no texto, qual intervalo define corretamente a quantidade de códigos distintos possíveis gerados por um aplicativo de videoconferência utilizando combinações de 10 letras de um alfabeto de 26 letras?
+
+<context>
+(Fuvest 2021) Um aplicativo de videoconferências estabelece, para cada reunião, um código de 10 letras, usando um alfabeto completo de 26 letras. A quantidade de códigos distintos possíveis está entre (Fuvest 2021) Um aplicativo de videoconferê
+  [N-GRAMA COLIDIDO] de videoconferências estabelece para cada reunião um código de 10 letras usando um | 10 letras usando um alfabeto completo de 26 letras a quantidade de códigos | código de 10 letras usando um alfabeto completo de 26 letras a quantidade
+--------------------------------------------------------------------------------
+
+--- enem_pt::enem_pt_957 (linhas de treino: [266648]) ---
+[BENCHMARK] Um cosmonauta russo estava a bordo da estação espacial MIR quando um de seus rádios de comunicação quebrou. Ele constatou que dois capacitores do rádio de 3 μF e 7 μF ligados em série estavam queimados. Em função da disponibilidade, foi preciso substituir os capacitores defeituosos por um único capacitor que cumpria a mesma função. 
+Qual foi a capacitância, medida em μF, do capacitor utilizado pelo cosmonauta?  0,10  0,50  2,1  10  21 
+  [TREINO linha 266648] Dada a consulta de busca e a passagem abaixo, a passagem é relevante para a consulta? Responda apenas Sim ou Não. Consulta: O que é a associação em série de um capacitor?
+
+Passagem: Qual foi a capacitância, medida em μF, do capacitor utilizado pelo cosmonauta? 0,10 0,50 2,1 10 21 8. (ENEM 2013) Um circuito em série é formado por uma pilha, uma lâmpada incandescente e uma chave interruptora. Ao se ligar a chave, a lâmpada acende quase instantaneamente, irradiando calor e luz. Popularmente, associ
+  [N-GRAMA COLIDIDO] qual foi a capacitância medida em μf do capacitor utilizado pelo cosmonauta 0 | do capacitor utilizado pelo cosmonauta 0 10 0 50 2 1 10 21 | capacitância medida em μf do capacitor utilizado pelo cosmonauta 0 10 0 50
+--------------------------------------------------------------------------------
+
+--- enem_pt::enem_pt_521 (linhas de treino: [266648]) ---
+[BENCHMARK] Um circuito em série é formado por uma pilha, uma lâmpada incandescente e uma chave interruptora. Ao se ligar a chave, a lâmpada acende quase instantaneamente, irradiando calor e luz. Popularmente, associa-se o fenômeno da irradiação de energia a um desgaste da corrente elétrica, ao atravessar o filamento da lâmpada, e à rapidez com que a lâmpada começa a brilhar. Essa explicação está em desacordo com o modelo clássico de corrente. 
+De acordo com o modelo mencionado, o fato de a lâmpada acender 
+  [TREINO linha 266648] Dada a consulta de busca e a passagem abaixo, a passagem é relevante para a consulta? Responda apenas Sim ou Não. Consulta: O que é a associação em série de um capacitor?
+
+Passagem: Qual foi a capacitância, medida em μF, do capacitor utilizado pelo cosmonauta? 0,10 0,50 2,1 10 21 8. (ENEM 2013) Um circuito em série é formado por uma pilha, uma lâmpada incandescente e uma chave interruptora. Ao se ligar a chave, a lâmpada acende quase instantaneamente, irradiando calor e luz. Popularmente, associ
+  [N-GRAMA COLIDIDO] lâmpada o campo elétrico se estabelece em todos os pontos do circuito as | elétrico se estabelece em todos os pontos do circuito as cargas positivas e | fluido elétrico se desloca no circuito as cargas negativas móveis atravessam o circuito
+--------------------------------------------------------------------------------
+
+--- enem_pt::enem_pt_408 (linhas de treino: [270501]) ---
+[BENCHMARK] Em certos locais, larvas de moscas, criadas em arroz cozido, são utilizadas como iscas para pesca. Alguns criadores, no entanto, acreditam que essas larvas surgem espontaneamente do arroz cozido, tal como preconizado pela teoria da geração espontânea. 
+Essa teoria começou a ser refutada pelos cientistas ainda no século XVII, a partir dos estudos de Redi e Pasteur, que mostraram experimentalmente que  seres vivos podem ser criados em laboratório.  a vida se originou no planeta a partir de microrg
+  [TREINO linha 270501] Segundo o texto fornecido, qual enunciado corretamente resume a contribuição científica de Redi e Pasteur contra a teoria da geração espontânea?
+
+<context>
+Em certos locais, larvas de moscas, criadas em arroz cozido, são utilizadas como iscas para pesca. Alguns criadores, no entanto, acreditam que essas larvas surgem espontaneamente do arroz cozido, tal como preconizado pela teoria da geração espontânea. Essa teoria começou a ser refutada pelos cientistas ainda no século XVII, a partir dos estud
+  [N-GRAMA COLIDIDO] certos locais larvas de moscas criadas em arroz cozido são utilizadas como iscas | tal como preconizado pela teoria da geração espontânea essa teoria começou a ser | espontânea essa teoria começou a ser refutada pelos cientistas ainda no século xvii
+--------------------------------------------------------------------------------
+
+--- enem_pt::enem_pt_1017 (linhas de treino: [274015]) ---
+[BENCHMARK] Descobrimento Abancado à escrivaninha em São Paulo Na minha casa da rua Lopes Chaves De sopetão senti um friúme por dentro. Fiquei trêmulo, muito comovido Com o livro palerma olhando pra mim. Não vê que me lembrei que lá no norte, meu Deus! Muito longe de mim, Na escuridão ativa da noite que caiu, Um homem pálido, magro de cabelos escorrendo nos olhos Depois de fazer uma pele com a borracha do dia, Faz pouco se deitou, está dormindo. Esse homem é brasileiro que nem eu... ANDRADE, M. Poesias comp
+  [TREINO linha 274015] Explique de forma simples a contribuição de Mário de Andrade para o Modernismo e sua visão sobre a Amazônia. Contexto: Por baixo das pedras que o tempo virou
+Montagem: Fabrício Vinhas
+Mário de Andrade (1893-1945), um dos pais do Modernismo, também é considerado um dos principais intérpretes do Brasil. Na tentativa de contribuir à busca modernista pela ainda inaudita “identidade nacional”, o poeta jogou os holofotes sobre a Amazônia no início do século XX, com obras não-ficcionais, como o diário 
+  [N-GRAMA COLIDIDO] de fazer uma pele com a borracha do dia faz pouco se deitou | lembrei que lá no norte meu deus muito longe de mim na escuridão | chaves de sopetão senti um friúme por dentro fiquei trêmulo muito comovido com
+--------------------------------------------------------------------------------
+
+--- enem_pt::enem_pt_39 (linhas de treino: [287155]) ---
+[BENCHMARK] Para Caio Prado Jr., a formação brasileira se completaria no momento em que fosse superada a nossa herança de inorganicidade social ― o oposto da interligação com objetivos internos ― trazida da colônia. Este momento alto estaria, ou esteve, no futuro. Se passarmos a Sérgio Buarque de Holanda, encontraremos algo análogo. O país será moderno e estará formado quando superar a sua herança portuguesa, rural e autoritária, quando então teríamos um país democrático. Também aqui o ponto de chegada está
+  [TREINO linha 287155] Qual é a resposta correta para a questão 59 do Enem 2009 sobre as expectativas em relação à formação do Brasil? Contexto: Na prova do Enem 2009, tente resolver esta questão sobre as expectativas em relação ao futuro do Brasil, questionamento de vários historiadores que analisam o nosso passado. A resolução está logo abaixo da questão, com comentários e habilidades cobradas na prova.
+Para ter mais informações sobre este exame nacional, dê uma olhada no post Tudo sobre o Novo Enem.
+Questão
+Questão
+  [N-GRAMA COLIDIDO] se completaria no momento em que fosse superada a nossa herança de inorganicidade | então teríamos um país democrático também aqui o ponto de chegada está mais | interligação com objetivos internos trazida da colônia este momento alto estaria ou esteve
+--------------------------------------------------------------------------------
