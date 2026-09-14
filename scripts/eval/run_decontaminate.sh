@@ -25,7 +25,11 @@ TRAIN_FILE="$(realpath -m "$TRAIN_FILE")"
 
 OUT="${OUT:-docs/evaluation/decontamination-report}"
 
-HF_CACHE="${HF_CACHE:-$HOME/hf_cache_eval}"; HF_CACHE="$(realpath -m "$HF_CACHE")"; mkdir -p "$HF_CACHE"
+# Cache PROPRIO (do usuario). Nao reuse $HOME/hf_cache_eval: ele foi populado
+# pelas rodadas do lm-eval que rodavam docker como root, e com --user (abaixo) o
+# processo nao consegue escrever la (PermissionError) -- mesma armadilha ja
+# documentada em run_mtbench_pt.sh.
+HF_CACHE="${HF_CACHE:-$HOME/hf_cache_decontam}"; HF_CACHE="$(realpath -m "$HF_CACHE")"; mkdir -p "$HF_CACHE"
 
 echo "[decontam] imagem=$IMAGE  treino=$TRAIN_FILE  cache=$HF_CACHE"
 
