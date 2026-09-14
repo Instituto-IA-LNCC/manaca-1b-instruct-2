@@ -4,8 +4,9 @@
 > (pós-treinada)** do
 > [**Manacá-1B base**](https://github.com/Instituto-IA-LNCC/manaca-1b-base): o
 > mesmo decoder-only de **~1,72 bilhão de parâmetros**, agora com um corpus de
-> SFT maior e mais diverso (~291 mil exemplos), **duas** tentativas de DPO
-> registradas como resultado negativo, e um alinhamento de segurança
+> SFT maior e mais diverso (~291 mil exemplos), **mais uma** tentativa de DPO
+> (a 3ª do projeto, depois de duas já negativas na 1ª geração) registrada
+> como resultado negativo, e um alinhamento de segurança
 > (safety-SFT) refinado em 3 iterações (`v2`→`v3`→`v4`) até validado
 > estatisticamente contra 4 baselines externos de PT-BR — **com todo o
 > caminho, inclusive o que não funcionou, reprodutível e auditável**.
@@ -20,6 +21,8 @@
 [![Status: experimental](https://img.shields.io/badge/Status-release%20de%20pesquisa%20experimental%20v0.2-orange.svg)]()
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 [![Model: Manacá-1B-Instruct-2](https://img.shields.io/badge/Model-Manac%C3%A1--1B--Instruct--2-8A2BE2.svg)]()
+[![Model on Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Model-menezesbruno%2Fmanaca--1b--instruct--2-yellow.svg)](https://huggingface.co/menezesbruno/manaca-1b-instruct-2)
+[![Institutional repo](https://img.shields.io/badge/Institutional%20repo-manaca--1b--instruct--2-002776.svg)](https://github.com/Instituto-IA-LNCC/manaca-1b-instruct-2)
 [![Base model on Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Base-menezesbruno%2Fmanaca--1b--base-yellow.svg)](https://huggingface.co/menezesbruno/manaca-1b-base)
 [![Base repo](https://img.shields.io/badge/Base%20repo-manaca--1b--base-002776.svg)](https://github.com/Instituto-IA-LNCC/manaca-1b-base)
 [![Predecessor: Instruct v1](https://img.shields.io/badge/Predecessor-manaca--1b--instruct%20(v1)-555.svg)](https://github.com/brunoleomenezes/manaca-1b-instruct)
@@ -82,9 +85,12 @@ reprodutível e auditável todo o caminho até o instruct seguro** — incluindo
 que **não** funcionou.
 
 O resultado central é metodológico e honesto, e mais forte que o da 1ª
-geração: **DPO foi tentado duas vezes** (on-policy, fiel ao LLM-jp; e offline
-com pares de preferência de terceiros) e **nenhuma das duas reverteu** a
-obediência do modelo a pedidos nocivos. A segurança veio, de novo, de um
+geração: sobre o `manaca-1b-instruct-2-full`, **DPO foi tentado mais uma vez**
+(offline, com pares de preferência de terceiros) e **não reverteu** a
+obediência do modelo a pedidos nocivos — mesma conclusão das duas tentativas
+já negativas da 1ª geração (off-policy com pares do GigaVerbo, depois
+on-policy fiel ao LLM-jp), a 3ª tentativa negativa de DPO no projeto como um
+todo. A segurança veio, de novo, de um
 **SFT de segurança** (estilo *AnswerCarefully* do LLM-jp) — só que desta vez
 refinado em **3 iterações** (`v2`→`v3`→`v4`) até fechar a fronteira
 segurança×prestatividade, e **validado com McNemar pareado + correção de
@@ -96,7 +102,9 @@ documentado e reproduzível aqui.
 **Cooperação científica LNCC × NII/LLM-jp** — Laboratório Nacional de Computação
 Científica (Brasil) × National Institute of Informatics (Japão).
 
-🤗 **Modelo base no Hugging Face:** [`menezesbruno/manaca-1b-base`](https://huggingface.co/menezesbruno/manaca-1b-base)
+🤗 **Modelo no Hugging Face:** [`menezesbruno/manaca-1b-instruct-2`](https://huggingface.co/menezesbruno/manaca-1b-instruct-2)
+<br>🏛️ **Espelho institucional (LNCC):** [`Instituto-IA-LNCC/manaca-1b-instruct-2`](https://github.com/Instituto-IA-LNCC/manaca-1b-instruct-2)
+<br>🤗 **Modelo base no Hugging Face:** [`menezesbruno/manaca-1b-base`](https://huggingface.co/menezesbruno/manaca-1b-base)
 <br>🧩 **Base (pré-treino + avaliação):** [`Instituto-IA-LNCC/manaca-1b-base`](https://github.com/Instituto-IA-LNCC/manaca-1b-base)
 <br>↩️ **Predecessor (1ª geração, v1):** [`brunoleomenezes/manaca-1b-instruct`](https://github.com/brunoleomenezes/manaca-1b-instruct)
 
@@ -180,16 +188,19 @@ completa: [`docs/evaluation/composition-sweep-pt.md`](docs/evaluation/compositio
    treino (base v1/v2 + GigaVerbo-v2 SFT, ExtraGLUE, Quati, personas_br, e
    instrução sintética gerada via Claude Batches API e via vLLM local) →
    `manaca-1b-instruct-2-full`.
-2. **DPO — duas tentativas, ambas resultado negativo.**
-   - **On-policy (fiel ao `llm-jp-dpo`).** Pares gerados pelo próprio modelo
-     (recusa boa vs. a obediência nociva do modelo), β=0,1. Curva de
-     recompensa perfeita (margem 1,0), mas a **geração livre não mudou** —
-     o adapter obedecia até os próprios prompts de treino.
+2. **DPO — mais uma tentativa sobre o `manaca-1b-instruct-2-full`, resultado
+   negativo (a 3ª do projeto).**
    - **Offline, com pares de preferência de terceiros.**
      `Polygl0t/gigaverbo-v2-preferences` (~28,4k pares harmless/harmful,
-     Apache-2.0) + `nicholasKluge/reward-aira-dataset`. Mesma conclusão: não
-     foi o que mudou a segurança do modelo. Ambos os diagnósticos estão no
-     repositório ([`dpo/`](dpo/)).
+     Apache-2.0) + `nicholasKluge/reward-aira-dataset`. Não foi o que mudou a
+     segurança do modelo — mesma conclusão das duas tentativas já negativas
+     da 1ª geração (§ abaixo). Diagnóstico no repositório ([`dpo/`](dpo/)).
+   - **Para contexto, as duas tentativas herdadas da 1ª geração** (não
+     re-executadas neste repositório): off-policy com pares do GigaVerbo
+     (não melhorou/sobre-otimizou) e on-policy fiel ao `llm-jp-dpo` (curva de
+     recompensa perfeita, margem 1,0, mas a **geração livre não mudou** — o
+     adapter obedecia até os próprios prompts de treino). Detalhes em
+     [`dpo/README-onpolicy.md`](dpo/README-onpolicy.md).
 3. **Safety-SFT (adotado, 3 iterações até fechar a fronteira).** Estilo
    *AnswerCarefully*: recusa como alvo de cross-entropy, misturada a
    exemplos de ajudar o benigno (com oversampling dos casos de crise
@@ -198,8 +209,9 @@ completa: [`docs/evaluation/composition-sweep-pt.md`](docs/evaluation/compositio
    → `manaca-1b-instruct-2-safe-v4-merged`, o modelo aprovado.
 
 Por que SFT e não DPO, de novo: a segurança do LLM-jp veio do AnswerCarefully
-(SFT de segurança), não de DPO. Duas tentativas de DPO sem sucesso (contra
-uma na 1ª geração) tornam esse pivô ainda mais fiel ao método deles.
+(SFT de segurança), não de DPO. Três tentativas de DPO sem sucesso no
+projeto como um todo (duas na 1ª geração, mais esta no instruct-2) tornam
+esse pivô ainda mais fiel ao método deles.
 
 ### O corpus de instrução
 
@@ -286,10 +298,13 @@ Já disponível neste repositório (o que funcionou e valeu, sem tentativas falh
 - **Ficha completa de contagens/status do instruct-2** (só o que foi de fato
   gerado, com `wc -l` real, fontes usadas vs. abandonadas e por quê):
   [`docs/data/README-instruct2.md`](docs/data/README-instruct2.md).
-- **DPO — as duas tentativas, ambas resultado negativo** — pares e
-  diagnóstico em [`dpo/README-onpolicy.md`](dpo/README-onpolicy.md)
-  (on-policy) e [`dpo/gigaverbo_v2_preferences/README.md`](dpo/gigaverbo_v2_preferences/README.md) /
-  [`dpo/reward_aira/README.md`](dpo/reward_aira/README.md) (offline, pares de terceiros).
+- **DPO — a tentativa do instruct-2 (offline, resultado negativo)** —
+  pares e diagnóstico em
+  [`dpo/gigaverbo_v2_preferences/README.md`](dpo/gigaverbo_v2_preferences/README.md) /
+  [`dpo/reward_aira/README.md`](dpo/reward_aira/README.md). As duas
+  tentativas anteriores, herdadas da 1ª geração (off-policy GigaVerbo +
+  on-policy fiel ao `llm-jp-dpo`, ambas também negativas), estão em
+  [`dpo/README-onpolicy.md`](dpo/README-onpolicy.md).
 - **Treino do SFT full** — [`sft/README.md`](sft/README.md), plano e lições
   do v1/v2 em [`docs/training/README-instruct2.md`](docs/training/README-instruct2.md),
   trainer em [`sft/train.py`](sft/train.py); ambiente em [`docker/`](docker/) + `docker-compose.yml`.
@@ -337,11 +352,21 @@ resposta errada tenha custo real.
   o CVV (188) — mitigado com oversampling de exemplos-ouro, não eliminado.
 - **Capacidade geral abaixo de modelos PT-BR com pré-treino em maior escala**
   (ex.: Tucano2-qwen, via continual-pretrain sobre Qwen3): efeito de
-  orçamento de compute, não de metodologia de alinhamento.
+  orçamento de compute, não de metodologia de alinhamento — quantificado em
+  `docs/evaluation/compute-budget-pt.md` (Manacá usa ~1,2× o ponto
+  compute-optimal de Chinchilla; os Tucano nativos, ~10-11×; o Tucano2-qwen
+  herda um pré-treino ~3 ordens de grandeza maior via Qwen3, ~849× o FLOPs
+  de pré-treino do Manacá).
 - **Exames de múltipla escolha (ENEM/OAB/BLUEX) no nível do acaso**: limite
   conhecido de conhecimento factual amplo em modelos ~1B nativos PT-BR.
 - **Pontos internos da varredura de composição** ainda em N=16/34 por ponto
   (não expandidos como a comparação principal) — tratar como exploratório.
+- **Decontaminação (checagem de n-gram treino × benchmarks)**: overlap de
+  0,49% (73/15.026 itens avaliados), majoritariamente boilerplate legal e
+  republicação indireta de provas passadas em sites de vestibular via web
+  scrape — sem evidência de vazamento em massa, mas leia
+  `docs/evaluation/decontamination-pt.md` antes de citar os números do
+  núcleo obrigatório como livres de qualquer overlap.
 - Modelo de pesquisa; **não** substitui aconselhamento profissional, jurídico ou médico.
 
 ### O nome
@@ -369,10 +394,12 @@ Licenciado sob **Creative Commons Attribution 4.0 International (CC BY 4.0)**.
 ```
 Menezes, B.L.S., Cardoso, C.L.S., & Porto, F.A.M. (2026). Manacá-1B-Instruct-2:
 An Open, Auditable Brazilian-Portuguese Instruction-Tuned Language Model, with
-Two Negative Results on DPO, a Three-Iteration Safety-SFT Alignment, and a
+A Third Negative DPO Result Across Two Generations, a Three-Iteration Safety-SFT Alignment, and a
 Statistically-Validated Comparison Against External PT-BR Baselines. Preprint,
 experimental research release v0.2. LNCC (Instituto de IA) × NII/LLM-jp.
-GitHub: https://github.com/brunoleomenezes/manaca-1b-instruct-2 · License: CC BY 4.0.
+GitHub: https://github.com/brunoleomenezes/manaca-1b-instruct-2 (institutional
+mirror: https://github.com/Instituto-IA-LNCC/manaca-1b-instruct-2) · Model:
+https://huggingface.co/menezesbruno/manaca-1b-instruct-2 · License: CC BY 4.0.
 ```
 
 ---
@@ -390,9 +417,12 @@ lacked. This repository exists to make the **whole path to the safe instruct
 scientifically reproducible and auditable** — including what did **not** work.
 
 The central result is methodological and honest, and stronger than the first
-generation's: **DPO was tried twice** (on-policy, faithful to LLM-jp; and
-offline with third-party preference pairs) and **neither reversed** the
-model's compliance with harmful requests. Safety came, again, from a
+generation's: on `manaca-1b-instruct-2-full`, **DPO was tried once more**
+(offline, with third-party preference pairs) and **did not reverse** the
+model's compliance with harmful requests — the same conclusion as the two
+already-negative attempts from the first generation (off-policy with
+GigaVerbo pairs, then on-policy faithful to LLM-jp), the project's 3rd
+negative DPO attempt overall. Safety came, again, from a
 **safety-SFT** (LLM-jp *AnswerCarefully* style) — this time refined across
 **3 iterations** (`v2`→`v3`→`v4`) until closing the safety×helpfulness
 frontier, and **validated with paired McNemar tests + Holm-Bonferroni
@@ -404,7 +434,9 @@ documented and reproducible here.
 **Scientific cooperation LNCC × NII/LLM-jp** — National Laboratory for Scientific
 Computing (Brazil) × National Institute of Informatics (Japan).
 
-🤗 **Base model on Hugging Face:** [`menezesbruno/manaca-1b-base`](https://huggingface.co/menezesbruno/manaca-1b-base)
+🤗 **Model on Hugging Face:** [`menezesbruno/manaca-1b-instruct-2`](https://huggingface.co/menezesbruno/manaca-1b-instruct-2)
+<br>🏛️ **Institutional mirror (LNCC):** [`Instituto-IA-LNCC/manaca-1b-instruct-2`](https://github.com/Instituto-IA-LNCC/manaca-1b-instruct-2)
+<br>🤗 **Base model on Hugging Face:** [`menezesbruno/manaca-1b-base`](https://huggingface.co/menezesbruno/manaca-1b-base)
 <br>🧩 **Base (pretraining + evaluation):** [`Instituto-IA-LNCC/manaca-1b-base`](https://github.com/Instituto-IA-LNCC/manaca-1b-base)
 <br>↩️ **Predecessor (1st generation, v1):** [`brunoleomenezes/manaca-1b-instruct`](https://github.com/brunoleomenezes/manaca-1b-instruct)
 
@@ -487,16 +519,20 @@ error; the sweep confirms this by method, not by luck. Full methodology:
    (base v1/v2 + GigaVerbo-v2 SFT, ExtraGLUE, Quati, personas_br, and
    synthetic instruction generated via Claude Batches API and local vLLM) →
    `manaca-1b-instruct-2-full`.
-2. **DPO — two attempts, both negative results.**
-   - **On-policy (faithful to `llm-jp-dpo`).** Pairs generated by the model
-     itself (a good refusal vs. the model's own harmful compliance), β=0.1.
-     The reward curve was perfect (margin 1.0), but **free generation did
-     not change** — the adapter complied even on its own training prompts.
+2. **DPO — one more attempt on `manaca-1b-instruct-2-full`, negative result
+   (the project's 3rd).**
    - **Offline, with third-party preference pairs.**
      `Polygl0t/gigaverbo-v2-preferences` (~28.4k harmless/harmful pairs,
-     Apache-2.0) + `nicholasKluge/reward-aira-dataset`. Same conclusion: not
-     what changed the model's safety. Both diagnostics are in the repo
+     Apache-2.0) + `nicholasKluge/reward-aira-dataset`. Not what changed the
+     model's safety — same conclusion as the two already-negative attempts
+     from the 1st generation (see below). Diagnostics in the repo
      ([`dpo/`](dpo/)).
+   - **For context, the two attempts inherited from the 1st generation**
+     (not re-run in this repository): off-policy with GigaVerbo pairs (did
+     not improve/over-optimized) and on-policy faithful to `llm-jp-dpo`
+     (perfect reward curve, margin 1.0, but **free generation did not
+     change** — the adapter complied even on its own training prompts).
+     Details in [`dpo/README-onpolicy.md`](dpo/README-onpolicy.md).
 3. **Safety-SFT (adopted, 3 iterations to close the frontier).**
    *AnswerCarefully* style: refusal as a cross-entropy target, mixed with
    help-the-benign examples (oversampling pro-social crisis cases) and
@@ -505,8 +541,9 @@ error; the sweep confirms this by method, not by luck. Full methodology:
    `manaca-1b-instruct-2-safe-v4-merged`, the approved model.
 
 Why SFT and not DPO, again: LLM-jp's safety came from AnswerCarefully (a
-safety-SFT dataset), not DPO. Two unsuccessful DPO attempts (vs. one in the
-1st generation) make this pivot even more faithful to their method.
+safety-SFT dataset), not DPO. Three unsuccessful DPO attempts across the
+whole project (two in the 1st generation, plus this one in instruct-2) make
+this pivot even more faithful to their method.
 
 ### The instruction corpus
 
@@ -593,10 +630,13 @@ Already in this repository (what worked and mattered, no failed attempts):
 - **Full instruct-2 counts/status card** (only what was actually generated,
   with real `wc -l`, sources used vs. abandoned and why):
   [`docs/data/README-instruct2.md`](docs/data/README-instruct2.md).
-- **DPO — both attempts, both negative results** — pairs and diagnostics in
-  [`dpo/README-onpolicy.md`](dpo/README-onpolicy.md) (on-policy) and
+- **DPO — instruct-2's attempt (offline, negative result)** — pairs and
+  diagnostics in
   [`dpo/gigaverbo_v2_preferences/README.md`](dpo/gigaverbo_v2_preferences/README.md) /
-  [`dpo/reward_aira/README.md`](dpo/reward_aira/README.md) (offline, third-party pairs).
+  [`dpo/reward_aira/README.md`](dpo/reward_aira/README.md). The two earlier
+  attempts, inherited from the 1st generation (off-policy GigaVerbo +
+  on-policy faithful to `llm-jp-dpo`, both also negative), are in
+  [`dpo/README-onpolicy.md`](dpo/README-onpolicy.md).
 - **Full SFT training** — [`sft/README.md`](sft/README.md), plan and lessons
   from v1/v2 in [`docs/training/README-instruct2.md`](docs/training/README-instruct2.md),
   trainer in [`sft/train.py`](sft/train.py); environment in [`docker/`](docker/) + `docker-compose.yml`.
@@ -645,11 +685,21 @@ cost.
   oversampling of gold examples, not eliminated.
 - **General capability below PT-BR models with larger-scale pretraining**
   (e.g., Tucano2-qwen, via continual pretraining on Qwen3): a compute-budget
-  effect, not an alignment-methodology one.
+  effect, not an alignment-methodology one — quantified in
+  `docs/evaluation/compute-budget-pt.md` (Manacá sits at ~1.2× Chinchilla's
+  compute-optimal point; the native Tucano models, ~10-11×; Tucano2-qwen
+  inherits a pretraining budget ~3 orders of magnitude larger via Qwen3,
+  ~849× Manacá's pretraining FLOPs).
 - **Multiple-choice exams (ENEM/OAB/BLUEX) at chance level**: a known limit
   of broad factual knowledge in natively PT-BR ~1B models.
 - **Internal composition-sweep points** still at N=16/34 per point (not
   expanded like the main comparison) — treat as exploratory.
+- **Decontamination (n-gram check, training corpus × benchmarks)**: 0.49%
+  overlap (73/15,026 evaluated items), mostly legal boilerplate and indirect
+  republication of past exams on prep websites picked up via web scrape —
+  no evidence of mass leakage, but read
+  `docs/evaluation/decontamination-pt.md` before citing the mandatory-core
+  numbers as free of any overlap.
 - Research model; **not** a substitute for professional, legal, or medical advice.
 
 ### The name
@@ -677,10 +727,12 @@ Licensed under **Creative Commons Attribution 4.0 International (CC BY 4.0)**.
 ```
 Menezes, B.L.S., Cardoso, C.L.S., & Porto, F.A.M. (2026). Manacá-1B-Instruct-2:
 An Open, Auditable Brazilian-Portuguese Instruction-Tuned Language Model, with
-Two Negative Results on DPO, a Three-Iteration Safety-SFT Alignment, and a
+A Third Negative DPO Result Across Two Generations, a Three-Iteration Safety-SFT Alignment, and a
 Statistically-Validated Comparison Against External PT-BR Baselines. Preprint,
 experimental research release v0.2. LNCC (AI Institute) × NII/LLM-jp.
-GitHub: https://github.com/brunoleomenezes/manaca-1b-instruct-2 · License: CC BY 4.0.
+GitHub: https://github.com/brunoleomenezes/manaca-1b-instruct-2 (institutional
+mirror: https://github.com/Instituto-IA-LNCC/manaca-1b-instruct-2) · Model:
+https://huggingface.co/menezesbruno/manaca-1b-instruct-2 · License: CC BY 4.0.
 ```
 
 ---
