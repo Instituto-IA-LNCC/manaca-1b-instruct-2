@@ -80,7 +80,11 @@ extremo esquerdo desta curva (10%→32,4%, pior ainda com menos ajuda);
 aqui (40-50%), o que explica por que `v4` funcionou bem sem ter sido
 desenhado com essa curva em mãos — a proporção acabou caindo perto do ótimo
 por tentativa e erro guiado por hipótese, e agora está confirmado por
-varredura controlada.
+varredura controlada. `v3` teve 23,5% de over-refusal (8/34) — ponto
+intermediário entre o catastrófico `v2` e o `v4` final. Dados brutos dos
+três em `bench/overrefusal_pt/answers/{v2,v3,v4}-n34.jsonl` (commitados
+2026-09-14 — eram uma lacuna de reprodutibilidade: números já citados aqui,
+dado bruto nunca tinha ido pro repo).
 
 ## 5. Limitações
 

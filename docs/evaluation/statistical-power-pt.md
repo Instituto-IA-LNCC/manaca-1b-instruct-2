@@ -105,6 +105,9 @@ parte desta comparação pareada.
 - Geração: `dpo/dpo_seeds/generate_harmful_prompts.py` /
   `sft/safety_seeds/generate_benign_prompts.py`, args no histórico de commits
   (`d50317a`, `b6cf65d`).
+- Dado bruto do "Over-refusal geral, N=34 (antigo)" acima (linha do `v4`):
+  `bench/overrefusal_pt/answers/v4-n34.jsonl` (commitado 2026-09-14, junto
+  com `v2-n34.jsonl`/`v3-n34.jsonl` — ver `composition-sweep-pt.md` §4).
 - Sondas expandidas: `bench/safety_pt/heldout_v2.jsonl` (218),
   `bench/overrefusal_pt/prompts_v2.jsonl` (184).
 - Avaliação do v4: `bench/safety_pt/answers/v4-scaled.jsonl`,
