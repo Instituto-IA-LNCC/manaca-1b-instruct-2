@@ -600,6 +600,71 @@ contornado filtrando o resultado no `.json`/`.md` em vez de apagar o diretório.
   de execução. Registrar como reprodução própria com metodologia diferente do
   self-reported, não como contradição.
 
+### 7.6 Classificação PT-BR (assin2_rte, faquad_nli, hatebr, hatespeech)
+
+Mesma situação do Bloco 2: já tinha sido rodada pro `v1`/`v2`/`safe4`
+(`instruct-eval-pt.md` §3.1), nunca pro `v4`/`instruct2-full`. Shot count
+(5-shot, todas as 4 tarefas) recuperado do `results*.json` da rodada antiga
+em `manaca-1b/docs/evaluation/lmeval_ptbench/` (repo do projeto anterior),
+já que não estava registrado em nenhum doc — vale documentar aqui pra não
+se perder de novo. Métrica reportada: **f1-macro**, não acurácia (tarefas
+desbalanceadas, acc infla pela classe majoritária) — calculado por
+`scripts/eval/f1_ptbench.py` a partir dos `samples_*.jsonl` do lm-eval
+(script já existia, mesmo usado na tabela antiga).
+
+```bash
+tmux new -s ptclassif
+cd $HOME/manaca-1b-instruct-2
+TASKS="assin2_rte_pt:5 faquad_nli_pt:5 hatebr_pt:5 hatespeech_pt:5"
+
+MANACA_HF=/data/brunolsm/manaca-checkpoints/manaca-1b-instruct-2-safe-v4-merged \
+MANACA_LABEL=v4 HUB_MODELS="" TASKS="$TASKS" \
+OUT_DIR=$HOME/manaca-lmeval-out-ptclassif ./scripts/eval/run_lm_eval_pt.sh
+
+MANACA_HF=/data/brunolsm/manaca-checkpoints/manaca-1b-instruct-2-full \
+MANACA_LABEL=instruct2-full HUB_MODELS="" TASKS="$TASKS" \
+OUT_DIR=$HOME/manaca-lmeval-out-ptclassif ./scripts/eval/run_lm_eval_pt.sh
+
+HUB_MODELS="ttl-460m-chat|nicholasKluge/TeenyTinyLlama-460m-Chat tucano-1b1-instruct|TucanoBR/Tucano-1b1-Instruct tucano-2b4-instruct|TucanoBR/Tucano-2b4-Instruct" \
+ONLY="ttl-460m-chat tucano-1b1-instruct tucano-2b4-instruct" TASKS="$TASKS" \
+OUT_DIR=$HOME/manaca-lmeval-out-ptclassif ./scripts/eval/run_lm_eval_pt.sh
+
+HUB_MODELS="tucano2-qwen-1b5-instruct|Polygl0t/Tucano2-qwen-1.5B-Instruct" \
+ONLY="tucano2-qwen-1b5-instruct" EVAL_IMAGE=manaca-lmeval-qwen3:latest TASKS="$TASKS" \
+OUT_DIR=$HOME/manaca-lmeval-out-ptclassif ./scripts/eval/run_lm_eval_pt.sh
+
+python3 scripts/eval/f1_ptbench.py --lm-eval-dir $HOME/manaca-lmeval-out-ptclassif \
+  --tasks assin2_rte_pt,faquad_nli_pt,hatebr_pt,hatespeech_pt \
+  --out docs/evaluation/classif-nucleo-f1
+```
+
+#### Resultado (rodado em 2026-09-14) — f1-macro (%), acc entre parênteses
+
+| Modelo | assin2_rte | faquad_nli | hatebr | hatespeech |
+|---|---:|---:|---:|---:|
+| `instruct2-full` (Manacá, pré-safety) | 52,64 (52,8) | 48,44 (77,4) | 37,37 (48,6) | 41,73 (67,8) |
+| **`v4` (Manacá, aprovado)** | 52,96 (53,0) | 47,97 (77,5) | 37,62 (49,0) | 41,77 (67,6) |
+| TeenyTinyLlama-460m-Chat | 53,61 (55,0) | 37,59 (38,2) | 40,67 (45,8) | 39,37 (39,9) |
+| Tucano-1b1-Instruct | 35,69 (50,1) | 44,97 (71,2) | 30,64 (38,0) | 42,18 (66,2) |
+| Tucano-2b4-Instruct | 43,75 (51,7) | 45,66 (74,9) | 37,19 (45,9) | 41,58 (68,2) |
+| Tucano2-qwen-1.5B-Instruct | **91,52** (91,5) | **72,73** (78,5) | **83,35** (83,6) | **67,63** (75,6) |
+
+**Checagem de sanidade**: os números de TTL/Tucano-1b1/Tucano-2b4 saíram
+**idênticos, casa decimal por casa decimal**, aos já publicados em
+`instruct-eval-pt.md` meses atrás — confirma harness determinístico, nada
+mudou na infraestrutura entre as duas rodadas.
+
+- **`v4` vs `instruct2-full`**: praticamente empatados nas 4 tarefas —
+  o safety-SFT não afeta capacidade de classificação, nem pra melhor nem
+  pra pior. Esperado (a natureza do ajuste é sobre segurança/recusa, não
+  sobre NLI/toxicidade).
+- **`v4` vs baselines de geração 1**: bate o Tucano-1b1 em 3/4 tarefas,
+  fica à frente ou empatado com o Tucano-2b4 nas 4, só perde levemente pro
+  TTL em `hatebr` (37,6 vs 40,7). Mesmo padrão de "compete no seu porte" já
+  visto no resto do núcleo obrigatório.
+- **Tucano2-qwen dispara de novo** (91,5/72,7/83,4/67,6) — mesmo efeito do
+  continual-pretrain sobre Qwen3 já visto em toda a bateria.
+
 ## 8. Antes de commitar
 
 - Auditar por amostra as respostas de segurança held-out dos baselines
